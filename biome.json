@@ -9,7 +9,8 @@
       "!**/.ignore/**/*",
       "!**/.turbo/**/*",
       "!**/.next/**/*",
-      "!**/.wrangler/**/*"
+      "!**/.wrangler/**/*",
+      "!**/.coverage/**/*"
     ]
   },
 
@@ -29,7 +30,8 @@
       },
       "suspicious": {
         "noAssignInExpressions": "off",
-        "noExplicitAny": "off"
+        "noExplicitAny": "off",
+        "noTemplateCurlyInString": "off"
       }
     }
   },

@@ -1,12 +1,11 @@
 import type { Formatter } from '@saykit/config';
-import { format as formatDate } from 'date-fns';
 import PO from 'pofile';
 
-export function createFormatter(): Formatter {
+function createFormatter(): Formatter {
   return {
     extension: '.po',
 
-    parse(content, context) {
+    async parse(content, context) {
       const po = PO.parse(content);
 
       if (!po.headers['X-Generator']?.startsWith('saykit'))
@@ -19,7 +18,8 @@ export function createFormatter(): Formatter {
           .find((c) => c.startsWith('id:'))
           ?.slice(3);
         const comments = item.extractedComments //
-          .filter((c) => !c.startsWith('id:'));
+          .filter((c) => !c.startsWith('id:'))
+          .map((c) => c.trim());
 
         return {
           id,
@@ -27,50 +27,35 @@ export function createFormatter(): Formatter {
           message: item.msgid,
           translation: item.msgstr[0],
           comments,
-          references: item.references as never,
+          references: item.references,
         };
       });
     },
 
-    stringify(messages, context) {
-      const po = context.previousContent
-        ? PO.parse(context.previousContent)
-        : new PO();
+    async stringify(messages, context) {
+      const po = new PO();
 
-      const items = po.items.reduce((map, item) => {
-        const key = `${item.msgctxt ?? ''}\u0000${item.msgid}`;
-        return map.set(key, item);
-      }, new Map<string, (typeof po.items)[number]>());
-
-      // Remove empty headers
-      for (const key in po.headers)
-        if (!po.headers[key]) delete po.headers[key];
-
-      po.headers['POT-Creation-Date'] ||= //
-        formatDate(new Date(), 'yyyy-MM-dd HH:mmxxxx');
-      po.headers['Content-Type'] ||= 'text/plain; charset=UTF-8';
-      po.headers['Content-Transfer-Encoding'] ||= '8bit';
+      po.headers['Content-Type'] = 'text/plain; charset=UTF-8';
+      po.headers['Content-Transfer-Encoding'] = '8bit';
       po.headers.Language = context.locale;
       po.headers['X-Generator'] = 'saykit';
 
       for (const message of messages) {
-        const key = `${message.context ?? ''}\u0000${message.message}`;
-        const item = items.get(key) ?? new PO.Item();
+        const item = new PO.Item();
 
         item.msgid = message.message;
         if (message.context) item.msgctxt = message.context;
         item.msgstr = [message.translation ?? ''];
 
-        const comments: string[] = [];
+        const comments = [];
         if (message.id) comments.push(`id:${message.id}`);
         if (message.comments.length) comments.push(...message.comments);
         item.extractedComments = comments;
 
-        item.references = message.references ?? [];
-        items.set(key, item);
+        item.references = message.references;
+        po.items.push(item);
       }
 
-      po.items = Array.from(items.values());
       return po.toString();
     },
   };

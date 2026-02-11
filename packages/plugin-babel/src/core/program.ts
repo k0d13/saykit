@@ -4,7 +4,7 @@ import traverse_ from '@babel/traverse';
 import { Context } from './context.js';
 import { Visitor } from './visitor.js';
 
-const traverse = Reflect.get(traverse_, 'default') as typeof traverse_;
+const traverse = (traverse_ as any).default || (traverse_ as typeof traverse_);
 
 const supportedExtensions = [
   '.js',
@@ -50,7 +50,7 @@ export function printProgram(program: parser.ParseResult) {
   });
 }
 
-export function extractMessages(id: string, code: string) {
+export function collectMessages(id: string, code: string) {
   const result = parseProgram(id, code);
   if (result) applyVisitor(result.program, result.context);
   return result?.context.foundMessages ?? [];

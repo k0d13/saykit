@@ -1,2 +1,2 @@
 export { generateHash } from './messages/hash.js';
-export { extractMessages, transformCode } from './program.js';
+export { collectMessages, transformCode } from './program.js';

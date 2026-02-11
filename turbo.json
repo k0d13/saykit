@@ -21,6 +21,11 @@
       "inputs": ["src/**"],
       "outputLogs": "new-only"
     },
+    "coverage": {
+      "dependsOn": ["^coverage"],
+      "inputs": ["src/**"],
+      "outputLogs": "new-only"
+    },
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["src/**"],

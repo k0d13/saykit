@@ -5,6 +5,7 @@
   "scripts": {
     "check": "tsc --noEmit",
     "test": "vitest",
+    "coverage": "vitest run --coverage",
     "build": "tsdown",
     "prepack": "pnpm build"
   },

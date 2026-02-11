@@ -12,9 +12,9 @@ export default class Logger {
   #quiet: boolean;
   #verbose: boolean;
 
-  constructor(quiet: boolean, verbose: boolean) {
-    this.#quiet = quiet;
-    this.#verbose = verbose;
+  constructor(options: { quiet?: boolean; verbose?: boolean } = {}) {
+    this.#quiet = options.quiet ?? false;
+    this.#verbose = options.verbose ?? false;
   }
 
   log(...args: unknown[]) {
@@ -46,6 +46,16 @@ export default class Logger {
   }
 }
 
-export const loggerStorage = new AsyncLocalStorage<Logger>({
-  defaultValue: new Logger(false, false),
+const loggerStorage = new AsyncLocalStorage<Logger>({
+  defaultValue: new Logger(),
 });
+
+export function useLogger(...parameters: ConstructorParameters<typeof Logger>) {
+  if (parameters.length > 0) {
+    const logger = new Logger(...parameters);
+    loggerStorage.enterWith(logger);
+    return logger;
+  } else {
+    return loggerStorage.getStore()!;
+  }
+}

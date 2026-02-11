@@ -2,36 +2,29 @@ import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { err, ok } from 'neverthrow';
+import picomatch from 'picomatch';
 import * as z from 'zod';
 
-type Awaitable<T> = T | PromiseLike<T>;
+export const Message = z.object({
+  message: z.string(),
+  translation: z.string().optional(),
+  id: z.string().optional(),
+  context: z.string().optional(),
+  comments: z.string().array(),
+  references: z.string().array(),
+});
+export type Message = z.infer<typeof Message>;
 
 export const Formatter = z.object({
   extension: z.templateLiteral(['.', z.string()]).transform((v) => v.slice(1)),
   parse: z.custom<
-    (
-      content: string,
-      context: { locale: string },
-    ) => Awaitable<Formatter.Message[]>
+    (content: string, context: { locale: string }) => Promise<Message[]>
   >((v) => typeof v === 'function'),
   stringify: z.custom<
-    (
-      messages: Formatter.Message[],
-      context: { locale: string; previousContent?: string },
-    ) => Awaitable<string>
+    (messages: Message[], context: { locale: string }) => Promise<string>
   >((v) => typeof v === 'function'),
 });
-
-export namespace Formatter {
-  export interface Message {
-    message: string;
-    translation?: string;
-    id: string | undefined;
-    context: string | undefined;
-    comments: string[];
-    references: string[];
-  }
-}
+export type Formatter = z.infer<typeof Formatter>;
 
 async function tryImport(id: string) {
   const require = createRequire(join(process.cwd(), 'noop.js'));
@@ -43,34 +36,40 @@ async function tryImport(id: string) {
   }
 }
 
-export const Bucket = z.object({
-  include: z.array(z.string()),
-  exclude: z.array(z.string()).optional(),
-  output: z.templateLiteral([
-    z.string(),
-    '{locale}',
-    z.string(),
-    '.{extension}',
-  ]),
+export const Bucket = z
+  .object({
+    include: z.array(z.string()),
+    exclude: z.array(z.string()).optional(),
+    output: z.templateLiteral([
+      z.string(),
+      '{locale}',
+      z.string(),
+      '.{extension}',
+    ]),
 
-  formatter: Formatter.optional().transform(async (formatter, context) => {
-    if (formatter) return formatter;
+    formatter: Formatter.optional().transform(async (formatter, context) => {
+      if (formatter) return formatter;
 
-    const module = await tryImport('@saykit/format-po');
-    if (module.isErr()) {
-      context.addIssue(module.error);
-      return z.NEVER;
-    }
-    formatter = module.value.createFormatter();
+      const module = await tryImport('@saykit/format-po');
+      if (module.isErr()) {
+        context.addIssue(module.error);
+        return z.NEVER;
+      }
+      formatter = module.value.default();
 
-    const result = Formatter.safeParse(formatter);
-    if (result.error) {
-      for (const issue of result.error.issues) context.addIssue({ ...issue });
-      return z.NEVER;
-    }
-    return result.data;
-  }),
-});
+      const result = Formatter.safeParse(formatter);
+      if (result.error) {
+        for (const issue of result.error.issues) context.addIssue({ ...issue });
+        return z.NEVER;
+      }
+      return result.data;
+    }),
+  })
+  .transform((v) => ({
+    ...v,
+    match: picomatch(v.include, { ignore: v.exclude }),
+  }));
+export type Bucket = z.infer<typeof Bucket>;
 
 export const Configuration = z
   .object({
@@ -83,3 +82,4 @@ export const Configuration = z
     (c) => c.sourceLocale === c.locales[0],
     'sourceLocale must be the same as the first locale',
   );
+export type Configuration = z.infer<typeof Configuration>;

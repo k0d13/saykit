@@ -1,6 +1,5 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-08-29 00:21+1200\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: fr\n"
@@ -12,7 +11,7 @@ msgstr "à-propos"
 
 #: src/commands/about.ts:17
 msgid "Tell me about yourself!"
-msgstr "Parle-moi de toi!"
+msgstr ""
 
 #: src/commands/about.ts:31
 msgid "About You"

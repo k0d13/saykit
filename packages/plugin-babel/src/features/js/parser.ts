@@ -152,7 +152,7 @@ export function getExpressionAsKey(context: Context, node: t.Node) {
  *
  * @param expression
  */
-function processExpression(
+export function processExpression(
   expression: t.Node,
 ): [t.Expression, t.ObjectExpression | null, string | null] | null {
   if (t.isIdentifier(expression) && expression.name === 'say') {

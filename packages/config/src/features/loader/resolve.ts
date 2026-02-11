@@ -3,7 +3,7 @@ import { Configuration } from '~/shapes.js';
 import { findConfigFile } from './explorer.js';
 import loaders from './loaders.js';
 
-export async function resolveConfig(name = 'saykit') {
+export async function useConfig(name = 'saykit') {
   const file = await findConfigFile(name, process.cwd());
   if (!file) throw new Error(`Could not find config file for "${name}"`);
 
