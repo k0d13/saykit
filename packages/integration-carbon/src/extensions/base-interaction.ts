@@ -3,7 +3,6 @@ import type { Say } from 'saykit';
 import { kSay } from '~/constants.js';
 
 declare module '@buape/carbon' {
-  // biome-ignore lint/correctness/noUnusedVariables: T
   interface BaseInteraction<T extends APIInteraction> {
     get say(): Say;
     [kSay]: Say;

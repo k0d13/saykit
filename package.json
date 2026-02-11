@@ -1,7 +1,7 @@
 {
   "name": "root",
   "private": true,
-  "packageManager": "pnpm@10.26.2",
+  "packageManager": "pnpm@10.29.2",
   "workspaces": ["examples/*", "packages/*"],
   "scripts": {
     "check": "turbo run check",
@@ -14,16 +14,16 @@
     "prepare": "husky & ts-patch install"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.10",
-    "@types/node": "^25.0.3",
-    "@vitest/coverage-v8": "^4.0.17",
+    "@biomejs/biome": "^2.3.14",
+    "@types/node": "^25.2.3",
+    "@vitest/coverage-v8": "^4.0.18",
     "husky": "^9.1.7",
     "ts-patch": "^3.3.0",
-    "tsdown": "^0.18.3",
-    "turbo": "^2.7.2",
+    "tsdown": "^0.20.3",
+    "turbo": "^2.8.5",
     "typescript": "^5.9.3",
-    "typescript-transform-paths": "^3.5.5",
+    "typescript-transform-paths": "^3.5.6",
     "vite-tsconfig-paths": "^6.1.0",
-    "vitest": "^4.0.16"
+    "vitest": "^4.0.18"
   }
 }

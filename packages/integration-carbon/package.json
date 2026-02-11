@@ -19,7 +19,7 @@
     "saykit": "*"
   },
   "devDependencies": {
-    "@buape/carbon": "0.13.0",
+    "@buape/carbon": "0.14.0",
     "saykit": "workspace:^"
   }
 }

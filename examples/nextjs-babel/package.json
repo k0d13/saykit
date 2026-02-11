@@ -12,14 +12,14 @@
   },
   "dependencies": {
     "@saykit/react": "workspace:^",
-    "next": "^16.1.1",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
+    "next": "^16.1.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "saykit": "workspace:^"
   },
   "devDependencies": {
     "@saykit/babel-plugin": "workspace:^",
     "@saykit/config": "workspace:^",
-    "@types/react": "^19.2.7"
+    "@types/react": "^19.2.13"
   }
 }
