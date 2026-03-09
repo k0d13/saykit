@@ -49,8 +49,7 @@ export async function* watchDebounced(
       const key = event.filename ?? '__unknown__';
 
       if (timers.has(key)) clearTimeout(timers.get(key)!);
-      if (!queue.has(key))
-        queue.set(key, new Promise((r) => resolvers.set(key, r)));
+      if (!queue.has(key)) queue.set(key, new Promise((r) => resolvers.set(key, r)));
 
       timers.set(
         key,

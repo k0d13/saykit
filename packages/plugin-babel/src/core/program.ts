@@ -6,16 +6,7 @@ import { Visitor } from './visitor.js';
 
 const traverse = (traverse_ as any).default || (traverse_ as typeof traverse_);
 
-const supportedExtensions = [
-  '.js',
-  '.cjs',
-  '.mjs',
-  '.jsx',
-  '.ts',
-  '.mts',
-  '.cts',
-  '.tsx',
-];
+const supportedExtensions = ['.js', '.cjs', '.mjs', '.jsx', '.ts', '.mts', '.cts', '.tsx'];
 
 export function parseProgram(id: string, code: string) {
   // Check if the file extension is supported
@@ -59,7 +50,5 @@ export function collectMessages(id: string, code: string) {
 export function transformCode(id: string, code: string) {
   const result = parseProgram(id, code);
   if (result) applyVisitor(result.program, result.context);
-  return result?.context.foundMessages.length
-    ? printProgram(result.program)
-    : code;
+  return result?.context.foundMessages.length ? printProgram(result.program) : code;
 }

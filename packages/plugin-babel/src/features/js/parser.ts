@@ -49,32 +49,25 @@ export function parseCallExpression(
   if (!processed) return null;
   const [accessor, descriptor, kind] = processed;
 
-  if (
-    typeof kind === 'string' &&
-    ['select', 'ordinal', 'plural'].includes(kind)
-  ) {
+  if (typeof kind === 'string' && ['select', 'ordinal', 'plural'].includes(kind)) {
     if (call.arguments.length !== 2) return null;
     if (!t.isExpression(call.arguments[0])) return null;
     if (!t.isObjectExpression(call.arguments[1])) return null;
     const object = call.arguments[1];
 
-    const branches = object.properties.reduce<ChoiceMessage['branches']>(
-      (c, p) => {
-        if (!t.isObjectProperty(p) || !t.isExpression(p.value)) return c;
+    const branches = object.properties.reduce<ChoiceMessage['branches']>((c, p) => {
+      if (!t.isObjectProperty(p) || !t.isExpression(p.value)) return c;
 
-        let message: Message | null = null;
-        if (!message && t.isStringLiteral(p.value))
-          message = new LiteralMessage(p.value.value);
-        if (!message) message = parseExpression(context, p.value, true);
-        c.push({
-          key: getPropertyNameAsString(context, p.key),
-          value: message!,
-        });
+      let message: Message | null = null;
+      if (!message && t.isStringLiteral(p.value)) message = new LiteralMessage(p.value.value);
+      if (!message) message = parseExpression(context, p.value, true);
+      c.push({
+        key: getPropertyNameAsString(context, p.key),
+        value: message!,
+      });
 
-        return c;
-      },
-      [],
-    );
+      return c;
+    }, []);
 
     const value = call.arguments[0];
     const identifier = getExpressionAsKey(context, value);
@@ -111,11 +104,7 @@ export function parseExpression(
   expression: t.Expression,
   fallback: true,
 ): CompositeMessage | ArgumentMessage;
-export function parseExpression(
-  context: Context,
-  expression: t.Expression,
-  fallback?: boolean,
-) {
+export function parseExpression(context: Context, expression: t.Expression, fallback?: boolean) {
   let message: CompositeMessage | null = null;
   switch (true) {
     case t.isTaggedTemplateExpression(expression):
@@ -184,10 +173,7 @@ export function processExpression(
   return null;
 }
 
-function getPropertyNameAsString(
-  context: Context,
-  key: t.ObjectProperty['key'],
-) {
+function getPropertyNameAsString(context: Context, key: t.ObjectProperty['key']) {
   if (t.isIdentifier(key)) return key.name;
   if (t.isStringLiteral(key)) return key.value;
   if (t.isNumericLiteral(key)) return key.value.toString();
@@ -195,10 +181,7 @@ function getPropertyNameAsString(
   return context.identifierStore.next();
 }
 
-function findPropertyValueIfStringLiteralAsString(
-  object: t.ObjectExpression,
-  key: string,
-) {
+function findPropertyValueIfStringLiteralAsString(object: t.ObjectExpression, key: string) {
   for (const property of object.properties) {
     if (!t.isObjectProperty(property)) continue;
     if (
@@ -214,8 +197,7 @@ function findPropertyValueIfStringLiteralAsString(
 function getTranslatorComments(comments: t.Comment[]) {
   return comments.reduce<string[]>((a, c) => {
     const text = c.value.trim();
-    if (text.toLowerCase().startsWith('translators:'))
-      a.push(text.slice(12).trim());
+    if (text.toLowerCase().startsWith('translators:')) a.push(text.slice(12).trim());
     return a;
   }, []);
 }

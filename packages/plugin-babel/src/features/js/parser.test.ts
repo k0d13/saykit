@@ -1,11 +1,7 @@
 import * as t from '@babel/types';
 import { describe, expect, it } from 'vitest';
 import { Context } from '~/core/context.js';
-import {
-  ArgumentMessage,
-  ChoiceMessage,
-  LiteralMessage,
-} from '~/core/messages/types.js';
+import { ArgumentMessage, ChoiceMessage, LiteralMessage } from '~/core/messages/types.js';
 import * as parser from './parser.js';
 
 describe('processExpression', () => {
@@ -29,10 +25,7 @@ describe('processExpression', () => {
   it('should process member expression with selector', () => {
     const sayIdentifier = t.identifier('say');
     const selectorIdentifier = t.identifier('plural');
-    const memberExpression = t.memberExpression(
-      sayIdentifier,
-      selectorIdentifier,
-    );
+    const memberExpression = t.memberExpression(sayIdentifier, selectorIdentifier);
 
     const result = parser.processExpression(memberExpression);
 
@@ -82,10 +75,7 @@ describe('parseTaggedTemplateExpression', () => {
       t.templateLiteral([quasi], []),
     );
 
-    const result = parser.parseTaggedTemplateExpression(
-      createMockContext(),
-      taggedTemplate,
-    );
+    const result = parser.parseTaggedTemplateExpression(createMockContext(), taggedTemplate);
 
     expect(result).not.toBeNull();
     expect(result!.children).toHaveLength(1);
@@ -94,10 +84,7 @@ describe('parseTaggedTemplateExpression', () => {
 
   it('should parse tagged template with expressions', () => {
     const sayIdentifier = t.identifier('say');
-    const quasi1 = t.templateElement(
-      { raw: 'Hello ', cooked: 'Hello ' },
-      false,
-    );
+    const quasi1 = t.templateElement({ raw: 'Hello ', cooked: 'Hello ' }, false);
     const quasi2 = t.templateElement({ raw: '!', cooked: '!' }, true);
     const expression = t.identifier('name');
     const taggedTemplate = t.taggedTemplateExpression(
@@ -105,10 +92,7 @@ describe('parseTaggedTemplateExpression', () => {
       t.templateLiteral([quasi1, quasi2], [expression]),
     );
 
-    const result = parser.parseTaggedTemplateExpression(
-      createMockContext(),
-      taggedTemplate,
-    );
+    const result = parser.parseTaggedTemplateExpression(createMockContext(), taggedTemplate);
 
     expect(result).not.toBeNull();
     expect(result!.children).toHaveLength(3);
@@ -128,15 +112,9 @@ describe('parseTaggedTemplateExpression', () => {
     const sayCall = t.callExpression(sayIdentifier, [descriptorObject]);
 
     const quasi = t.templateElement({ raw: 'Hello', cooked: 'Hello' }, false);
-    const taggedTemplate = t.taggedTemplateExpression(
-      sayCall,
-      t.templateLiteral([quasi], []),
-    );
+    const taggedTemplate = t.taggedTemplateExpression(sayCall, t.templateLiteral([quasi], []));
 
-    const result = parser.parseTaggedTemplateExpression(
-      createMockContext(),
-      taggedTemplate,
-    );
+    const result = parser.parseTaggedTemplateExpression(createMockContext(), taggedTemplate);
 
     expect(result).not.toBeNull();
     expect(result!.descriptor).toEqual({ id: 'greeting', context: undefined });
@@ -150,15 +128,9 @@ describe('parseTaggedTemplateExpression', () => {
     const sayCall = t.callExpression(sayIdentifier, [descriptorObject]);
 
     const quasi = t.templateElement({ raw: 'Hello', cooked: 'Hello' }, false);
-    const taggedTemplate = t.taggedTemplateExpression(
-      sayCall,
-      t.templateLiteral([quasi], []),
-    );
+    const taggedTemplate = t.taggedTemplateExpression(sayCall, t.templateLiteral([quasi], []));
 
-    const result = parser.parseTaggedTemplateExpression(
-      createMockContext(),
-      taggedTemplate,
-    );
+    const result = parser.parseTaggedTemplateExpression(createMockContext(), taggedTemplate);
 
     expect(result).not.toBeNull();
     expect(result!.descriptor).toEqual({ id: undefined, context: 'greeting' });
@@ -181,16 +153,10 @@ describe('parseTaggedTemplateExpression', () => {
       },
     ] as t.Comment[];
 
-    const result = parser.parseTaggedTemplateExpression(
-      createMockContext(),
-      taggedTemplate,
-    );
+    const result = parser.parseTaggedTemplateExpression(createMockContext(), taggedTemplate);
 
     expect(result).not.toBeNull();
-    expect(result!.comments).toEqual([
-      'Use formal greeting',
-      'Consider cultural context',
-    ]);
+    expect(result!.comments).toEqual(['Use formal greeting', 'Consider cultural context']);
   });
 
   it('should include location information', () => {
@@ -209,10 +175,7 @@ describe('parseTaggedTemplateExpression', () => {
       identifierName: undefined,
     };
 
-    const result = parser.parseTaggedTemplateExpression(
-      createMockContext(),
-      taggedTemplate,
-    );
+    const result = parser.parseTaggedTemplateExpression(createMockContext(), taggedTemplate);
 
     expect(result).not.toBeNull();
     expect(result!.references).toEqual(['test.js:10']);
@@ -226,10 +189,7 @@ describe('parseTaggedTemplateExpression', () => {
       t.templateLiteral([quasi], []),
     );
 
-    const result = parser.parseTaggedTemplateExpression(
-      createMockContext(),
-      taggedTemplate,
-    );
+    const result = parser.parseTaggedTemplateExpression(createMockContext(), taggedTemplate);
 
     expect(result).toBeNull();
   });
@@ -240,24 +200,15 @@ describe('parseCallExpression', () => {
 
   it('should parse simple plural call expression', () => {
     const sayIdentifier = t.identifier('say');
-    const pluralMember = t.memberExpression(
-      sayIdentifier,
-      t.identifier('plural'),
-    );
+    const pluralMember = t.memberExpression(sayIdentifier, t.identifier('plural'));
     const countIdentifier = t.identifier('count');
     const choicesObject = t.objectExpression([
       t.objectProperty(t.stringLiteral('one'), t.stringLiteral('item')),
       t.objectProperty(t.stringLiteral('other'), t.stringLiteral('items')),
     ]);
-    const callExpression = t.callExpression(pluralMember, [
-      countIdentifier,
-      choicesObject,
-    ]);
+    const callExpression = t.callExpression(pluralMember, [countIdentifier, choicesObject]);
 
-    const result = parser.parseCallExpression(
-      createMockContext(),
-      callExpression,
-    );
+    const result = parser.parseCallExpression(createMockContext(), callExpression);
 
     expect(result).not.toBeNull();
     expect(result!.children).toHaveLength(1);
@@ -274,25 +225,16 @@ describe('parseCallExpression', () => {
 
   it('should parse ordinal call expression', () => {
     const sayIdentifier = t.identifier('say');
-    const ordinalMember = t.memberExpression(
-      sayIdentifier,
-      t.identifier('ordinal'),
-    );
+    const ordinalMember = t.memberExpression(sayIdentifier, t.identifier('ordinal'));
     const positionIdentifier = t.identifier('position');
     const choicesObject = t.objectExpression([
       t.objectProperty(t.stringLiteral('1'), t.stringLiteral('first')),
       t.objectProperty(t.stringLiteral('2'), t.stringLiteral('second')),
       t.objectProperty(t.stringLiteral('other'), t.stringLiteral('other')),
     ]);
-    const callExpression = t.callExpression(ordinalMember, [
-      positionIdentifier,
-      choicesObject,
-    ]);
+    const callExpression = t.callExpression(ordinalMember, [positionIdentifier, choicesObject]);
 
-    const result = parser.parseCallExpression(
-      createMockContext(),
-      callExpression,
-    );
+    const result = parser.parseCallExpression(createMockContext(), callExpression);
 
     expect(result).not.toBeNull();
     const choiceMessage = result!.children[0] as ChoiceMessage;
@@ -310,25 +252,16 @@ describe('parseCallExpression', () => {
 
   it('should parse select call expression', () => {
     const sayIdentifier = t.identifier('say');
-    const selectMember = t.memberExpression(
-      sayIdentifier,
-      t.identifier('select'),
-    );
+    const selectMember = t.memberExpression(sayIdentifier, t.identifier('select'));
     const genderIdentifier = t.identifier('gender');
     const choicesObject = t.objectExpression([
       t.objectProperty(t.stringLiteral('male'), t.stringLiteral('He')),
       t.objectProperty(t.stringLiteral('female'), t.stringLiteral('She')),
       t.objectProperty(t.stringLiteral('other'), t.stringLiteral('They')),
     ]);
-    const callExpression = t.callExpression(selectMember, [
-      genderIdentifier,
-      choicesObject,
-    ]);
+    const callExpression = t.callExpression(selectMember, [genderIdentifier, choicesObject]);
 
-    const result = parser.parseCallExpression(
-      createMockContext(),
-      callExpression,
-    );
+    const result = parser.parseCallExpression(createMockContext(), callExpression);
 
     expect(result).not.toBeNull();
     const choiceMessage = result!.children[0] as ChoiceMessage;
@@ -346,24 +279,15 @@ describe('parseCallExpression', () => {
 
   it('should parse choices with nested expressions', () => {
     const sayIdentifier = t.identifier('say');
-    const pluralMember = t.memberExpression(
-      sayIdentifier,
-      t.identifier('plural'),
-    );
+    const pluralMember = t.memberExpression(sayIdentifier, t.identifier('plural'));
     const countIdentifier = t.identifier('count');
     const nestedExpression = t.identifier('name');
     const choicesObject = t.objectExpression([
       t.objectProperty(t.stringLiteral('one'), nestedExpression),
     ]);
-    const callExpression = t.callExpression(pluralMember, [
-      countIdentifier,
-      choicesObject,
-    ]);
+    const callExpression = t.callExpression(pluralMember, [countIdentifier, choicesObject]);
 
-    const result = parser.parseCallExpression(
-      createMockContext(),
-      callExpression,
-    );
+    const result = parser.parseCallExpression(createMockContext(), callExpression);
 
     expect(result).not.toBeNull();
     const choiceMessage = result!.children[0] as ChoiceMessage;
@@ -373,9 +297,7 @@ describe('parseCallExpression', () => {
     expect(choiceMessage.branches).toHaveLength(1);
     expect(choiceMessage.branches[0]!.key).toBe('one');
     expect(choiceMessage.branches[0]!.value).toBeInstanceOf(ArgumentMessage);
-    expect(
-      (choiceMessage.branches[0]!.value as ArgumentMessage).identifier,
-    ).toBe('name');
+    expect((choiceMessage.branches[0]!.value as ArgumentMessage).identifier).toBe('name');
   });
 
   it('should parse choices with descriptor', () => {
@@ -390,15 +312,9 @@ describe('parseCallExpression', () => {
       t.objectProperty(t.stringLiteral('one'), t.stringLiteral('item')),
       t.objectProperty(t.stringLiteral('other'), t.stringLiteral('items')),
     ]);
-    const callExpression = t.callExpression(pluralMember, [
-      countIdentifier,
-      choicesObject,
-    ]);
+    const callExpression = t.callExpression(pluralMember, [countIdentifier, choicesObject]);
 
-    const result = parser.parseCallExpression(
-      createMockContext(),
-      callExpression,
-    );
+    const result = parser.parseCallExpression(createMockContext(), callExpression);
 
     expect(result).not.toBeNull();
     expect(result!.descriptor).toEqual({ id: 'itemCount', context: undefined });
@@ -406,58 +322,37 @@ describe('parseCallExpression', () => {
 
   it('should return null for non-choice call expressions', () => {
     const sayIdentifier = t.identifier('say');
-    const someMember = t.memberExpression(
-      sayIdentifier,
-      t.identifier('something'),
-    );
+    const someMember = t.memberExpression(sayIdentifier, t.identifier('something'));
     const callExpression = t.callExpression(someMember, []);
 
-    const result = parser.parseCallExpression(
-      createMockContext(),
-      callExpression,
-    );
+    const result = parser.parseCallExpression(createMockContext(), callExpression);
 
     expect(result).toBeNull();
   });
 
   it('should return null for malformed choice expressions', () => {
     const sayIdentifier = t.identifier('say');
-    const pluralMember = t.memberExpression(
-      sayIdentifier,
-      t.identifier('plural'),
-    );
+    const pluralMember = t.memberExpression(sayIdentifier, t.identifier('plural'));
     // Missing required arguments
     const callExpression = t.callExpression(pluralMember, []);
 
-    const result = parser.parseCallExpression(
-      createMockContext(),
-      callExpression,
-    );
+    const result = parser.parseCallExpression(createMockContext(), callExpression);
 
     expect(result).toBeNull();
   });
 
   it('should handle numeric keys as exact matches', () => {
     const sayIdentifier = t.identifier('say');
-    const pluralMember = t.memberExpression(
-      sayIdentifier,
-      t.identifier('plural'),
-    );
+    const pluralMember = t.memberExpression(sayIdentifier, t.identifier('plural'));
     const countIdentifier = t.identifier('count');
     const choicesObject = t.objectExpression([
       t.objectProperty(t.numericLiteral(0), t.stringLiteral('none')),
       t.objectProperty(t.numericLiteral(1), t.stringLiteral('one')),
       t.objectProperty(t.stringLiteral('other'), t.stringLiteral('many')),
     ]);
-    const callExpression = t.callExpression(pluralMember, [
-      countIdentifier,
-      choicesObject,
-    ]);
+    const callExpression = t.callExpression(pluralMember, [countIdentifier, choicesObject]);
 
-    const result = parser.parseCallExpression(
-      createMockContext(),
-      callExpression,
-    );
+    const result = parser.parseCallExpression(createMockContext(), callExpression);
 
     expect(result).not.toBeNull();
     const choiceMessage = result!.children[0] as ChoiceMessage;
@@ -493,19 +388,13 @@ describe('parseExpression', () => {
 
   it('should delegate to call expression parser', () => {
     const sayIdentifier = t.identifier('say');
-    const pluralMember = t.memberExpression(
-      sayIdentifier,
-      t.identifier('plural'),
-    );
+    const pluralMember = t.memberExpression(sayIdentifier, t.identifier('plural'));
     const countIdentifier = t.identifier('count');
     const choicesObject = t.objectExpression([
       t.objectProperty(t.stringLiteral('one'), t.stringLiteral('item')),
       t.objectProperty(t.stringLiteral('other'), t.stringLiteral('items')),
     ]);
-    const callExpression = t.callExpression(pluralMember, [
-      countIdentifier,
-      choicesObject,
-    ]);
+    const callExpression = t.callExpression(pluralMember, [countIdentifier, choicesObject]);
 
     const result = parser.parseExpression(createMockContext(), callExpression);
 
@@ -516,27 +405,16 @@ describe('parseExpression', () => {
   it('should return argument message for fallback=true with simple identifier', () => {
     const identifier = t.identifier('name');
 
-    const result = parser.parseExpression(
-      createMockContext(),
-      identifier,
-      true,
-    );
+    const result = parser.parseExpression(createMockContext(), identifier, true);
 
     expect(result).toBeInstanceOf(ArgumentMessage);
     expect((result as ArgumentMessage).identifier).toBe('name');
   });
 
   it('should return argument message for fallback=true with complex expression', () => {
-    const expression = t.memberExpression(
-      t.identifier('obj'),
-      t.identifier('prop'),
-    );
+    const expression = t.memberExpression(t.identifier('obj'), t.identifier('prop'));
 
-    const result = parser.parseExpression(
-      createMockContext(),
-      expression,
-      true,
-    );
+    const result = parser.parseExpression(createMockContext(), expression, true);
 
     expect(result).toBeInstanceOf(ArgumentMessage);
     expect((result as ArgumentMessage).identifier).toBe('0'); // Generated identifier
@@ -545,25 +423,15 @@ describe('parseExpression', () => {
   it('should return null for fallback=false with non-say expression', () => {
     const identifier = t.identifier('name');
 
-    const result = parser.parseExpression(
-      createMockContext(),
-      identifier,
-      false,
-    );
+    const result = parser.parseExpression(createMockContext(), identifier, false);
 
     expect(result).toBeNull();
   });
 
   it('should handle nested expressions in tagged templates', () => {
     const sayIdentifier = t.identifier('say');
-    const complexExpression = t.memberExpression(
-      t.identifier('user'),
-      t.identifier('name'),
-    );
-    const quasi1 = t.templateElement(
-      { raw: 'Hello ', cooked: 'Hello ' },
-      false,
-    );
+    const complexExpression = t.memberExpression(t.identifier('user'), t.identifier('name'));
+    const quasi1 = t.templateElement({ raw: 'Hello ', cooked: 'Hello ' }, false);
     const quasi2 = t.templateElement({ raw: '!', cooked: '!' }, true);
     const taggedTemplate = t.taggedTemplateExpression(
       sayIdentifier,

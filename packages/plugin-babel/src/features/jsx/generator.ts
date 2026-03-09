@@ -9,16 +9,9 @@ export function generateSayJSXElement(message: CompositeMessage) {
   const attributes = [
     t.jsxAttribute(t.jsxIdentifier('id'), t.stringLiteral(id)),
     ...children.map(([k, e]) =>
-      t.jsxAttribute(
-        t.jsxIdentifier(Number.isNaN(+k) ? k : `_${k}`),
-        t.jsxExpressionContainer(e),
-      ),
+      t.jsxAttribute(t.jsxIdentifier(Number.isNaN(+k) ? k : `_${k}`), t.jsxExpressionContainer(e)),
     ),
   ];
 
-  return t.jsxElement(
-    t.jsxOpeningElement(t.jsxIdentifier('Say'), attributes, true),
-    null,
-    [],
-  );
+  return t.jsxElement(t.jsxOpeningElement(t.jsxIdentifier('Say'), attributes, true), null, []);
 }

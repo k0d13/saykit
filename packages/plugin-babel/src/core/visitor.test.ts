@@ -13,10 +13,7 @@ describe('Visitor', () => {
 
       // Create a tagged template expression node
       const sayIdentifier = t.identifier('say');
-      const quasi = t.templateElement(
-        { raw: 'Hello World', cooked: 'Hello World' },
-        false,
-      );
+      const quasi = t.templateElement({ raw: 'Hello World', cooked: 'Hello World' }, false);
       const taggedTemplate = t.taggedTemplateExpression(
         sayIdentifier,
         t.templateLiteral([quasi], []),
@@ -43,19 +40,13 @@ describe('Visitor', () => {
 
       // Create a plural call expression
       const sayIdentifier = t.identifier('say');
-      const pluralMember = t.memberExpression(
-        sayIdentifier,
-        t.identifier('plural'),
-      );
+      const pluralMember = t.memberExpression(sayIdentifier, t.identifier('plural'));
       const countIdentifier = t.identifier('count');
       const choicesObject = t.objectExpression([
         t.objectProperty(t.stringLiteral('one'), t.stringLiteral('item')),
         t.objectProperty(t.stringLiteral('other'), t.stringLiteral('items')),
       ]);
-      const callExpression = t.callExpression(pluralMember, [
-        countIdentifier,
-        choicesObject,
-      ]);
+      const callExpression = t.callExpression(pluralMember, [countIdentifier, choicesObject]);
 
       // Mock path object
       const path = {
@@ -78,13 +69,8 @@ describe('Visitor', () => {
 
       // Create a non-say expression
       const notSayIdentifier = t.identifier('console');
-      const logMember = t.memberExpression(
-        notSayIdentifier,
-        t.identifier('log'),
-      );
-      const callExpression = t.callExpression(logMember, [
-        t.stringLiteral('test'),
-      ]);
+      const logMember = t.memberExpression(notSayIdentifier, t.identifier('log'));
+      const callExpression = t.callExpression(logMember, [t.stringLiteral('test')]);
 
       // Mock path object
       const path = {
@@ -169,9 +155,7 @@ describe('Visitor', () => {
       const openingElement = t.jsxOpeningElement(sayIdentifier, [], false);
       const closingElement = t.jsxClosingElement(sayIdentifier);
       const helloText = t.jsxText('Hello World');
-      const jsxElement = t.jsxElement(openingElement, closingElement, [
-        helloText,
-      ]);
+      const jsxElement = t.jsxElement(openingElement, closingElement, [helloText]);
 
       // Mock path object
       const path = {
@@ -200,14 +184,8 @@ describe('Visitor', () => {
         t.jsxIdentifier('_'),
         t.jsxExpressionContainer(t.identifier('count')),
       );
-      const oneAttribute = t.jsxAttribute(
-        t.jsxIdentifier('one'),
-        t.stringLiteral('item'),
-      );
-      const otherAttribute = t.jsxAttribute(
-        t.jsxIdentifier('other'),
-        t.stringLiteral('items'),
-      );
+      const oneAttribute = t.jsxAttribute(t.jsxIdentifier('one'), t.stringLiteral('item'));
+      const otherAttribute = t.jsxAttribute(t.jsxIdentifier('other'), t.stringLiteral('items'));
 
       const openingElement = t.jsxOpeningElement(
         sayMember,
@@ -239,9 +217,7 @@ describe('Visitor', () => {
       const openingElement = t.jsxOpeningElement(divIdentifier, [], false);
       const closingElement = t.jsxClosingElement(divIdentifier);
       const helloText = t.jsxText('Hello World');
-      const jsxElement = t.jsxElement(openingElement, closingElement, [
-        helloText,
-      ]);
+      const jsxElement = t.jsxElement(openingElement, closingElement, [helloText]);
 
       // Mock path object
       const path = {
@@ -270,9 +246,7 @@ describe('Visitor', () => {
       const openingElement = t.jsxOpeningElement(sayIdentifier, [], false);
       const closingElement = t.jsxClosingElement(sayIdentifier);
       const helloText = t.jsxText('Hello');
-      const jsxElement = t.jsxElement(openingElement, closingElement, [
-        helloText,
-      ]);
+      const jsxElement = t.jsxElement(openingElement, closingElement, [helloText]);
 
       const path = {
         node: jsxElement,
@@ -328,9 +302,7 @@ describe('Visitor', () => {
       };
 
       // Calling handlers should not throw and should access the instance context
-      expect(() =>
-        handlers.Expression(expressionMockPath as any),
-      ).not.toThrow();
+      expect(() => handlers.Expression(expressionMockPath as any)).not.toThrow();
       expect(() => handlers.JSXElement(jsxMockPath as any)).not.toThrow();
     });
   });

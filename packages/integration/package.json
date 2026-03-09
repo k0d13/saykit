@@ -1,18 +1,21 @@
 {
   "name": "saykit",
   "version": "0.0.0",
+  "files": [
+    "dist",
+    "!dist/**/*.map"
+  ],
   "type": "module",
-  "scripts": {
-    "check": "tsc --noEmit",
-    "build": "tsdown",
-    "prepack": "pnpm build"
-  },
-  "files": ["dist", "!dist/**/*.map"],
   "exports": {
     ".": {
       "types": "./dist/runtime.d.mts",
       "default": "./dist/runtime.mjs"
     }
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build": "tsdown",
+    "prepack": "pnpm build"
   },
   "dependencies": {
     "@messageformat/icu-messageformat-1": "^0.12.0"

@@ -1,29 +1,14 @@
-import {
-  createElement,
-  Fragment,
-  type PropsWithChildren,
-  type ReactNode,
-} from 'react';
+import { createElement, Fragment, type PropsWithChildren, type ReactNode } from 'react';
 
-type ComponentsMap = Record<
-  string | number,
-  string | React.ComponentType<PropsWithChildren>
->;
+type ComponentsMap = Record<string | number, string | React.ComponentType<PropsWithChildren>>;
 type ComponentResolver = (
   tag?: string,
 ) => string | React.ComponentType<PropsWithChildren> | undefined;
 type ComponentsProp = ComponentsMap | ComponentResolver;
 
-export function Renderer({
-  html,
-  components,
-}: {
-  html: string;
-  components: ComponentsProp;
-}) {
+export function Renderer({ html, components }: { html: string; components: ComponentsProp }) {
   function getComponent(tag?: string) {
-    if (typeof components === 'function')
-      return components(tag) ?? tag ?? Fragment;
+    if (typeof components === 'function') return components(tag) ?? tag ?? Fragment;
     return tag && tag in components ? components[tag]! : Fragment;
   }
 
@@ -55,11 +40,7 @@ export function Renderer({
           // Closing tag like </0>
           const last = stack.pop()!;
           const Component = getComponent(last.tag);
-          const element = createElement(
-            Component,
-            { key: nodeKey++ },
-            ...current,
-          );
+          const element = createElement(Component, { key: nodeKey++ }, ...current);
           current = last.children;
           current.push(element);
         } else {

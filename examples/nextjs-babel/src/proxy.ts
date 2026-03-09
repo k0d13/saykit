@@ -8,8 +8,7 @@ export default function proxy(request: NextRequest) {
 
   const defaultLocale = saykitConfig.sourceLocale;
   let pathLocale = fromUrlPathname(request.nextUrl.pathname);
-  if (pathLocale && !saykitConfig.locales.includes(pathLocale))
-    pathLocale = undefined;
+  if (pathLocale && !saykitConfig.locales.includes(pathLocale)) pathLocale = undefined;
 
   if (pathLocale === defaultLocale) {
     // Redirect /{defaultLocale} to /
@@ -20,8 +19,7 @@ export default function proxy(request: NextRequest) {
   //
   else if (!pathLocale) {
     let cookieLocale = fromRequestCookies(request.cookies) ?? defaultLocale;
-    if (!saykitConfig.locales.includes(cookieLocale))
-      cookieLocale = defaultLocale;
+    if (!saykitConfig.locales.includes(cookieLocale)) cookieLocale = defaultLocale;
 
     request.nextUrl.pathname = `/${cookieLocale}${request.nextUrl.pathname}`;
     if (cookieLocale === defaultLocale) {
@@ -43,9 +41,7 @@ export default function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 };
 
 const LOCALE = /^[a-z]{2,3}(-[A-Z][a-z]+)?(-[A-Z]{2}|\d{3})?$/;
@@ -56,10 +52,7 @@ function fromUrlPathname(pathname: string, partIndex = 0) {
   return undefined;
 }
 
-function fromRequestCookies(
-  cookies: NextRequest['cookies'],
-  key = 'x-preferred-locale',
-) {
+function fromRequestCookies(cookies: NextRequest['cookies'], key = 'x-preferred-locale') {
   const value = cookies.get(key)?.value;
   if (value?.match(LOCALE)) return value;
   return undefined;

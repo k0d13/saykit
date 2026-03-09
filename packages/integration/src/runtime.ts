@@ -1,22 +1,12 @@
 import { mf1ToMessage } from '@messageformat/icu-messageformat-1';
-import type {
-  Disallow,
-  NumeralOptions,
-  SelectOptions,
-  Tuple,
-} from './types.js';
+import type { Disallow, NumeralOptions, SelectOptions, Tuple } from './types.js';
 
 export namespace Say {
   export type Messages = { [key: string]: string };
 
-  export type Loader<Locale extends string> = (
-    locale: Locale,
-  ) => Messages | Promise<Messages>;
+  export type Loader<Locale extends string> = (locale: Locale) => Messages | Promise<Messages>;
 
-  export type Options<
-    Locale extends string,
-    Loader extends Say.Loader<Locale> | undefined,
-  > = {
+  export type Options<Locale extends string, Loader extends Say.Loader<Locale> | undefined> = {
     locales: Locale[];
   } & (
     | { messages: Record<Locale, Messages>; loader?: Loader }
@@ -57,16 +47,12 @@ export interface Say {
 
 export type ReadonlySay<
   Locale extends string = string,
-  Loader extends Say.Loader<Locale> | undefined =
-    | Say.Loader<Locale>
-    | undefined,
+  Loader extends Say.Loader<Locale> | undefined = Say.Loader<Locale> | undefined,
 > = Omit<Say<Locale, Loader>, 'activate' | 'load' | 'assign'>;
 
 export class Say<
   Locale extends string = string,
-  Loader extends Say.Loader<Locale> | undefined =
-    | Say.Loader<Locale>
-    | undefined,
+  Loader extends Say.Loader<Locale> | undefined = Say.Loader<Locale> | undefined,
 > {
   #locales: Locale[];
   #loader?: Loader;
@@ -97,8 +83,7 @@ export class Say<
    * @throws If no messages are available for the active locale
    */
   get messages() {
-    if (!this.#messages.has(this.locale))
-      throw new Error('No messages loaded for locale');
+    if (!this.#messages.has(this.locale)) throw new Error('No messages loaded for locale');
     return this.#messages.get(this.locale)!;
   }
 
@@ -112,15 +97,13 @@ export class Say<
    * @returns This
    */
   load(...locales: Locale[]) {
-    if (Object.isFrozen(this))
-      throw new Error('Cannot load messages on a frozen Say');
+    if (Object.isFrozen(this)) throw new Error('Cannot load messages on a frozen Say');
     if (locales.length === 0) locales = this.#locales;
 
     const tasks: Promise<unknown>[] = [];
     for (const locale of locales) {
       if (this.#messages.has(locale)) continue;
-      if (!this.#loader)
-        throw new Error('No loader provided, cannot load messages');
+      if (!this.#loader) throw new Error('No loader provided, cannot load messages');
 
       const result = this.#loader(locale);
       if (result instanceof Promise) {
@@ -152,13 +135,11 @@ export class Say<
     localeOrMessages: Locale | Partial<Record<Locale, Say.Messages>>,
     maybeMessages?: Say.Messages,
   ) {
-    if (Object.isFrozen(this))
-      throw new Error('Cannot assign messages on a frozen Say');
+    if (Object.isFrozen(this)) throw new Error('Cannot assign messages on a frozen Say');
     if (typeof localeOrMessages === 'string') {
       this.#messages.set(localeOrMessages, maybeMessages!);
     } else {
-      for (const locale in localeOrMessages)
-        this.#messages.set(locale, localeOrMessages[locale]!);
+      for (const locale in localeOrMessages) this.#messages.set(locale, localeOrMessages[locale]!);
     }
     return this;
   }
@@ -171,10 +152,8 @@ export class Say<
    * @throws If locale is not available
    */
   activate(locale: Locale) {
-    if (Object.isFrozen(this))
-      throw new Error('Cannot activate locale on a frozen Say');
-    if (!this.#messages.has(locale))
-      throw new Error('No messages loaded for locale');
+    if (Object.isFrozen(this)) throw new Error('Cannot activate locale on a frozen Say');
+    if (!this.#messages.has(locale)) throw new Error('No messages loaded for locale');
     // const currentLocale = this.#active;
     this.#active = locale;
     // this.emit('localeChange', locale, currentLocale);
@@ -203,16 +182,8 @@ export class Say<
    *
    * @param callback Callback function to call on each locale
    */
-  map<T>(
-    callbackfn: (
-      value: [this, Locale],
-      index: number,
-      array: [this, Locale][],
-    ) => T,
-  ) {
-    return this.#locales
-      .map((l) => [this.clone().activate(l), l] satisfies Tuple)
-      .map(callbackfn);
+  map<T>(callbackfn: (value: [this, Locale], index: number, array: [this, Locale][]) => T) {
+    return this.#locales.map((l) => [this.clone().activate(l), l] satisfies Tuple).map(callbackfn);
   }
 
   /**
@@ -293,8 +264,7 @@ export class Say<
     context: import('node:util').InspectContext,
     inspect: typeof import('node:util').inspect,
   ) {
-    if (this.#active)
-      return `${this.constructor.name}<${inspect(this.#active, context)}> {}`;
+    if (this.#active) return `${this.constructor.name}<${inspect(this.#active, context)}> {}`;
     else return `${this.constructor.name} {}`;
   }
 
@@ -317,15 +287,10 @@ export class Say<
    * @returns The plural form of the number
    * @remark This is a macro and must be used with the relevant saykit plugin
    */
-  plural(
-    _: number,
-    options: Disallow<NumeralOptions, 'id' | 'context'>,
-  ): string {
+  plural(_: number, options: Disallow<NumeralOptions, 'id' | 'context'>): string {
     void _;
     void options;
-    throw new Error(
-      "'Say#plural' is a macro and must be used with the relevant saykit plugin",
-    );
+    throw new Error("'Say#plural' is a macro and must be used with the relevant saykit plugin");
   }
 
   /**
@@ -347,15 +312,10 @@ export class Say<
    * @returns The ordinal form of the number
    * @remark This is a macro and must be used with the relevant saykit plugin
    */
-  ordinal(
-    _: number,
-    options: Disallow<NumeralOptions, 'id' | 'context'>,
-  ): string {
+  ordinal(_: number, options: Disallow<NumeralOptions, 'id' | 'context'>): string {
     void _;
     void options;
-    throw new Error(
-      "'Say#ordinal' is a macro and must be used with the relevant saykit plugin",
-    );
+    throw new Error("'Say#ordinal' is a macro and must be used with the relevant saykit plugin");
   }
 
   /**
@@ -375,15 +335,10 @@ export class Say<
    * @returns The select form of the value
    * @remark This is a macro and must be used with the relevant saykit plugin
    */
-  select(
-    _: string,
-    options: Disallow<SelectOptions, 'id' | 'context'>,
-  ): string {
+  select(_: string, options: Disallow<SelectOptions, 'id' | 'context'>): string {
     void _;
     void options;
-    throw new Error(
-      "'Say#select' is a macro and must be used with the relevant saykit plugin",
-    );
+    throw new Error("'Say#select' is a macro and must be used with the relevant saykit plugin");
   }
 }
 

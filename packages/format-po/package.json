@@ -1,26 +1,29 @@
 {
   "name": "@saykit/format-po",
   "version": "0.0.0",
+  "files": [
+    "dist",
+    "!dist/**/*.map"
+  ],
   "type": "module",
-  "scripts": {
-    "check": "tsc --noEmit",
-    "build": "tsdown",
-    "prepack": "pnpm build"
-  },
   "exports": {
     ".": {
       "types": "./dist/formatter.d.mts",
       "default": "./dist/formatter.mjs"
     }
   },
-  "files": ["dist", "!dist/**/*.map"],
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build": "tsdown",
+    "prepack": "pnpm build"
+  },
   "dependencies": {
     "pofile": "^1.1.4"
   },
-  "peerDependencies": {
-    "@saykit/config": "*"
-  },
   "devDependencies": {
     "@saykit/config": "workspace:^"
+  },
+  "peerDependencies": {
+    "@saykit/config": "*"
   }
 }

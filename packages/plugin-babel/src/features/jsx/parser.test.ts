@@ -17,14 +17,9 @@ describe('parseJSXContainerElement', () => {
     const openingElement = t.jsxOpeningElement(sayIdentifier, [], false);
     const closingElement = t.jsxClosingElement(sayIdentifier);
     const helloText = t.jsxText('Hello World');
-    const jsxElement = t.jsxElement(openingElement, closingElement, [
-      helloText,
-    ]);
+    const jsxElement = t.jsxElement(openingElement, closingElement, [helloText]);
 
-    const result = parser.parseJSXContainerElement(
-      createMockContext(),
-      jsxElement,
-    );
+    const result = parser.parseJSXContainerElement(createMockContext(), jsxElement);
 
     expect(result).not.toBeNull();
     expect(result!.children).toHaveLength(1);
@@ -45,10 +40,7 @@ describe('parseJSXContainerElement', () => {
       exclamationText,
     ]);
 
-    const result = parser.parseJSXContainerElement(
-      createMockContext(),
-      jsxElement,
-    );
+    const result = parser.parseJSXContainerElement(createMockContext(), jsxElement);
 
     expect(result).not.toBeNull();
     expect(result!.children).toHaveLength(3);
@@ -71,19 +63,11 @@ describe('parseJSXContainerElement', () => {
     const strongOpening = t.jsxOpeningElement(strongIdentifier, [], false);
     const strongClosing = t.jsxClosingElement(strongIdentifier);
     const strongText = t.jsxText('World');
-    const strongElement = t.jsxElement(strongOpening, strongClosing, [
-      strongText,
-    ]);
+    const strongElement = t.jsxElement(strongOpening, strongClosing, [strongText]);
 
-    const jsxElement = t.jsxElement(openingElement, closingElement, [
-      helloText,
-      strongElement,
-    ]);
+    const jsxElement = t.jsxElement(openingElement, closingElement, [helloText, strongElement]);
 
-    const result = parser.parseJSXContainerElement(
-      createMockContext(),
-      jsxElement,
-    );
+    const result = parser.parseJSXContainerElement(createMockContext(), jsxElement);
 
     expect(result).not.toBeNull();
     expect(result!.children).toHaveLength(2);
@@ -99,21 +83,13 @@ describe('parseJSXContainerElement', () => {
     const helloText = t.jsxText('Hello ');
 
     // Fragment
-    const fragment = t.jsxFragment(
-      t.jsxOpeningFragment(),
-      t.jsxClosingFragment(),
-      [t.jsxText('World')],
-    );
-
-    const jsxElement = t.jsxElement(openingElement, closingElement, [
-      helloText,
-      fragment,
+    const fragment = t.jsxFragment(t.jsxOpeningFragment(), t.jsxClosingFragment(), [
+      t.jsxText('World'),
     ]);
 
-    const result = parser.parseJSXContainerElement(
-      createMockContext(),
-      jsxElement,
-    );
+    const jsxElement = t.jsxElement(openingElement, closingElement, [helloText, fragment]);
+
+    const result = parser.parseJSXContainerElement(createMockContext(), jsxElement);
 
     expect(result).not.toBeNull();
     expect(result!.children).toHaveLength(2);
@@ -124,25 +100,13 @@ describe('parseJSXContainerElement', () => {
 
   it('should parse JSX container with descriptor id', () => {
     const sayIdentifier = t.jsxIdentifier('Say');
-    const idAttribute = t.jsxAttribute(
-      t.jsxIdentifier('id'),
-      t.stringLiteral('greeting'),
-    );
-    const openingElement = t.jsxOpeningElement(
-      sayIdentifier,
-      [idAttribute],
-      false,
-    );
+    const idAttribute = t.jsxAttribute(t.jsxIdentifier('id'), t.stringLiteral('greeting'));
+    const openingElement = t.jsxOpeningElement(sayIdentifier, [idAttribute], false);
     const closingElement = t.jsxClosingElement(sayIdentifier);
     const helloText = t.jsxText('Hello');
-    const jsxElement = t.jsxElement(openingElement, closingElement, [
-      helloText,
-    ]);
+    const jsxElement = t.jsxElement(openingElement, closingElement, [helloText]);
 
-    const result = parser.parseJSXContainerElement(
-      createMockContext(),
-      jsxElement,
-    );
+    const result = parser.parseJSXContainerElement(createMockContext(), jsxElement);
 
     expect(result).not.toBeNull();
     expect(result!.descriptor).toEqual({ id: 'greeting', context: undefined });
@@ -154,21 +118,12 @@ describe('parseJSXContainerElement', () => {
       t.jsxIdentifier('context'),
       t.stringLiteral('greeting'),
     );
-    const openingElement = t.jsxOpeningElement(
-      sayIdentifier,
-      [contextAttribute],
-      false,
-    );
+    const openingElement = t.jsxOpeningElement(sayIdentifier, [contextAttribute], false);
     const closingElement = t.jsxClosingElement(sayIdentifier);
     const helloText = t.jsxText('Hello');
-    const jsxElement = t.jsxElement(openingElement, closingElement, [
-      helloText,
-    ]);
+    const jsxElement = t.jsxElement(openingElement, closingElement, [helloText]);
 
-    const result = parser.parseJSXContainerElement(
-      createMockContext(),
-      jsxElement,
-    );
+    const result = parser.parseJSXContainerElement(createMockContext(), jsxElement);
 
     expect(result).not.toBeNull();
     expect(result!.descriptor).toEqual({ id: undefined, context: 'greeting' });
@@ -179,10 +134,7 @@ describe('parseJSXContainerElement', () => {
     const openingElement = t.jsxOpeningElement(sayIdentifier, [], true);
     const jsxElement = t.jsxElement(openingElement, null, []);
 
-    const result = parser.parseJSXContainerElement(
-      createMockContext(),
-      jsxElement,
-    );
+    const result = parser.parseJSXContainerElement(createMockContext(), jsxElement);
 
     expect(result).toBeNull();
   });
@@ -192,14 +144,9 @@ describe('parseJSXContainerElement', () => {
     const openingElement = t.jsxOpeningElement(divIdentifier, [], false);
     const closingElement = t.jsxClosingElement(divIdentifier);
     const helloText = t.jsxText('Hello');
-    const jsxElement = t.jsxElement(openingElement, closingElement, [
-      helloText,
-    ]);
+    const jsxElement = t.jsxElement(openingElement, closingElement, [helloText]);
 
-    const result = parser.parseJSXContainerElement(
-      createMockContext(),
-      jsxElement,
-    );
+    const result = parser.parseJSXContainerElement(createMockContext(), jsxElement);
 
     expect(result).toBeNull();
   });
@@ -209,21 +156,14 @@ describe('parseJSXContainerElement', () => {
     const openingElement = t.jsxOpeningElement(sayIdentifier, [], false);
     const closingElement = t.jsxClosingElement(sayIdentifier);
     const whitespaceText = t.jsxText('\n  Hello,  \n  World!  \n');
-    const jsxElement = t.jsxElement(openingElement, closingElement, [
-      whitespaceText,
-    ]);
+    const jsxElement = t.jsxElement(openingElement, closingElement, [whitespaceText]);
 
-    const result = parser.parseJSXContainerElement(
-      createMockContext(),
-      jsxElement,
-    );
+    const result = parser.parseJSXContainerElement(createMockContext(), jsxElement);
 
     expect(result).not.toBeNull();
     expect(result!.children).toHaveLength(1);
     expect(result!.children[0]).toBeInstanceOf(LiteralMessage);
-    expect((result!.children[0] as LiteralMessage).text).toBe(
-      ' Hello, World! ',
-    );
+    expect((result!.children[0] as LiteralMessage).text).toBe(' Hello, World! ');
   });
 });
 
@@ -239,14 +179,8 @@ describe('parseJSXOpeningElement', () => {
       t.jsxIdentifier('_'),
       t.jsxExpressionContainer(t.identifier('count')),
     );
-    const oneAttribute = t.jsxAttribute(
-      t.jsxIdentifier('one'),
-      t.stringLiteral('item'),
-    );
-    const otherAttribute = t.jsxAttribute(
-      t.jsxIdentifier('other'),
-      t.stringLiteral('items'),
-    );
+    const oneAttribute = t.jsxAttribute(t.jsxIdentifier('one'), t.stringLiteral('item'));
+    const otherAttribute = t.jsxAttribute(t.jsxIdentifier('other'), t.stringLiteral('items'));
 
     const openingElement = t.jsxOpeningElement(
       sayMember,
@@ -254,10 +188,7 @@ describe('parseJSXOpeningElement', () => {
       true,
     );
 
-    const result = parser.parseJSXOpeningElement(
-      createMockContext(),
-      openingElement,
-    );
+    const result = parser.parseJSXOpeningElement(createMockContext(), openingElement);
 
     expect(result).not.toBeNull();
     expect(result!.children).toHaveLength(1);
@@ -281,18 +212,9 @@ describe('parseJSXOpeningElement', () => {
       t.jsxIdentifier('_'),
       t.jsxExpressionContainer(t.identifier('gender')),
     );
-    const maleAttribute = t.jsxAttribute(
-      t.jsxIdentifier('male'),
-      t.stringLiteral('He'),
-    );
-    const femaleAttribute = t.jsxAttribute(
-      t.jsxIdentifier('female'),
-      t.stringLiteral('She'),
-    );
-    const otherAttribute = t.jsxAttribute(
-      t.jsxIdentifier('other'),
-      t.stringLiteral('They'),
-    );
+    const maleAttribute = t.jsxAttribute(t.jsxIdentifier('male'), t.stringLiteral('He'));
+    const femaleAttribute = t.jsxAttribute(t.jsxIdentifier('female'), t.stringLiteral('She'));
+    const otherAttribute = t.jsxAttribute(t.jsxIdentifier('other'), t.stringLiteral('They'));
 
     const openingElement = t.jsxOpeningElement(
       sayMember,
@@ -300,10 +222,7 @@ describe('parseJSXOpeningElement', () => {
       true,
     );
 
-    const result = parser.parseJSXOpeningElement(
-      createMockContext(),
-      openingElement,
-    );
+    const result = parser.parseJSXOpeningElement(createMockContext(), openingElement);
 
     expect(result).not.toBeNull();
     const choiceMessage = result!.children[0] as ChoiceMessage;
@@ -328,18 +247,9 @@ describe('parseJSXOpeningElement', () => {
       t.jsxIdentifier('_'),
       t.jsxExpressionContainer(t.identifier('position')),
     );
-    const firstAttribute = t.jsxAttribute(
-      t.jsxIdentifier('1'),
-      t.stringLiteral('first'),
-    );
-    const secondAttribute = t.jsxAttribute(
-      t.jsxIdentifier('2'),
-      t.stringLiteral('second'),
-    );
-    const otherAttribute = t.jsxAttribute(
-      t.jsxIdentifier('other'),
-      t.stringLiteral('other'),
-    );
+    const firstAttribute = t.jsxAttribute(t.jsxIdentifier('1'), t.stringLiteral('first'));
+    const secondAttribute = t.jsxAttribute(t.jsxIdentifier('2'), t.stringLiteral('second'));
+    const otherAttribute = t.jsxAttribute(t.jsxIdentifier('other'), t.stringLiteral('other'));
 
     const openingElement = t.jsxOpeningElement(
       sayMember,
@@ -347,10 +257,7 @@ describe('parseJSXOpeningElement', () => {
       true,
     );
 
-    const result = parser.parseJSXOpeningElement(
-      createMockContext(),
-      openingElement,
-    );
+    const result = parser.parseJSXOpeningElement(createMockContext(), openingElement);
 
     expect(result).not.toBeNull();
     const choiceMessage = result!.children[0] as ChoiceMessage;
@@ -375,18 +282,9 @@ describe('parseJSXOpeningElement', () => {
       t.jsxIdentifier('_'),
       t.jsxExpressionContainer(t.identifier('count')),
     );
-    const zeroAttribute = t.jsxAttribute(
-      t.jsxIdentifier('0'),
-      t.stringLiteral('none'),
-    );
-    const oneAttribute = t.jsxAttribute(
-      t.jsxIdentifier('one'),
-      t.stringLiteral('single'),
-    );
-    const otherAttribute = t.jsxAttribute(
-      t.jsxIdentifier('other'),
-      t.stringLiteral('many'),
-    );
+    const zeroAttribute = t.jsxAttribute(t.jsxIdentifier('0'), t.stringLiteral('none'));
+    const oneAttribute = t.jsxAttribute(t.jsxIdentifier('one'), t.stringLiteral('single'));
+    const otherAttribute = t.jsxAttribute(t.jsxIdentifier('other'), t.stringLiteral('many'));
 
     const openingElement = t.jsxOpeningElement(
       sayMember,
@@ -394,10 +292,7 @@ describe('parseJSXOpeningElement', () => {
       true,
     );
 
-    const result = parser.parseJSXOpeningElement(
-      createMockContext(),
-      openingElement,
-    );
+    const result = parser.parseJSXOpeningElement(createMockContext(), openingElement);
 
     expect(result).not.toBeNull();
     const choiceMessage = result!.children[0] as ChoiceMessage;
@@ -419,14 +314,8 @@ describe('parseJSXOpeningElement', () => {
       t.jsxIdentifier('_'),
       t.jsxExpressionContainer(t.identifier('count')),
     );
-    const _1Attribute = t.jsxAttribute(
-      t.jsxIdentifier('_1'),
-      t.stringLiteral('first'),
-    );
-    const _2Attribute = t.jsxAttribute(
-      t.jsxIdentifier('_2'),
-      t.stringLiteral('second'),
-    );
+    const _1Attribute = t.jsxAttribute(t.jsxIdentifier('_1'), t.stringLiteral('first'));
+    const _2Attribute = t.jsxAttribute(t.jsxIdentifier('_2'), t.stringLiteral('second'));
 
     const openingElement = t.jsxOpeningElement(
       sayMember,
@@ -434,10 +323,7 @@ describe('parseJSXOpeningElement', () => {
       true,
     );
 
-    const result = parser.parseJSXOpeningElement(
-      createMockContext(),
-      openingElement,
-    );
+    const result = parser.parseJSXOpeningElement(createMockContext(), openingElement);
 
     expect(result).not.toBeNull();
     const choiceMessage = result!.children[0] as ChoiceMessage;
@@ -462,25 +348,16 @@ describe('parseJSXOpeningElement', () => {
       t.jsxExpressionContainer(t.identifier('itemText')),
     );
 
-    const openingElement = t.jsxOpeningElement(
-      sayMember,
-      [countAttribute, oneAttribute],
-      true,
-    );
+    const openingElement = t.jsxOpeningElement(sayMember, [countAttribute, oneAttribute], true);
 
-    const result = parser.parseJSXOpeningElement(
-      createMockContext(),
-      openingElement,
-    );
+    const result = parser.parseJSXOpeningElement(createMockContext(), openingElement);
 
     expect(result).not.toBeNull();
     const choiceMessage = result!.children[0] as ChoiceMessage;
     expect(choiceMessage.branches).toHaveLength(1);
     expect(choiceMessage.branches[0]!.key).toBe('one');
     expect(choiceMessage.branches[0]!.value).toBeInstanceOf(ArgumentMessage);
-    expect(
-      (choiceMessage.branches[0]!.value as ArgumentMessage).identifier,
-    ).toBe('itemText');
+    expect((choiceMessage.branches[0]!.value as ArgumentMessage).identifier).toBe('itemText');
   });
 
   it('should handle nested elements in attributes', () => {
@@ -498,24 +375,15 @@ describe('parseJSXOpeningElement', () => {
     const strongOpening = t.jsxOpeningElement(strongIdentifier, [], false);
     const strongClosing = t.jsxClosingElement(strongIdentifier);
     const strongText = t.jsxText('Bold');
-    const strongElement = t.jsxElement(strongOpening, strongClosing, [
-      strongText,
-    ]);
+    const strongElement = t.jsxElement(strongOpening, strongClosing, [strongText]);
     const oneAttribute = t.jsxAttribute(
       t.jsxIdentifier('one'),
       t.jsxExpressionContainer(strongElement),
     );
 
-    const openingElement = t.jsxOpeningElement(
-      sayMember,
-      [countAttribute, oneAttribute],
-      true,
-    );
+    const openingElement = t.jsxOpeningElement(sayMember, [countAttribute, oneAttribute], true);
 
-    const result = parser.parseJSXOpeningElement(
-      createMockContext(),
-      openingElement,
-    );
+    const result = parser.parseJSXOpeningElement(createMockContext(), openingElement);
 
     expect(result).not.toBeNull();
     const choiceMessage = result!.children[0] as ChoiceMessage;
@@ -535,26 +403,15 @@ describe('parseJSXOpeningElement', () => {
     );
 
     // Fragment in attribute
-    const fragment = t.jsxFragment(
-      t.jsxOpeningFragment(),
-      t.jsxClosingFragment(),
-      [t.jsxText('Hello'), t.jsxText(' World')],
-    );
-    const oneAttribute = t.jsxAttribute(
-      t.jsxIdentifier('one'),
-      t.jsxExpressionContainer(fragment),
-    );
+    const fragment = t.jsxFragment(t.jsxOpeningFragment(), t.jsxClosingFragment(), [
+      t.jsxText('Hello'),
+      t.jsxText(' World'),
+    ]);
+    const oneAttribute = t.jsxAttribute(t.jsxIdentifier('one'), t.jsxExpressionContainer(fragment));
 
-    const openingElement = t.jsxOpeningElement(
-      sayMember,
-      [countAttribute, oneAttribute],
-      true,
-    );
+    const openingElement = t.jsxOpeningElement(sayMember, [countAttribute, oneAttribute], true);
 
-    const result = parser.parseJSXOpeningElement(
-      createMockContext(),
-      openingElement,
-    );
+    const result = parser.parseJSXOpeningElement(createMockContext(), openingElement);
 
     expect(result).not.toBeNull();
     const choiceMessage = result!.children[0] as ChoiceMessage;
@@ -568,18 +425,12 @@ describe('parseJSXOpeningElement', () => {
     const pluralProperty = t.jsxIdentifier('plural');
     const sayMember = t.jsxMemberExpression(sayIdentifier, pluralProperty);
 
-    const idAttribute = t.jsxAttribute(
-      t.jsxIdentifier('id'),
-      t.stringLiteral('itemCount'),
-    );
+    const idAttribute = t.jsxAttribute(t.jsxIdentifier('id'), t.stringLiteral('itemCount'));
     const countAttribute = t.jsxAttribute(
       t.jsxIdentifier('_'),
       t.jsxExpressionContainer(t.identifier('count')),
     );
-    const oneAttribute = t.jsxAttribute(
-      t.jsxIdentifier('one'),
-      t.stringLiteral('item'),
-    );
+    const oneAttribute = t.jsxAttribute(t.jsxIdentifier('one'), t.stringLiteral('item'));
 
     const openingElement = t.jsxOpeningElement(
       sayMember,
@@ -587,10 +438,7 @@ describe('parseJSXOpeningElement', () => {
       true,
     );
 
-    const result = parser.parseJSXOpeningElement(
-      createMockContext(),
-      openingElement,
-    );
+    const result = parser.parseJSXOpeningElement(createMockContext(), openingElement);
 
     expect(result).not.toBeNull();
     expect(result!.descriptor).toEqual({ id: 'itemCount', context: undefined });
@@ -603,10 +451,7 @@ describe('parseJSXOpeningElement', () => {
 
     const openingElement = t.jsxOpeningElement(sayMember, [], true);
 
-    const result = parser.parseJSXOpeningElement(
-      createMockContext(),
-      openingElement,
-    );
+    const result = parser.parseJSXOpeningElement(createMockContext(), openingElement);
 
     expect(result).toBeNull();
   });
@@ -615,10 +460,7 @@ describe('parseJSXOpeningElement', () => {
     const sayIdentifier = t.jsxIdentifier('Say');
     const openingElement = t.jsxOpeningElement(sayIdentifier, [], false);
 
-    const result = parser.parseJSXOpeningElement(
-      createMockContext(),
-      openingElement,
-    );
+    const result = parser.parseJSXOpeningElement(createMockContext(), openingElement);
 
     expect(result).toBeNull();
   });
@@ -627,10 +469,7 @@ describe('parseJSXOpeningElement', () => {
     const divIdentifier = t.jsxIdentifier('div');
     const openingElement = t.jsxOpeningElement(divIdentifier, [], true);
 
-    const result = parser.parseJSXOpeningElement(
-      createMockContext(),
-      openingElement,
-    );
+    const result = parser.parseJSXOpeningElement(createMockContext(), openingElement);
 
     expect(result).toBeNull();
   });
@@ -644,9 +483,7 @@ describe('parseJSXElement', () => {
     const openingElement = t.jsxOpeningElement(sayIdentifier, [], false);
     const closingElement = t.jsxClosingElement(sayIdentifier);
     const helloText = t.jsxText('Hello');
-    const jsxElement = t.jsxElement(openingElement, closingElement, [
-      helloText,
-    ]);
+    const jsxElement = t.jsxElement(openingElement, closingElement, [helloText]);
 
     const result = parser.parseJSXElement(createMockContext(), jsxElement);
 
@@ -665,16 +502,9 @@ describe('parseJSXElement', () => {
       t.jsxIdentifier('_'),
       t.jsxExpressionContainer(t.identifier('count')),
     );
-    const oneAttribute = t.jsxAttribute(
-      t.jsxIdentifier('one'),
-      t.stringLiteral('item'),
-    );
+    const oneAttribute = t.jsxAttribute(t.jsxIdentifier('one'), t.stringLiteral('item'));
 
-    const openingElement = t.jsxOpeningElement(
-      sayMember,
-      [countAttribute, oneAttribute],
-      true,
-    );
+    const openingElement = t.jsxOpeningElement(sayMember, [countAttribute, oneAttribute], true);
     const jsxElement = t.jsxElement(openingElement, null, []);
 
     const result = parser.parseJSXElement(createMockContext(), jsxElement);
@@ -698,11 +528,7 @@ describe('parseJSXElement', () => {
     const openingElement = t.jsxOpeningElement(strongIdentifier, [], true);
     const jsxElement = t.jsxElement(openingElement, null, []);
 
-    const result = parser.parseJSXElement(
-      createMockContext(),
-      jsxElement,
-      true,
-    );
+    const result = parser.parseJSXElement(createMockContext(), jsxElement, true);
 
     expect(result).toBeInstanceOf(ElementMessage);
   });
@@ -712,15 +538,9 @@ describe('parseJSXElement', () => {
     const openingElement = t.jsxOpeningElement(strongIdentifier, [], false);
     const closingElement = t.jsxClosingElement(strongIdentifier);
     const helloText = t.jsxText('Hello');
-    const jsxElement = t.jsxElement(openingElement, closingElement, [
-      helloText,
-    ]);
+    const jsxElement = t.jsxElement(openingElement, closingElement, [helloText]);
 
-    const result = parser.parseJSXElement(
-      createMockContext(),
-      jsxElement,
-      true,
-    );
+    const result = parser.parseJSXElement(createMockContext(), jsxElement, true);
 
     expect(result).toBeInstanceOf(ElementMessage);
   });
@@ -730,11 +550,7 @@ describe('parseJSXElement', () => {
     const openingElement = t.jsxOpeningElement(strongIdentifier, [], true);
     const jsxElement = t.jsxElement(openingElement, null, []);
 
-    const result = parser.parseJSXElement(
-      createMockContext(),
-      jsxElement,
-      false,
-    );
+    const result = parser.parseJSXElement(createMockContext(), jsxElement, false);
 
     expect(result).toBeNull();
   });
@@ -746,11 +562,7 @@ describe('parseJSXElement', () => {
     // Empty children won't match any patterns
     const jsxElement = t.jsxElement(openingElement, closingElement, []);
 
-    const result = parser.parseJSXElement(
-      createMockContext(),
-      jsxElement,
-      true,
-    );
+    const result = parser.parseJSXElement(createMockContext(), jsxElement, true);
 
     // This returns a CompositeMessage wrapping an ElementMessage
     expect(result).not.toBeNull();

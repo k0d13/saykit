@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  createContext,
-  createElement,
-  type PropsWithChildren,
-  useContext,
-  useState,
-} from 'react';
+import { createContext, createElement, type PropsWithChildren, useContext, useState } from 'react';
 import { type ReadonlySay, Say } from 'saykit';
 
 type SayRef = { current: ReadonlySay | null };
@@ -35,11 +29,7 @@ export function SayProvider({
     return instance.freeze();
   });
 
-  return createElement(
-    SayContext.Provider,
-    { value: { current: say } },
-    children,
-  );
+  return createElement(SayContext.Provider, { value: { current: say } }, children);
 }
 
 /**
@@ -51,7 +41,6 @@ export function SayProvider({
  */
 export function useSay() {
   const ref = useContext(SayContext);
-  if (!ref.current)
-    throw new Error("'useSay' must be used within a 'SayProvider'");
+  if (!ref.current) throw new Error("'useSay' must be used within a 'SayProvider'");
   return ref.current;
 }

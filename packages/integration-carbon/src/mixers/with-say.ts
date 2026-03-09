@@ -44,10 +44,7 @@ export function withSay<Args extends unknown[], Instance extends BaseCommand>(
  * @param Base Abstract component or modal constructor to extend.
  * @returns A new constructor that accepts a set of properties.
  */
-export function withSay<
-  Args extends unknown[],
-  Instance extends BaseComponent | Modal,
->(
+export function withSay<Args extends unknown[], Instance extends BaseComponent | Modal>(
   Base: AbstractConstructor<Args, Instance>,
 ): AbstractConstructor<
   [properties: SayProps<Instance>, ...args: Args],
@@ -107,16 +104,12 @@ function createSayCommand<Args extends unknown[], Instance extends BaseCommand>(
   return SayCommand;
 }
 
-function createSayComponent<
-  Args extends unknown[],
-  Instance extends BaseComponent | Modal,
->(Base: AbstractConstructor<Args, Instance>) {
+function createSayComponent<Args extends unknown[], Instance extends BaseComponent | Modal>(
+  Base: AbstractConstructor<Args, Instance>,
+) {
   // @ts-expect-error - abstract, unions
   abstract class SayComponent extends Base {
-    constructor(
-      properties?: Pick<Instance, Extract<keyof Instance, Keys>>,
-      ...args: Args
-    ) {
+    constructor(properties?: Pick<Instance, Extract<keyof Instance, Keys>>, ...args: Args) {
       super(...args);
       if (properties) Object.assign(this, properties);
     }
