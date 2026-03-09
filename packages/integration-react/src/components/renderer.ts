@@ -22,9 +22,8 @@ export function Renderer({ html, components }: { html: string; components: Compo
     while (i < input.length) {
       if (input[i] === '<') {
         const isClosing = input[i + 1] === '/';
-        const isSelfClosing =
-          input.slice(i).indexOf('/>') !== -1 &&
-          input.slice(i, input.indexOf('>', i) + 1).includes('/>');
+        const tagContent = input.slice(i, input.indexOf('>', i) + 1);
+        const isSelfClosing = tagContent.endsWith('/>');
 
         const tagStart = i + (isClosing ? 2 : 1);
         const tagEnd = input.indexOf('>', tagStart);
