@@ -27,7 +27,9 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  # Cancel in-progress runs on PRs (new push makes old run irrelevant)
+  # but never cancel on main (could interrupt a release)
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
@@ -48,6 +50,7 @@ jobs:
         with:
           name: dist
           path: packages/*/dist/
+          retention-days: 1
 
   check:
     name: Type Checking
@@ -100,6 +103,12 @@ jobs:
 
       - name: Setup Node.js
         uses: ./.github/actions/node
+
+      - name: Download dist artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: packages
 
       - name: Run tests
         run: pnpm test

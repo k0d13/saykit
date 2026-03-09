@@ -1,0 +1,39 @@
+'dependencies':
+  - changed-files:
+      - any-glob-to-any-file: ['pnpm-lock.yaml']
+
+'examples':
+  - changed-files:
+      - any-glob-to-any-file: ['examples/**']
+
+'tests':
+  - changed-files:
+      - any-glob-to-any-file: ['packages/**/*.test.ts']
+
+'package: core':
+  - changed-files:
+      - any-glob-to-any-file: ['packages/integration/**']
+
+'package: react':
+  - changed-files:
+      - any-glob-to-any-file: ['packages/integration-react/**']
+
+'package: carbon':
+  - changed-files:
+      - any-glob-to-any-file: ['packages/integration-carbon/**']
+
+'package: config':
+  - changed-files:
+      - any-glob-to-any-file: ['packages/config/**']
+
+'package: format-po':
+  - changed-files:
+      - any-glob-to-any-file: ['packages/format-po/**']
+
+'package: babel-plugin':
+  - changed-files:
+      - any-glob-to-any-file: ['packages/plugin-babel/**']
+
+'package: unplugin':
+  - changed-files:
+      - any-glob-to-any-file: ['packages/unplugin/**']

@@ -1,0 +1,63 @@
+# Labels primarily for issues
+
+- name: bug
+  description: Something is broken or not working as expected
+  color: d73a4a
+
+- name: request
+  description: A request for a new feature or a change in behaviour
+  color: 0075ca
+
+# Labels primarily for pull requests
+
+- name: dependencies
+  description: Updates or changes related to project dependencies
+  color: ffb300
+
+- name: examples
+  description: Updates or additions to example apps
+  color: 009688
+
+- name: tests
+  description: Modifications, additions, or fixes related to testing
+  color: 00bfa5
+
+# Package labels
+
+- name: 'package: core'
+  description: Related to the core saykit package
+  color: 6f42c1
+
+- name: 'package: react'
+  description: Related to @saykit/react
+  color: 61dafb
+
+- name: 'package: carbon'
+  description: Related to @saykit/carbon
+  color: 5865f2
+
+- name: 'package: config'
+  description: Related to @saykit/config and the CLI
+  color: f97316
+
+- name: 'package: format-po'
+  description: Related to @saykit/format-po
+  color: 84cc16
+
+- name: 'package: babel-plugin'
+  description: Related to @saykit/babel-plugin
+  color: f59e0b
+
+- name: 'package: unplugin'
+  description: Related to unplugin-saykit
+  color: 06b6d4
+
+# Labels primarily for both issues and pull requests
+
+- name: blocked
+  description: Progress is halted due to a dependency or required action
+  color: d73a4a
+
+- name: duplicate
+  description: This issue or pull request already exists
+  color: cfd3d7
