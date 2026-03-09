@@ -15,9 +15,9 @@
     "dev": "turbo watch build --filter=\"./packages/*\"",
     "prepare": "husky & ts-patch install",
     "release:version": "changeset version",
-    "release:publish": "changeset publish",
-    "release:snapshot:version": "changeset version --snapshot",
-    "release:snapshot:publish": "changeset publish --tag beta"
+    "release:snapshot:version": "changeset version --snapshot beta",
+    "release:publish": "pnpm build && changeset publish",
+    "release:snapshot:publish": "pnpm build && changeset publish --tag beta --no-git-tag"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.6.0",
