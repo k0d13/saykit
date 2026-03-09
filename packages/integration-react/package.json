@@ -38,6 +38,10 @@
       "default": "./dist/server.mjs"
     }
   },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "check": "tsc --noEmit",
     "build": "tsdown",
