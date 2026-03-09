@@ -1,6 +1,24 @@
 {
   "name": "@saykit/format-po",
   "version": "0.0.0",
+  "description": "PO file formatter for saykit",
+  "keywords": [
+    "formatter",
+    "gettext",
+    "i18n",
+    "po",
+    "saykit"
+  ],
+  "homepage": "https://github.com/k0d13/saykit#readme",
+  "bugs": {
+    "url": "https://github.com/k0d13/saykit/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/k0d13/saykit.git",
+    "directory": "packages/format-po"
+  },
   "files": [
     "dist",
     "!dist/**/*.map"

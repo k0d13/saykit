@@ -1,0 +1,21 @@
+{
+  "$schema": "../node_modules/@changesets/config/schema.json",
+  "changelog": ["@changesets/changelog-github", { "repo": "k0d13/saykit" }],
+  "commit": false,
+  "fixed": [
+    [
+      "saykit",
+      "@saykit/react",
+      "@saykit/carbon",
+      "@saykit/config",
+      "@saykit/format-po",
+      "@saykit/babel-plugin",
+      "unplugin-saykit"
+    ]
+  ],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": []
+}

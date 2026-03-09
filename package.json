@@ -13,9 +13,16 @@
     "coverage": "turbo run coverage",
     "build": "turbo run build --filter=\"./packages/*\"",
     "dev": "turbo watch build --filter=\"./packages/*\"",
-    "prepare": "husky & ts-patch install"
+    "prepare": "husky & ts-patch install",
+    "release:version": "changeset version",
+    "release:publish": "changeset publish",
+    "release:snapshot:version": "changeset version --snapshot",
+    "release:snapshot:publish": "changeset publish --tag beta"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.6.0",
+    "@changesets/cli": "^2.30.0",
+    "@changesets/config": "^3.1.3",
     "@types/node": "^25.2.3",
     "@vitest/coverage-v8": "^4.0.18",
     "husky": "^9.1.7",

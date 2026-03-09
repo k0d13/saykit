@@ -1,6 +1,25 @@
 {
   "name": "unplugin-saykit",
   "version": "0.0.0",
+  "description": "Universal build tool plugin for saykit (Vite, Rollup, Webpack, esbuild)",
+  "keywords": [
+    "i18n",
+    "rollup",
+    "saykit",
+    "unplugin",
+    "vite",
+    "webpack"
+  ],
+  "homepage": "https://github.com/k0d13/saykit#readme",
+  "bugs": {
+    "url": "https://github.com/k0d13/saykit/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/k0d13/saykit.git",
+    "directory": "packages/unplugin"
+  },
   "files": [
     "dist",
     "!dist/**/*.map"
