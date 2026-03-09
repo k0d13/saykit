@@ -67,7 +67,7 @@ jobs:
           path: packages
 
       - name: Run the type checker
-        run: pnpm check
+        run: pnpm check --filter "./packages/*"
 
   lint:
     name: Linting
