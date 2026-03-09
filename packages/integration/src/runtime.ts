@@ -57,12 +57,14 @@ export class Say<
   #locales: Locale[];
   #loader?: Loader;
   #messages: Map<Locale, Say.Messages>;
+  #formats: Map<string, ReturnType<typeof mf1ToMessage>>;
   #active: Locale | undefined;
 
   constructor(options: Say.Options<Locale, Loader>) {
     this.#locales = options.locales;
     this.#loader = options.loader;
     this.#messages = new Map();
+    this.#formats = new Map();
     if (options.messages) this.assign(options.messages);
   }
 
@@ -219,9 +221,9 @@ export class Say<
    *
    * @returns The best matching locale, or the first locale if no matches are found
    */
-  match(guesses: string[]) {
+  match(guesses: string[]): Locale {
     for (const guess of guesses) {
-      if (this.#locales.includes(guess as Locale)) return guess;
+      if (this.#locales.includes(guess as Locale)) return guess as Locale;
     }
 
     for (const guess of guesses) {
@@ -255,7 +257,9 @@ export class Say<
     if (typeof message !== 'string')
       throw new Error(`Message for ${descriptor.id} is not a string`);
 
-    const format = mf1ToMessage(locale, message);
+    const key = `${locale}:${descriptor.id}`;
+    const format =
+      this.#formats.get(key) ?? this.#formats.set(key, mf1ToMessage(locale, message)).get(key)!;
     return String(format.format(descriptor));
   }
 
