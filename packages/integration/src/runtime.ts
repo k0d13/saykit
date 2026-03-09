@@ -48,7 +48,7 @@ export interface Say {
 export type ReadonlySay<
   Locale extends string = string,
   Loader extends Say.Loader<Locale> | undefined = Say.Loader<Locale> | undefined,
-> = Omit<Say<Locale, Loader>, 'activate' | 'load' | 'assign'>;
+> = Say<Locale, Loader> & { activate: never; load: never; assign: never };
 
 export class Say<
   Locale extends string = string,
