@@ -1,6 +1,25 @@
 {
   "name": "@saykit/babel-plugin",
   "version": "0.0.0",
+  "description": "Babel plugin for saykit macro transforms",
+  "keywords": [
+    "babel",
+    "i18n",
+    "macros",
+    "plugin",
+    "saykit",
+    "transform"
+  ],
+  "homepage": "https://github.com/k0d13/saykit#readme",
+  "bugs": {
+    "url": "https://github.com/k0d13/saykit/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/k0d13/saykit.git",
+    "directory": "packages/plugin-babel"
+  },
   "files": [
     "dist",
     "!dist/**/*.map"

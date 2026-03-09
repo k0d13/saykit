@@ -1,6 +1,23 @@
 {
   "name": "@saykit/react",
   "version": "0.0.0",
+  "description": "React integration for saykit, i18n hooks and components",
+  "keywords": [
+    "i18n",
+    "internationalization",
+    "react",
+    "saykit"
+  ],
+  "homepage": "https://github.com/k0d13/saykit#readme",
+  "bugs": {
+    "url": "https://github.com/k0d13/saykit/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/k0d13/saykit.git",
+    "directory": "packages/integration-react"
+  },
   "files": [
     "dist",
     "!dist/**/*.map"

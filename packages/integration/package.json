@@ -1,6 +1,25 @@
 {
   "name": "saykit",
   "version": "0.0.0",
+  "description": "Type-safe i18n library with compile-time macro transforms",
+  "keywords": [
+    "i18n",
+    "icu",
+    "internationalization",
+    "localization",
+    "macros",
+    "typescript"
+  ],
+  "homepage": "https://github.com/k0d13/saykit#readme",
+  "bugs": {
+    "url": "https://github.com/k0d13/saykit/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/k0d13/saykit.git",
+    "directory": "packages/integration"
+  },
   "files": [
     "dist",
     "!dist/**/*.map"

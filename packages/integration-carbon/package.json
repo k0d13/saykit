@@ -1,6 +1,24 @@
 {
   "name": "@saykit/carbon",
   "version": "0.0.0",
+  "description": "Carbon Discord framework integration for saykit",
+  "keywords": [
+    "bot",
+    "carbon",
+    "discord",
+    "i18n",
+    "saykit"
+  ],
+  "homepage": "https://github.com/k0d13/saykit#readme",
+  "bugs": {
+    "url": "https://github.com/k0d13/saykit/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/k0d13/saykit.git",
+    "directory": "packages/integration-carbon"
+  },
   "files": [
     "dist",
     "!dist/**/*.map"
