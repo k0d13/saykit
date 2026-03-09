@@ -172,3 +172,5 @@ jobs:
         run: |
           pnpm run release:snapshot:version
           pnpm run release:snapshot:publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.CHANGELOG_GITHUB_TOKEN }}
