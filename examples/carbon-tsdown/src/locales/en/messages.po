@@ -5,29 +5,18 @@ msgstr ""
 "Language: en\n"
 "X-Generator: saykit\n"
 
+#: src/commands/maths.ts:17
+#: src/commands/maths.ts:49
+msgid "a"
+msgstr "a"
+
 #: src/commands/about.ts:16
 msgid "about"
 msgstr "about"
 
-#: src/commands/about.ts:17
-msgid "Tell me about yourself!"
-msgstr "Tell me about yourself!"
-
 #: src/commands/about.ts:31
 msgid "About You"
 msgstr "About You"
-
-#: src/commands/about.ts:40
-msgid "Your name is {name}!"
-msgstr "Your name is {name}!"
-
-#: src/commands/about.ts:47
-msgid "Name"
-msgstr "Name"
-
-#: src/commands/about.ts:55
-msgid "Your name"
-msgstr "Your name"
 
 #: src/commands/maths.ts:13
 msgid "add"
@@ -37,41 +26,10 @@ msgstr "add"
 msgid "Add two numbers!"
 msgstr "Add two numbers!"
 
-#: src/commands/maths.ts:17
-#: src/commands/maths.ts:49
-msgid "a"
-msgstr "a"
-
-#: src/commands/maths.ts:18
-#: src/commands/maths.ts:50
-msgid "The first number."
-msgstr "The first number."
-
 #: src/commands/maths.ts:23
 #: src/commands/maths.ts:55
 msgid "b"
 msgstr "b"
-
-#: src/commands/maths.ts:24
-#: src/commands/maths.ts:56
-msgid "The second number."
-msgstr "The second number."
-
-#: src/commands/maths.ts:37
-msgid "The sum is {0}!"
-msgstr "The sum is {0}!"
-
-#: src/commands/maths.ts:45
-msgid "subtract"
-msgstr "subtract"
-
-#: src/commands/maths.ts:46
-msgid "Subtract two numbers!"
-msgstr "Subtract two numbers!"
-
-#: src/commands/maths.ts:69
-msgid "The difference is {0}!"
-msgstr "The difference is {0}!"
 
 #: src/commands/maths.ts:77
 msgid "maths"
@@ -80,6 +38,10 @@ msgstr "maths"
 #: src/commands/maths.ts:78
 msgid "Maths commands!"
 msgstr "Maths commands!"
+
+#: src/commands/about.ts:47
+msgid "Name"
+msgstr "Name"
 
 #: src/commands/ping.ts:9
 msgid "ping"
@@ -97,6 +59,10 @@ msgstr "Pong! Latency is {latency}ms."
 msgid "roll"
 msgstr "roll"
 
+#: src/commands/roll.ts:42
+msgid "Roll Again"
+msgstr "Roll Again"
+
 #: src/commands/roll.ts:16
 msgid "Roll the dice!"
 msgstr "Roll the dice!"
@@ -105,15 +71,49 @@ msgstr "Roll the dice!"
 msgid "sides"
 msgstr "sides"
 
-#: src/commands/roll.ts:20
-msgid "The number of sides on the dice."
-msgstr "The number of sides on the dice."
+#: src/commands/maths.ts:45
+msgid "subtract"
+msgstr "subtract"
+
+#: src/commands/maths.ts:46
+msgid "Subtract two numbers!"
+msgstr "Subtract two numbers!"
+
+#: src/commands/about.ts:17
+msgid "Tell me about yourself!"
+msgstr "Tell me about yourself!"
 
 #: src/commands/roll.ts:33
 #: src/commands/roll.ts:52
 msgid "The dice rolled {result}!"
 msgstr "The dice rolled {result}!"
 
-#: src/commands/roll.ts:42
-msgid "Roll Again"
-msgstr "Roll Again"
+#: src/commands/maths.ts:69
+msgid "The difference is {0}!"
+msgstr "The difference is {0}!"
+
+#: src/commands/maths.ts:18
+#: src/commands/maths.ts:50
+msgid "The first number."
+msgstr "The first number."
+
+#: src/commands/roll.ts:20
+msgid "The number of sides on the dice."
+msgstr "The number of sides on the dice."
+
+#: src/commands/maths.ts:24
+#: src/commands/maths.ts:56
+msgid "The second number."
+msgstr "The second number."
+
+#: src/commands/maths.ts:37
+msgid "The sum is {0}!"
+msgstr "The sum is {0}!"
+
+#: src/commands/about.ts:55
+msgid "Your name"
+msgstr "Your name"
+
+#: src/commands/about.ts:40
+msgid "Your name is {name}!"
+msgstr "Your name is {name}!"

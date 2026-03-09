@@ -38,7 +38,7 @@ function createFormatter(): Formatter {
       po.headers.Language = context.locale;
       po.headers['X-Generator'] = 'saykit';
 
-      for (const message of messages) {
+      for (const message of messages.sort((a, b) => a.message.localeCompare(b.message))) {
         const item = new PO.Item();
 
         item.msgid = message.message;

@@ -70,10 +70,10 @@ export function expandOutputPath(
   locale: string,
   extension = bucket.formatter.extension,
 ) {
-  const outputMessageemplate = bucket.output
+  const outputMessageTemplate = bucket.output
     .replaceAll('{locale}', locale)
     .replaceAll('{extension}', extension);
-  return resolve(outputMessageemplate);
+  return resolve(outputMessageTemplate);
 }
 
 export async function readMessagesFromDisk(

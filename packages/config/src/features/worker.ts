@@ -47,7 +47,7 @@ export class BucketExtractWorker extends BucketWorker {
     this.logger.info(`Scanning bucket: ${this.bucket.include}`);
     const paths = await globBucket(this.bucket);
     this.logger.step(`Found ${paths.length} file(s)`);
-    for (const path of paths) await this.indexPath(path);
+    await Promise.all(paths.map((p) => this.indexPath(p)));
     this.logger.info(`Total extracted messages: ${this.messages.length}`);
   }
 
