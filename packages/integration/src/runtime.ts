@@ -90,6 +90,13 @@ export class Say<
   }
 
   /**
+   * All available locales.
+   */
+  get locales() {
+    return this.#locales;
+  }
+
+  /**
    * Loads messages for the given locales.
    * If no locales are provided, all available locales are loaded.
    * Requires a {@link Say.Loader} to be provided.
@@ -175,7 +182,7 @@ export class Say<
     }) as unknown as this;
   }
 
-    /**
+  /**
    * Make this `Say` instance immutable.
    */
   freeze() {
