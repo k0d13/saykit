@@ -1,13 +1,11 @@
 {
   "name": "@saykit/react",
   "version": "0.0.0",
+  "files": [
+    "dist",
+    "!dist/**/*.map"
+  ],
   "type": "module",
-  "scripts": {
-    "check": "tsc --noEmit",
-    "build": "tsdown",
-    "prepack": "pnpm build"
-  },
-  "files": ["dist", "!dist/**/*.map"],
   "exports": {
     ".": {
       "types": "./dist/index.d.mts",
@@ -23,16 +21,21 @@
       "default": "./dist/server.mjs"
     }
   },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build": "tsdown",
+    "prepack": "pnpm build"
+  },
   "dependencies": {
     "server-only": "^0.0.1"
-  },
-  "peerDependencies": {
-    "react": "*",
-    "saykit": "*"
   },
   "devDependencies": {
     "@types/react": "^19.2.13",
     "react": "^19.2.4",
     "saykit": "workspace:^"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "saykit": "*"
   }
 }

@@ -2,10 +2,7 @@ import { Locale } from '@buape/carbon';
 
 const ALLOWED_LOCALES = Object.values(Locale) as string[];
 
-export function combineCommandOptions(
-  mappedOptions: Record<string, any>,
-  baseLocale: string,
-) {
+export function combineCommandOptions(mappedOptions: Record<string, any>, baseLocale: string) {
   const options = mappedOptions[baseLocale];
   const availableLocales = Object.keys(mappedOptions) //
     .filter((l) => l !== baseLocale && ALLOWED_LOCALES.includes(l));

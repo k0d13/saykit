@@ -37,11 +37,7 @@ describe('convertMessageToIcu', () => {
   });
 
   it('should generate element messages', () => {
-    const msg = new ElementMessage(
-      '0',
-      [new LiteralMessage('Hello world!')],
-      dummy,
-    );
+    const msg = new ElementMessage('0', [new LiteralMessage('Hello world!')], dummy);
     expect(convertMessageToIcu(msg)) //
       .toMatchInlineSnapshot('"<0>Hello world!</0>"');
   });
@@ -57,14 +53,13 @@ describe('convertMessageToIcu', () => {
       ],
       dummy,
     );
-    expect(convertMessageToIcu(msg)) //
-      .toMatchInlineSnapshot(`
+    expect(convertMessageToIcu(msg)).toMatchInlineSnapshot(`
       "{count, plural,
         =0 {none}
         one {one}
         other {many}
       }"
-    `);
+    `); //
   });
 
   it('should generate choice messages with ordinal kind', () => {
@@ -79,15 +74,14 @@ describe('convertMessageToIcu', () => {
       ],
       dummy,
     );
-    expect(convertMessageToIcu(msg)) //
-      .toMatchInlineSnapshot(`
+    expect(convertMessageToIcu(msg)).toMatchInlineSnapshot(`
       "{place, selectordinal,
         =1 {first}
         =2 {second}
         =3 {third}
         other {other}
       }"
-    `);
+    `); //
   });
 
   it('should normalise jsx related whitespace', () => {

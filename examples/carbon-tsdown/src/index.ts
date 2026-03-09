@@ -27,8 +27,7 @@ const client = new Client(
   },
   [new SayPlugin(say), new CommandDataPlugin()],
 );
-for (const modal of [new AboutModal(say)])
-  client.modalHandler.registerModal(modal);
+for (const modal of [new AboutModal(say)]) client.modalHandler.registerModal(modal);
 
 const handler = createHandler(client);
 export default { fetch: handler };

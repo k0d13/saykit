@@ -17,9 +17,7 @@ export function convertMessageToIcu(message: Message) {
         return `{${message.identifier}}`;
 
       case message instanceof ElementMessage: {
-        const children = message.children
-          .map((m) => internalConvertMessageToIcu(m))
-          .join('');
+        const children = message.children.map((m) => internalConvertMessageToIcu(m)).join('');
         return `<${message.identifier}>${children}</${message.identifier}>`;
       }
 
@@ -31,8 +29,7 @@ export function convertMessageToIcu(message: Message) {
           }))
           .map(({ key, value }) => `  ${key} {${value}}\n`)
           .join('');
-        const format =
-          message.kind === 'ordinal' ? 'selectordinal' : message.kind;
+        const format = message.kind === 'ordinal' ? 'selectordinal' : message.kind;
         return `{${message.identifier}, ${format},\n${branches}}`;
       }
 

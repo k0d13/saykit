@@ -1,15 +1,11 @@
 {
   "name": "@saykit/babel-plugin",
   "version": "0.0.0",
+  "files": [
+    "dist",
+    "!dist/**/*.map"
+  ],
   "type": "module",
-  "scripts": {
-    "check": "tsc --noEmit",
-    "test": "vitest",
-    "coverage": "vitest run --coverage",
-    "build": "tsdown",
-    "prepack": "pnpm build"
-  },
-  "files": ["dist", "!dist/**/*.map"],
   "exports": {
     ".": {
       "types": "./dist/index.d.mts",
@@ -20,11 +16,12 @@
       "default": "./dist/core/index.mjs"
     }
   },
-  "devDependencies": {
-    "@babel/core": "^7.29.0",
-    "@types/babel__core": "^7.20.5",
-    "@types/babel__generator": "^7.27.0",
-    "@types/babel__traverse": "^7.28.0"
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "vitest",
+    "coverage": "vitest run --coverage",
+    "build": "tsdown",
+    "prepack": "pnpm build"
   },
   "dependencies": {
     "@babel/generator": "^7.29.1",
@@ -32,5 +29,11 @@
     "@babel/traverse": "^7.29.0",
     "@babel/types": "^7.29.0",
     "js-sha256": "^0.11.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@types/babel__core": "^7.20.5",
+    "@types/babel__generator": "^7.27.0",
+    "@types/babel__traverse": "^7.28.0"
   }
 }

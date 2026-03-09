@@ -38,10 +38,7 @@ export function mergeMessages(messages: Message[]) {
   return Array.from(mergedMessages.values());
 }
 
-export function reconcileMessages(
-  existingMessages: Message[],
-  newMessages: Message[],
-) {
+export function reconcileMessages(existingMessages: Message[], newMessages: Message[]) {
   const existingMessagesMap = existingMessages.reduce((map, message) => {
     const key = message.id ?? generateHash(message.message, message.context);
     map.set(key, message);

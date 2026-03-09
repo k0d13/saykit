@@ -3,6 +3,7 @@ import type { Say } from 'saykit';
 import { kSay } from '~/constants.js';
 
 declare module '@buape/carbon' {
+  // oxlint-disable-next-line no-unused-vars
   interface BaseInteraction<T extends APIInteraction> {
     get say(): Say;
     [kSay]: Say;
@@ -11,9 +12,7 @@ declare module '@buape/carbon' {
 
 export function applyBaseInteractionExtension() {
   Object.defineProperty(BaseInteraction.prototype, 'say', {
-    get<T extends Extract<APIInteraction, { locale: string }>>(
-      this: BaseInteraction<T>,
-    ) {
+    get<T extends Extract<APIInteraction, { locale: string }>>(this: BaseInteraction<T>) {
       const say = Reflect.get(globalThis, kSay) as Say;
       if (!say) throw new Error('No `say` instance available');
 

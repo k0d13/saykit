@@ -1,25 +1,28 @@
 {
   "name": "@saykit/carbon",
   "version": "0.0.0",
+  "files": [
+    "dist",
+    "!dist/**/*.map"
+  ],
   "type": "module",
-  "scripts": {
-    "check": "tsc --noEmit",
-    "build": "tsdown",
-    "prepack": "pnpm build"
-  },
-  "files": ["dist", "!dist/**/*.map"],
   "exports": {
     ".": {
       "types": "./dist/index.d.mts",
       "default": "./dist/index.mjs"
     }
   },
-  "peerDependencies": {
-    "@buape/carbon": "*",
-    "saykit": "*"
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build": "tsdown",
+    "prepack": "pnpm build"
   },
   "devDependencies": {
     "@buape/carbon": "0.14.0",
     "saykit": "workspace:^"
+  },
+  "peerDependencies": {
+    "@buape/carbon": "*",
+    "saykit": "*"
   }
 }

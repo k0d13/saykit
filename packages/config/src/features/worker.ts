@@ -65,9 +65,7 @@ export class BucketExtractWorker extends BucketWorker {
 
       await writeMessagesToDisk(this.bucket, locale, updatedMessages);
     }
-    this.logger.success(
-      `Extraction complete for bucket: ${this.bucket.include}`,
-    );
+    this.logger.success(`Extraction complete for bucket: ${this.bucket.include}`);
   }
 
   async updatePath(path: string) {
@@ -83,9 +81,7 @@ export class BucketCompileWorker extends BucketWorker {
   async compileAll() {
     this.logger.info(`Compiling bucket: ${this.bucket.include}`);
     for (const locale of this.config.locales) await this.compileLocale(locale);
-    this.logger.success(
-      `Compilation complete for bucket: ${this.bucket.include}`,
-    );
+    this.logger.success(`Compilation complete for bucket: ${this.bucket.include}`);
   }
 
   async compileLocale(locale: string) {
@@ -120,9 +116,7 @@ export class BucketBuildWorker extends BucketWorker {
   }
 
   async watch() {
-    this.logger.header(
-      `👀 Watching bucket for changes: ${this.bucket.include}`,
-    );
+    this.logger.header(`👀 Watching bucket for changes: ${this.bucket.include}`);
 
     for await (const event of watchDebounced('.', { recursive: true })) {
       if (!event.filename || !this.bucket.match(event.filename)) continue;
@@ -130,9 +124,7 @@ export class BucketBuildWorker extends BucketWorker {
       const filePath = join(process.cwd(), event.filename);
       const changed = await this.extract.updatePath(filePath);
       if (changed) {
-        this.logger.info(
-          `Recompiling due to changes in ${normalisePath(filePath)}`,
-        );
+        this.logger.info(`Recompiling due to changes in ${normalisePath(filePath)}`);
         await this.compile.compileAll();
       }
     }

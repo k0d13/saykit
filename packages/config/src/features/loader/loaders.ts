@@ -47,9 +47,7 @@ namespace YAML {
       .filter((l) => l.trim() !== '')
       .map((l) => [l.match(/^\s*/)![0].length, l] as const);
     const root: YAMLObject = {};
-    const stack: [StackFrame, ...StackFrame[]] = [
-      { indent: -1, container: root },
-    ];
+    const stack: [StackFrame, ...StackFrame[]] = [{ indent: -1, container: root }];
 
     function parseValue(value: string, fallback?: YAMLValue): YAMLValue {
       if (value === 'true') return true;
@@ -93,9 +91,7 @@ namespace YAML {
               }
             }
           } else {
-            throw new Error(
-              'Invalid YAML: expected parent object for array conversion',
-            );
+            throw new Error('Invalid YAML: expected parent object for array conversion');
           }
         } else {
           parent.container.push(value);
@@ -139,8 +135,7 @@ export const ts: Loader = async (path, content) => {
   const outputPath = `${path}.${Date.now()}.js`;
 
   try {
-    const tsConfigPath =
-      ts.findConfigFile(dirname(path), ts.sys.fileExists) || 'tsconfig.json';
+    const tsConfigPath = ts.findConfigFile(dirname(path), ts.sys.fileExists) || 'tsconfig.json';
     const { config: tsConfig, error } = ts //
       .readConfigFile(tsConfigPath, ts.sys.readFile);
     if (error) throw error;

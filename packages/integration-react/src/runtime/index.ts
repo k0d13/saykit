@@ -20,17 +20,12 @@ declare function GET_SAY(): import('saykit').ReadonlySay;
  * @remark This is a macro and must be used with the relevant saykit plugin
  */
 // @ts-expect-error macro
-export function Say(
-  props: PropsWithChildren<Disallow<{ context?: string }, 'id'>>,
-): ReactElement;
+export function Say(props: PropsWithChildren<Disallow<{ context?: string }, 'id'>>): ReactElement;
 export function Say(props: { id: string; [match: string]: unknown }) {
   if (!('id' in props))
-    throw new Error(
-      "'Say' is a macro and must be used with the relevant saykit plugin",
-      {
-        cause: new Error("The 'id' property is required for a descriptor"),
-      },
-    );
+    throw new Error("'Say' is a macro and must be used with the relevant saykit plugin", {
+      cause: new Error("The 'id' property is required for a descriptor"),
+    });
 
   const say = GET_SAY();
   const descriptor = resolveJsxSafePropKeys(props);
@@ -40,8 +35,7 @@ export function Say(props: { id: string; [match: string]: unknown }) {
     components(tag?: string) {
       if (tag && tag in descriptor && isValidElement(descriptor[tag])) {
         const element = descriptor[tag]! as ReactElement;
-        return (props) =>
-          cloneElement(element, { ...(element.props ?? {}), ...props });
+        return (props) => cloneElement(element, { ...(element.props as object), ...props });
       } else {
         return tag;
       }
@@ -70,14 +64,10 @@ export namespace Say {
    * @remark This is a macro and must be used with the relevant saykit plugin
    */
   export function Plural(
-    props: { _: number } & PropsWithJSXSafeKeys<
-      Disallow<NumeralOptions, 'id' | 'context'>
-    >,
+    props: { _: number } & PropsWithJSXSafeKeys<Disallow<NumeralOptions, 'id' | 'context'>>,
   ): ReactNode {
     void props;
-    throw new Error(
-      "'Say.Plural' is a macro and must be used with the relevant saykit plugin",
-    );
+    throw new Error("'Say.Plural' is a macro and must be used with the relevant saykit plugin");
   }
 
   /**
@@ -100,14 +90,10 @@ export namespace Say {
    * @remark This is a macro and must be used with the relevant saykit plugin
    */
   export function Ordinal(
-    props: { _: number } & PropsWithJSXSafeKeys<
-      Disallow<NumeralOptions, 'id' | 'context'>
-    >,
+    props: { _: number } & PropsWithJSXSafeKeys<Disallow<NumeralOptions, 'id' | 'context'>>,
   ): ReactNode {
     void props;
-    throw new Error(
-      "'Say.Ordinal' is a macro and must be used with the relevant saykit plugin",
-    );
+    throw new Error("'Say.Ordinal' is a macro and must be used with the relevant saykit plugin");
   }
 
   /**
@@ -129,13 +115,9 @@ export namespace Say {
    * @remark This is a macro and must be used with the relevant saykit plugin
    */
   export function Select(
-    props: { _: string } & PropsWithJSXSafeKeys<
-      Disallow<SelectOptions, 'id' | 'context'>
-    >,
+    props: { _: string } & PropsWithJSXSafeKeys<Disallow<SelectOptions, 'id' | 'context'>>,
   ): ReactNode {
     void props;
-    throw new Error(
-      "'Say.Select' is a macro and must be used with the relevant saykit plugin",
-    );
+    throw new Error("'Say.Select' is a macro and must be used with the relevant saykit plugin");
   }
 }

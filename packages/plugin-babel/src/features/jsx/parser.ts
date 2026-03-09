@@ -35,27 +35,16 @@ export function parseJSXContainerElement(
     //
     else if (t.isJSXExpressionContainer(e)) {
       if (t.isExpression(e.expression))
-        c.push(
-          new ArgumentMessage(
-            getExpressionAsKey(context, e.expression),
-            e.expression,
-          ),
-        );
+        c.push(new ArgumentMessage(getExpressionAsKey(context, e.expression), e.expression));
     }
 
     return c;
   }, []);
 
   const descriptorId = //
-    findAttributeValueIfStringLiteralAsString(
-      element.openingElement.attributes,
-      'id',
-    );
+    findAttributeValueIfStringLiteralAsString(element.openingElement.attributes, 'id');
   const descriptorContext = //
-    findAttributeValueIfStringLiteralAsString(
-      element.openingElement.attributes,
-      'context',
-    );
+    findAttributeValueIfStringLiteralAsString(element.openingElement.attributes, 'context');
 
   return new CompositeMessage(
     { id: descriptorId, context: descriptorContext },
@@ -75,19 +64,13 @@ export function parseJSXOpeningElement(
   if (!processed) return null;
   const [accessor, kind] = processed;
 
-  if (
-    typeof kind === 'string' &&
-    ['select', 'ordinal', 'plural'].includes(kind)
-  ) {
-    const branches = element.attributes.reduce<
-      { key: string; value: Message }[]
-    >((b, a) => {
+  if (typeof kind === 'string' && ['select', 'ordinal', 'plural'].includes(kind)) {
+    const branches = element.attributes.reduce<{ key: string; value: Message }[]>((b, a) => {
       if (!t.isJSXAttribute(a)) return b;
 
       let key = getAttributeNameAsString(a);
       if (key === '_' || key === 'id' || key === 'context') return b;
-      if (key.startsWith('_') && key.length > 1 && !Number.isNaN(+key.slice(1)))
-        key = key.slice(1);
+      if (key.startsWith('_') && key.length > 1 && !Number.isNaN(+key.slice(1))) key = key.slice(1);
 
       if (t.isStringLiteral(a.value)) {
         b.push({ key, value: new LiteralMessage(a.value.value) });
@@ -108,11 +91,7 @@ export function parseJSXOpeningElement(
         else if (t.isJSXFragment(a.value.expression)) {
           b.push({
             key,
-            value: new ElementMessage(
-              context.identifierStore.next(),
-              [],
-              a.value.expression,
-            ),
+            value: new ElementMessage(context.identifierStore.next(), [], a.value.expression),
           });
         }
         //
@@ -154,9 +133,7 @@ export function parseJSXOpeningElement(
 
 //
 
-function processJSXOpeningElement(
-  element: t.JSXOpeningElement,
-): [t.Node, string | null] | null {
+function processJSXOpeningElement(element: t.JSXOpeningElement): [t.Node, string | null] | null {
   if (t.isJSXIdentifier(element.name) && element.name.name === 'Say') {
     return [element.name, null];
   }
@@ -239,10 +216,7 @@ function findAttributeValueIfExpressionOrStringLiteral(
   for (const attribute of attributes) {
     if (!t.isJSXAttribute(attribute)) continue;
     if (t.isJSXIdentifier(attribute.name) && attribute.name.name === key) {
-      if (
-        t.isJSXExpressionContainer(attribute.value) &&
-        t.isExpression(attribute.value.expression)
-      )
+      if (t.isJSXExpressionContainer(attribute.value) && t.isExpression(attribute.value.expression))
         return attribute.value.expression;
       if (t.isStringLiteral(attribute.value)) return attribute.value;
     }

@@ -1,5 +1,4 @@
 import 'server-only';
-
 import { cache, createElement, type ReactNode } from 'react';
 import { type ReadonlySay, Say } from 'saykit';
 
@@ -28,12 +27,9 @@ export function setSay(say: ReadonlySay | (() => ReadonlySay)): void {
 export function getSay(): ReadonlySay {
   const ref = serverContext();
   if (!ref.current)
-    throw new Error(
-      'Attempt to access the server-only Say instance before initialisation',
-      {
-        cause: new Error("'getSay' must be called after 'setSay'"),
-      },
-    );
+    throw new Error('Attempt to access the server-only Say instance before initialisation', {
+      cause: new Error("'getSay' must be called after 'setSay'"),
+    });
   return ref.current;
 }
 
@@ -49,9 +45,7 @@ export function unstable_createWithSay(say: Say) {
    * Wrap a server component so that a {@link Say} instance is initialised before render.
    */
   return function withSay<P extends object>(
-    Component: (
-      props: P & { locale: string; messages: Say.Messages },
-    ) => ReactNode,
+    Component: (props: P & { locale: string; messages: Say.Messages }) => ReactNode,
     getLocale: (props: P) => string | Promise<string>,
   ) {
     return async function WithSay(props: P) {

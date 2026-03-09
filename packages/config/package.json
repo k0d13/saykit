@@ -1,21 +1,24 @@
 {
   "name": "@saykit/config",
   "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "check": "tsc --noEmit",
-    "build": "tsdown",
-    "prepack": "pnpm build"
+  "bin": {
+    "saykit": "./dist/commands/index.mjs"
   },
-  "files": ["dist", "!dist/**/*.map"],
+  "files": [
+    "dist",
+    "!dist/**/*.map"
+  ],
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.mts",
       "default": "./dist/index.mjs"
     }
   },
-  "bin": {
-    "saykit": "./dist/commands/index.mjs"
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build": "tsdown",
+    "prepack": "pnpm build"
   },
   "dependencies": {
     "@commander-js/extra-typings": "^14.0.0",
@@ -25,11 +28,11 @@
     "picomatch": "^4.0.3",
     "zod": "^4.3.6"
   },
-  "peerDependencies": {
-    "typescript": "*"
-  },
   "devDependencies": {
     "@types/picomatch": "^4.0.2",
     "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "typescript": "*"
   }
 }

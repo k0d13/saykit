@@ -39,16 +39,7 @@ describe('parseProgram', () => {
   });
 
   it('should parse all supported extensions', () => {
-    const extensions = [
-      '.js',
-      '.cjs',
-      '.mjs',
-      '.jsx',
-      '.ts',
-      '.mts',
-      '.cts',
-      '.tsx',
-    ];
+    const extensions = ['.js', '.cjs', '.mjs', '.jsx', '.ts', '.mts', '.cts', '.tsx'];
     const code = 'const x = 42;';
 
     extensions.forEach((ext) => {
@@ -59,13 +50,7 @@ describe('parseProgram', () => {
 
   it('should return null for unsupported extensions', () => {
     const code = 'const x = 42;';
-    const unsupportedFiles = [
-      'test.json',
-      'test.css',
-      'test.txt',
-      'test.html',
-      'test.py',
-    ];
+    const unsupportedFiles = ['test.json', 'test.css', 'test.txt', 'test.html', 'test.py'];
 
     unsupportedFiles.forEach((file) => {
       const result = parser.parseProgram(file, code);

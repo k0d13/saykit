@@ -16,10 +16,7 @@ export function generateSayCallExpression(message: CompositeMessage) {
     ...children.map(([key, expr]) => t.objectProperty(t.identifier(key), expr)),
   ]);
 
-  return t.callExpression(
-    t.memberExpression(message.accessor, t.identifier('call')),
-    [properties],
-  );
+  return t.callExpression(t.memberExpression(message.accessor, t.identifier('call')), [properties]);
 }
 
 export function generateChildExpressions(messages: Message[]) {

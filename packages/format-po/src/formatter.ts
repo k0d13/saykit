@@ -14,9 +14,7 @@ function createFormatter(): Formatter {
         throw new Error('PO file locale does not match the expected locale');
 
       return po.items.map((item) => {
-        const id = item.extractedComments
-          .find((c) => c.startsWith('id:'))
-          ?.slice(3);
+        const id = item.extractedComments.find((c) => c.startsWith('id:'))?.slice(3);
         const comments = item.extractedComments //
           .filter((c) => !c.startsWith('id:'))
           .map((c) => c.trim());
