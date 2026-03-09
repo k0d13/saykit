@@ -175,42 +175,16 @@ export class Say<
     }) as unknown as this;
   }
 
+    /**
+   * Make this `Say` instance immutable.
+   */
   freeze() {
-    return Object.freeze(this) as ReadonlySay<Locale, Loader>;
-  }
-
-  /**
-   * Calls a defined callback function on each locale, passing the Say instance and locale to the callback.
-   *
-   * @param callback Callback function to call on each locale
-   */
-  map<T>(callbackfn: (value: [this, Locale], index: number, array: [this, Locale][]) => T) {
-    return this.#locales.map((l) => [this.clone().activate(l), l] satisfies Tuple).map(callbackfn);
-  }
-
-  /**
-   * Calls the specified callback function for all the elements in an array, passing the Say instance and locale to the callback.
-   *
-   * @param callback Callback function to call for each element
-   * @param initial Initial value to use as the first argument to the first call of the callback
-   */
-  reduce<T>(
-    callbackfn: (
-      previousValue: T,
-      currentValue: [this, Locale],
-      currentIndex: number,
-      array: [this, Locale][],
-    ) => T,
-    initialValue: T,
-  ) {
-    return this.#locales
-      .map((l) => [this.clone().activate(l), l] satisfies Tuple)
-      .reduce(callbackfn, initialValue);
+    return Object.freeze(this) as unknown as ReadonlySay<Locale, Loader>;
   }
 
   *[Symbol.iterator]() {
     for (const l of this.#locales) {
-      yield [this.clone().activate(l), l] as const;
+      yield [this.clone().activate(l).freeze(), l] satisfies Tuple;
     }
   }
 
