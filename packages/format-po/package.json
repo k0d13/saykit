@@ -1,6 +1,6 @@
 {
   "name": "@saykit/format-po",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "PO file formatter for saykit",
   "keywords": [
     "formatter",

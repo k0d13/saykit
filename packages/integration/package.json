@@ -1,6 +1,6 @@
 {
   "name": "saykit",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Type-safe i18n library with compile-time macro transforms",
   "keywords": [
     "i18n",
