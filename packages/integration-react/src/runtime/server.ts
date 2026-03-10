@@ -11,7 +11,7 @@ const serverContext = cache<() => SayRef>(() => ({ current: null }));
  *
  * @param say The current {@link Say} instance
  */
-export function setSay(say: ReadonlySay | (() => ReadonlySay)): void {
+export function setSay(say: Say | ReadonlySay | (() => Say | ReadonlySay)): void {
   const ref = serverContext();
   if (say instanceof Say) ref.current = say as ReadonlySay;
   else ref.current = (say as () => ReadonlySay)();

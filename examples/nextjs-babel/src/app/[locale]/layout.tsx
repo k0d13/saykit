@@ -3,7 +3,7 @@ import type { Say } from 'saykit';
 import say, { withSay } from '../../i18n';
 
 export function generateStaticParams() {
-  return say.map(([, l]) => ({ locale: l }));
+  return Array.from(say).map(([, l]) => ({ locale: l }));
 }
 
 async function RootLayout({
