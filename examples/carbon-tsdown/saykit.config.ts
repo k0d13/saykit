@@ -7,7 +7,7 @@ export default defineConfig({
   buckets: [
     {
       include: ['src/**/*.{ts,tsx}'],
-      output: 'src/locales/{locale}.{extension}',
+      output: 'src/locales/{locale}/messages.{extension}',
       formatter: createFormatter(),
     },
   ],
