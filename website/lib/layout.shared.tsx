@@ -18,8 +18,8 @@ export function baseOptions(): BaseLayoutProps {
       {
         text: 'Community',
         url: 'https://discord.gg/vGFBFf3K2',
-        icon: <MessageCircleMore />
-      }
-    ]
+        icon: <MessageCircleMore />,
+      },
+    ],
   };
 }

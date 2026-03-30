@@ -1,5 +1,5 @@
 {
-  "$schema": "https://turbo.build/schema.json",
+  "$schema": "./node_modules/turbo/schema.json",
   "tasks": {
     "check": {
       "dependsOn": ["^check"],
@@ -29,7 +29,7 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["src/**"],
-      "outputs": ["dist/**"],
+      "outputs": ["dist/**", ".next/**"],
       "outputLogs": "new-only"
     },
     "dev": {

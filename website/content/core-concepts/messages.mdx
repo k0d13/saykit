@@ -10,9 +10,9 @@ Saykit provides several ways to define translatable messages using **macros** th
 The most common way to define a message is using the `say` tagged template.
 
 ```ts
-const greeting = say`Hello, world!`
-const personalized = say`Hello, ${name}!`
-const message = say`Your order of ${quantity} ${item} is ready!`
+const greeting = say`Hello, world!`;
+const personalized = say`Hello, ${name}!`;
+const message = say`Your order of ${quantity} ${item} is ready!`;
 ```
 
 Extracted format:
@@ -36,7 +36,9 @@ Template variables become **named placeholders** in the extracted message.
 If a variable name cannot be determined, Saykit falls back to an **index-based placeholder**.
 
 <Callout type="info">
-SayKit looks for the `say` identifier when transforming messages. To have a string extracted and compiled, write it with `say`, such as <code>say\`Hello\`</code> or <code>interaction.say\`Hello\`</code>.
+  SayKit looks for the `say` identifier when transforming messages. To have a string extracted and
+  compiled, write it with `say`, such as <code>say\`Hello\`</code> or{' '}
+  <code>interaction.say\`Hello\`</code>.
 </Callout>
 
 ---
@@ -53,7 +55,7 @@ Plural messages allow text to vary based on a numeric value using **CLDR plural 
 say.plural(quantity, {
   one: 'You have 1 item',
   other: 'You have # items',
-})
+});
 ```
 
 Extracted format:
@@ -75,11 +77,12 @@ say.plural(count, {
   few: 'A few items',
   many: 'Many items',
   other: '# items',
-})
+});
 ```
 
 <Callout type="info">
-Plural categories vary by locale. English uses **one** and **other**, while languages such as Arabic use all six categories.
+  Plural categories vary by locale. English uses **one** and **other**, while languages such as
+  Arabic use all six categories.
 </Callout>
 
 You can also match specific numbers explicitly:
@@ -89,7 +92,7 @@ say.plural(count, {
   0: 'No items',
   1: 'One item',
   other: '# items',
-})
+});
 ```
 
 ### Ordinals
@@ -102,7 +105,7 @@ say.ordinal(position, {
   2: '#nd',
   3: '#rd',
   other: '#th',
-})
+});
 ```
 
 CLDR categories can also be used:
@@ -113,7 +116,7 @@ say.ordinal(position, {
   two: '#nd',
   few: '#rd',
   other: '#th',
-})
+});
 ```
 
 ### Select
@@ -125,7 +128,7 @@ say.select(gender, {
   male: 'He is online',
   female: 'She is online',
   other: 'They are online',
-})
+});
 ```
 
 Extracted format:
@@ -150,8 +153,8 @@ By default, Saykit generates a hash-based ID.
 You can provide your own semantic ID instead:
 
 ```ts
-say({ id: 'greeting.hello' })`Hello!`
-say({ id: 'button.submit' })`Submit`
+say({ id: 'greeting.hello' })`Hello!`;
+say({ id: 'button.submit' })`Submit`;
 ```
 
 Custom IDs are useful when:
@@ -166,10 +169,10 @@ Context helps distinguish identical strings with different meanings.
 
 ```ts
 // "Right" as a direction
-say({ context: 'direction' })`Right`
+say({ context: 'direction' })`Right`;
 
 // "Right" meaning correct
-say({ context: 'correctness' })`Right`
+say({ context: 'correctness' })`Right`;
 ```
 
 Extraction example:
@@ -187,13 +190,14 @@ Translator comments provide context for translators.
 
 ```ts
 // TRANSLATORS: This appears on the login button
-say`Sign in`
+say`Sign in`;
 
 // TRANSLATORS: Username field label in the registration form
-say`Username`
+say`Username`;
 ```
 
 Use translator comments when:
+
 - the meaning of a message may be unclear
 - placeholders need explanation
 - grammar or tone matters
@@ -204,9 +208,9 @@ Use translator comments when:
 Placeholder names come from the identifier that Saykit can see at compile time.
 
 ```ts
-const name = user.profile.name ?? 'Anonymous'
-say`Signed in as ${name}` // good
-say`Signed in as ${user.profile.name ?? 'Anonymous'}` // avoid
+const name = user.profile.name ?? 'Anonymous';
+say`Signed in as ${name}`; // good
+say`Signed in as ${user.profile.name ?? 'Anonymous'}`; // avoid
 ```
 
 Extracted format:
@@ -231,9 +235,10 @@ import { MessageSquareMore, MessageCircleQuestion, Link, Variable } from 'lucide
 When the same source string can mean different things, add context so translators can choose the right wording.
 
 ```ts
-say({ context: 'noun' })`Post`
-say({ context: 'verb' })`Post`
+say({ context: 'noun' })`Post`;
+say({ context: 'verb' })`Post`;
 ```
+
 </Card>
 
 <Card title="Leave Notes for Translators" icon={<MessageCircleQuestion />}>
@@ -241,26 +246,29 @@ Add comments when meaning, tone, or UI constraints would not be obvious from the
 
 ```ts
 // TRANSLATORS: Button text, keep under 20 characters
-say`Continue`
+say`Continue`;
 ```
+
 </Card>
 
 <Card title="Prepare Values Before Interpolation" icon={<Variable />}>
 Compute values first, then interpolate them, so placeholders stay readable and the message stays easy to translate.
 
 ```ts
-const name = user.profile.name ?? 'Anonymous'
-say`Hello, ${name}` // OK
-say`Hello, ${user.profile.name ?? 'Anonymous'}` // avoid
+const name = user.profile.name ?? 'Anonymous';
+say`Hello, ${name}`; // OK
+say`Hello, ${user.profile.name ?? 'Anonymous'}`; // avoid
 ```
+
 </Card>
 
 <Card title="Write Complete Messages" icon={<Link />}>
 Keep the full sentence inside a single `say` template instead of splitting it across string concatenation.
 
 ```ts
-say`Hello, ${name}` // OK
-say`Hello, ` + name // avoid
+say`Hello, ${name}`; // OK
+say`Hello, ` + name; // avoid
 ```
+
 </Card>
 </Cards>

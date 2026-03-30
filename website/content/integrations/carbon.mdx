@@ -6,6 +6,7 @@ description: Use SayKit with Carbon to localise commands, components, and replie
 SayKit includes a [Carbon](https://carbon.buape.com) integration via `@saykit/carbon`.
 
 The Carbon integration does three things:
+
 - registers a shared `Say` instance with your Carbon app
 - helps command and component classes expose translated metadata
 - gives interactions and guilds a locale-aware `say` helper
@@ -13,10 +14,12 @@ The Carbon integration does three things:
 ## How It Works
 
 `@saykit/carbon` is built around two pieces:
+
 - `SayPlugin`, which installs your shared `Say` instance into Carbon
 - `withSay()`, which helps you attach translated properties to Carbon classes
 
 Once the plugin is registered:
+
 - interactions get `interaction.locale`-aware `interaction.say`
 - guilds get `guild.preferredLocale`-aware `guild.say`
 
@@ -38,33 +41,35 @@ const client = new Client(
 
 If your app registers commands, components, or modals separately, keep using the same shared `say` instance for all of them.
 
-##  Localising Commands
+## Localising Commands
 
 For commands, `withSay()` accepts your shared `Say` instance and a mapping function. That mapping function runs for each locale and is used to build Carbon's localisation data.
 
 ```ts
-import { Command, type CommandInteraction } from '@buape/carbon'
-import { withSay } from '@saykit/carbon'
-import type { Say } from 'saykit'
+import { Command, type CommandInteraction } from '@buape/carbon';
+import { withSay } from '@saykit/carbon';
+import type { Say } from 'saykit';
 
 export class PingCommand extends withSay(Command) {
   constructor(say: Say) {
     super(say, (say) => ({
       name: say`ping`,
       description: say`Ping the bot!`,
-    }))
+    }));
   }
 
   async run(interaction: CommandInteraction) {
     await interaction.reply({
       content: interaction.say`Pong!`,
-    })
+    });
   }
 }
 ```
 
 <Callout type="info">
-SayKit looks for the `say` identifier when transforming messages. To have a string extracted and compiled, write it with `say`, such as <code>say\`ping\`</code> or <code>interaction.say\`Pong!\`</code>.
+  SayKit looks for the `say` identifier when transforming messages. To have a string extracted and
+  compiled, write it with `say`, such as <code>say\`ping\`</code> or{' '}
+  <code>interaction.say\`Pong!\`</code>.
 </Callout>
 
 Once your commands are defined, register them with Carbon passing your shared `say` instance as needed.

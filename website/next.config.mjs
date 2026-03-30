@@ -12,9 +12,9 @@ const config = {
         source: '/',
         destination: '/getting-started/introduction',
         permanent: false,
-      }
-    ]
-  }
+      },
+    ];
+  },
 };
 
 export default withMDX(config);

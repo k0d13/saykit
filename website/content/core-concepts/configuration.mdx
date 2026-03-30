@@ -37,7 +37,8 @@ The configuration is type-checked using Zod schemas at runtime:
 <TypeTable
   type={{
     sourceLocale: {
-      description: 'The source locale for your application. This must match the first locale in the locales array.',
+      description:
+        'The source locale for your application. This must match the first locale in the locales array.',
       type: 'string',
       required: true,
     },
@@ -47,12 +48,21 @@ The configuration is type-checked using Zod schemas at runtime:
       required: true,
     },
     fallbackLocales: {
-      description: 'Define fallback chains for locales. If a message isn\'t found in a locale, SayKit will check the fallback locales in order.',
+      description:
+        "Define fallback chains for locales. If a message isn't found in a locale, SayKit will check the fallback locales in order.",
       type: 'Record<string, string[]>',
     },
     buckets: {
-      description: 'Array of bucket configurations that define which files to extract from and where to output translations.',
-      type: <><a className="text-blue-400" href="#bucket">Bucket</a>[]</>,
+      description:
+        'Array of bucket configurations that define which files to extract from and where to output translations.',
+      type: (
+        <>
+          <a className="text-blue-400" href="#bucket">
+            Bucket
+          </a>
+          []
+        </>
+      ),
       required: true,
     },
   }}
@@ -75,15 +85,26 @@ Buckets group related messages and control extraction and output:
       required: false,
     },
     output: {
-      description: <>Output path template with <code>{'{locale}'}</code> and <code>{'{extension}'}</code> placeholders.</>,
+      description: (
+        <>
+          Output path template with <code>{'{locale}'}</code> and <code>{'{extension}'}</code>{' '}
+          placeholders.
+        </>
+      ),
       type: '`${string}{locale}${string}{extension}`',
       required: true,
     },
     formatter: {
       description: 'Formatter for message serialisation.',
-      type: <><a className="text-blue-400" href="#formatter">Formatter</a></>,
+      type: (
+        <>
+          <a className="text-blue-400" href="#formatter">
+            Formatter
+          </a>
+        </>
+      ),
       required: true,
-    }
+    },
   }}
 />
 
@@ -94,20 +115,36 @@ Formatters control how messages are serialized to disk:
 <TypeTable
   type={{
     extension: {
-      description: 'File extension.', 
+      description: 'File extension.',
       type: 'string',
       required: true,
     },
     parse: {
       description: 'Function to parse file content into messages.',
-      type: <>(content: string, context: {'{ locale: string }'}) {'=>'} Promise{'<'}<a className="text-blue-400" href="#message">Message</a>[]{'>'}</>,
+      type: (
+        <>
+          (content: string, context: {'{ locale: string }'}) {'=>'} Promise{'<'}
+          <a className="text-blue-400" href="#message">
+            Message
+          </a>
+          []{'>'}
+        </>
+      ),
       required: true,
     },
     stringify: {
       description: 'Function to serialize messages to file content.',
-      type: <>(messages: <a className="text-blue-400" href="#message">Message</a>[], context: {'{ locale: string }'}) {'=>'} Promise{'<string>'}</>,
+      type: (
+        <>
+          (messages:{' '}
+          <a className="text-blue-400" href="#message">
+            Message
+          </a>
+          [], context: {'{ locale: string }'}) {'=>'} Promise{'<string>'}
+        </>
+      ),
       required: true,
-    }
+    },
   }}
 />
 
