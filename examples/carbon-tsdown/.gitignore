@@ -2,4 +2,4 @@
 .wrangler/
 dist/
 node_modules/
-src/locales/*/*.json
+src/locales/*.json
