@@ -11,6 +11,7 @@ Create a `saykit.config.ts` in your project root:
 
 ```ts title='saykit.config.ts'
 import { defineConfig } from '@saykit/config';
+import createFormatter from '@saykit/format-po';
 
 export default defineConfig({
   sourceLocale: 'en',
@@ -18,7 +19,8 @@ export default defineConfig({
   buckets: [
     {
       include: ['src/**/*.{ts,tsx}'],
-      output: 'src/locales/{locale}/messages.{extension}',
+      output: 'src/locales/{locale}.{extension}',
+      formatter: createFormatter(),
     },
   ],
 });
@@ -78,8 +80,9 @@ Buckets group related messages and control extraction and output:
       required: true,
     },
     formatter: {
-      description: 'Custom formatter for message serialisation. Defaults to @saykit/format-po.',
+      description: 'Formatter for message serialisation.',
       type: <><a className="text-blue-400" href="#formatter">Formatter</a></>,
+      required: true,
     }
   }}
 />
@@ -98,10 +101,12 @@ Formatters control how messages are serialized to disk:
     parse: {
       description: 'Function to parse file content into messages.',
       type: <>(content: string, context: {'{ locale: string }'}) {'=>'} Promise{'<'}<a className="text-blue-400" href="#message">Message</a>[]{'>'}</>,
+      required: true,
     },
     stringify: {
       description: 'Function to serialize messages to file content.',
-      type: <>(messages: <a className="text-blue-400" href="#message">Message</a>[], context: {'{ locale: string }'}) {'=>'} Promise{'<string[]>'}</>,
+      type: <>(messages: <a className="text-blue-400" href="#message">Message</a>[], context: {'{ locale: string }'}) {'=>'} Promise{'<string>'}</>,
+      required: true,
     }
   }}
 />
