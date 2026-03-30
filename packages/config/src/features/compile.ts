@@ -63,7 +63,7 @@ export async function writeTranslationsToDisk(
   bucket: Bucket,
   locale: string,
   translations: Record<string, string>,
-  path = expandOutputPath(bucket, locale, 'json'),
+  path = expandOutputPath(bucket, locale, '.json'),
 ) {
   const content = JSON.stringify(translations, null, 2);
   await mkdir(dirname(path), { recursive: true });

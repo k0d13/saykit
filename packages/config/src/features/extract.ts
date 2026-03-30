@@ -72,7 +72,7 @@ export function expandOutputPath(
 ) {
   const outputMessageTemplate = bucket.output
     .replaceAll('{locale}', locale)
-    .replaceAll('{extension}', extension);
+    .replaceAll('{extension}', extension.slice(1));
   return resolve(outputMessageTemplate);
 }
 

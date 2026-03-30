@@ -8,7 +8,8 @@ export async function useConfig(name = 'saykit') {
   if (!file) throw new Error(`Could not find config file for "${name}"`);
 
   const ext = extname(file.id).toLowerCase();
-  const loader = ext in loaders ? loaders[ext as keyof typeof loaders] : loaders[''];
+  const loader = ext in loaders ? loaders[ext as keyof typeof loaders] : null;
+  if (!loader) throw new Error(`Unsupported config file type "${ext}" for "${name}"`);
 
   let config = await loader(file.id, file.content);
   if (!config || typeof config !== 'object') throw new Error(`Invalid config file for "${name}"`);
