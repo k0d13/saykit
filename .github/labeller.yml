@@ -6,6 +6,10 @@
   - changed-files:
       - any-glob-to-any-file: ['examples/**']
 
+'website':
+  - changed-files:
+      - any-glob-to-any-file: ['website/**']
+
 'tests':
   - changed-files:
       - any-glob-to-any-file: ['packages/**/*.test.ts']

@@ -1,0 +1,266 @@
+---
+title: Messages
+description: Learn how to define translatable messages using Saykit's macro syntax
+---
+
+Saykit provides several ways to define translatable messages using **macros** that are transformed at compile time by the Babel plugin.
+
+## Basic Messages
+
+The most common way to define a message is using the `say` tagged template.
+
+```ts
+const greeting = say`Hello, world!`
+const personalized = say`Hello, ${name}!`
+const message = say`Your order of ${quantity} ${item} is ready!`
+```
+
+Extracted format:
+
+```text
+Hello, world!
+Hello, {name}!
+Your order of {quantity} {item} is ready!
+```
+
+During compilation:
+
+1. The Babel plugin detects the `say` tagged template.
+2. The message text is extracted (e.g. `"Hello, {name}!"`).
+3. A **stable hash ID** is generated from the message.
+4. The template is replaced with a `say.call()` invocation.
+
+This keeps runtime code small while allowing translation tooling to extract messages automatically.
+
+Template variables become **named placeholders** in the extracted message.  
+If a variable name cannot be determined, Saykit falls back to an **index-based placeholder**.
+
+<Callout type="info">
+SayKit looks for the `say` identifier when transforming messages. To have a string extracted and compiled, write it with `say`, such as <code>say\`Hello\`</code> or <code>interaction.say\`Hello\`</code>.
+</Callout>
+
+---
+
+## Advanced Messages
+
+Saykit also supports more complex message patterns such as **plurals, ordinals, and conditional selections**.
+
+### Plurals
+
+Plural messages allow text to vary based on a numeric value using **CLDR plural rules**.
+
+```ts
+say.plural(quantity, {
+  one: 'You have 1 item',
+  other: 'You have # items',
+})
+```
+
+Extracted format:
+
+```text
+{quantity, plural,
+  one {You have 1 item}
+  other {You have # items}
+}
+```
+
+Saykit supports all CLDR plural categories:
+
+```ts
+say.plural(count, {
+  zero: 'No items',
+  one: '1 item',
+  two: '2 items',
+  few: 'A few items',
+  many: 'Many items',
+  other: '# items',
+})
+```
+
+<Callout type="info">
+Plural categories vary by locale. English uses **one** and **other**, while languages such as Arabic use all six categories.
+</Callout>
+
+You can also match specific numbers explicitly:
+
+```ts
+say.plural(count, {
+  0: 'No items',
+  1: 'One item',
+  other: '# items',
+})
+```
+
+### Ordinals
+
+Ordinal formatting is used for numbers like **1st**, **2nd**, and **3rd**.
+
+```ts
+say.ordinal(position, {
+  1: '#st',
+  2: '#nd',
+  3: '#rd',
+  other: '#th',
+})
+```
+
+CLDR categories can also be used:
+
+```ts
+say.ordinal(position, {
+  one: '#st',
+  two: '#nd',
+  few: '#rd',
+  other: '#th',
+})
+```
+
+### Select
+
+`select` messages branch based on a **string value**.
+
+```ts
+say.select(gender, {
+  male: 'He is online',
+  female: 'She is online',
+  other: 'They are online',
+})
+```
+
+Extracted format:
+
+```text
+{gender, select,
+  male {He is online}
+  female {She is online}
+  other {They are online}
+}
+```
+
+---
+
+## Message Descriptors
+
+Descriptors allow you to attach additional metadata to a message, such as a **custom ID** or **context**.
+
+### Custom IDs
+
+By default, Saykit generates a hash-based ID.  
+You can provide your own semantic ID instead:
+
+```ts
+say({ id: 'greeting.hello' })`Hello!`
+say({ id: 'button.submit' })`Submit`
+```
+
+Custom IDs are useful when:
+
+- you want **stable identifiers across refactors**
+- translators rely on **human-readable message IDs**
+- messages are **shared between projects**
+
+### Context
+
+Context helps distinguish identical strings with different meanings.
+
+```ts
+// "Right" as a direction
+say({ context: 'direction' })`Right`
+
+// "Right" meaning correct
+say({ context: 'correctness' })`Right`
+```
+
+Extraction example:
+
+```text
+Right
+Right
+```
+
+---
+
+## Translator Comments
+
+Translator comments provide context for translators.
+
+```ts
+// TRANSLATORS: This appears on the login button
+say`Sign in`
+
+// TRANSLATORS: Username field label in the registration form
+say`Username`
+```
+
+Use translator comments when:
+- the meaning of a message may be unclear
+- placeholders need explanation
+- grammar or tone matters
+- the message references UI elements
+
+## Placeholder Names
+
+Placeholder names come from the identifier that Saykit can see at compile time.
+
+```ts
+const name = user.profile.name ?? 'Anonymous'
+say`Signed in as ${name}` // good
+say`Signed in as ${user.profile.name ?? 'Anonymous'}` // avoid
+```
+
+Extracted format:
+
+```text
+Signed in as {name}
+Signed in as {0}
+```
+
+If the expression is a plain identifier like `name`, that identifier becomes the placeholder name. If the expression is something more complex, Saykit falls back to a positional placeholder such as `{0}` instead.
+
+If you want stable, readable placeholder names for translators, assign the value to a variable before interpolating it.
+
+---
+
+## Best Practices
+
+import { MessageSquareMore, MessageCircleQuestion, Link, Variable } from 'lucide-react';
+
+<Cards>
+<Card title="Disambiguate Reused Words" icon={<MessageSquareMore />}>
+When the same source string can mean different things, add context so translators can choose the right wording.
+
+```ts
+say({ context: 'noun' })`Post`
+say({ context: 'verb' })`Post`
+```
+</Card>
+
+<Card title="Leave Notes for Translators" icon={<MessageCircleQuestion />}>
+Add comments when meaning, tone, or UI constraints would not be obvious from the message alone.
+
+```ts
+// TRANSLATORS: Button text, keep under 20 characters
+say`Continue`
+```
+</Card>
+
+<Card title="Prepare Values Before Interpolation" icon={<Variable />}>
+Compute values first, then interpolate them, so placeholders stay readable and the message stays easy to translate.
+
+```ts
+const name = user.profile.name ?? 'Anonymous'
+say`Hello, ${name}` // OK
+say`Hello, ${user.profile.name ?? 'Anonymous'}` // avoid
+```
+</Card>
+
+<Card title="Write Complete Messages" icon={<Link />}>
+Keep the full sentence inside a single `say` template instead of splitting it across string concatenation.
+
+```ts
+say`Hello, ${name}` // OK
+say`Hello, ` + name // avoid
+```
+</Card>
+</Cards>

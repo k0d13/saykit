@@ -1,0 +1,6 @@
+{
+  "title": "Getting Started",
+  "icon": "Rocket",
+  "pages": ["introduction", "installation", "quickstart"],
+  "collapsible": false
+}
