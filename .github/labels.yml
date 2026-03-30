@@ -18,6 +18,10 @@
   description: Updates or additions to example apps
   color: 009688
 
+- name: website
+  description: Updates to the documentation website
+  color: 0ea5e9
+
 - name: tests
   description: Modifications, additions, or fixes related to testing
   color: 00bfa5
