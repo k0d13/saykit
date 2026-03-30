@@ -24,112 +24,6 @@ export const js: Loader = async (path, _content) => {
   }
 };
 
-export const json: Loader = async (_path, content) => {
-  try {
-    return JSON.parse(content);
-  } catch (error) {
-    throw new Error('Failed to parse JSON', {
-      cause: error,
-    });
-  }
-};
-
-namespace YAML {
-  type YAMLValue = string | number | boolean | null | YAMLObject | YAMLArray;
-  type YAMLObject = { [key: string]: YAMLValue };
-  type YAMLArray = YAMLValue[];
-
-  type StackFrame = { indent: number; container: YAMLObject | YAMLArray };
-
-  export function parse(text: string) {
-    const lines = text
-      .split(/\r?\n/)
-      .filter((l) => l.trim() !== '')
-      .map((l) => [l.match(/^\s*/)![0].length, l] as const);
-    const root: YAMLObject = {};
-    const stack: [StackFrame, ...StackFrame[]] = [{ indent: -1, container: root }];
-
-    function parseValue(value: string, fallback?: YAMLValue): YAMLValue {
-      if (value === 'true') return true;
-      if (value === 'false') return false;
-      if (!Number.isNaN(Number(value)) && value !== '') return Number(value);
-      if (value.startsWith('[') && value.endsWith(']')) {
-        return value
-          .slice(1, -1)
-          .split(',')
-          .map((e) => parseValue(e.trim()));
-      }
-      return value || fallback || value;
-    }
-
-    for (let [indent, line] of lines) {
-      const parent = stack.at(-1)!;
-      while (stack.length > 1 && indent <= parent.indent) stack.pop();
-
-      if (line.startsWith('- ')) {
-        line = line.slice(2).trim();
-
-        let value: YAMLValue;
-        if (line === '') {
-          value = {};
-        } else if (line.includes(':')) {
-          const [k, ...r] = line.split(':');
-          value = { [k!.trim()]: parseValue(r.join(':').trim()) };
-        } else {
-          value = parseValue(line);
-        }
-
-        if (!Array.isArray(parent.container)) {
-          const upper = stack.at(-2)!;
-
-          if (!Array.isArray(upper.container)) {
-            for (const key in upper.container) {
-              if (upper.container[key] === parent.container) {
-                upper.container[key] = [value];
-                stack.push({ indent, container: upper.container[key] });
-                break;
-              }
-            }
-          } else {
-            throw new Error('Invalid YAML: expected parent object for array conversion');
-          }
-        } else {
-          parent.container.push(value);
-        }
-
-        if (typeof value === 'object' && value && !Array.isArray(value)) {
-          stack.push({ indent, container: value });
-        }
-      } else {
-        const [key, ...rest] = line.split(':');
-        const value = parseValue(rest.join(':').trim(), {});
-
-        if (!Array.isArray(parent.container)) {
-          parent.container[key!.trim()] = value;
-        } else {
-          throw new Error('Invalid YAML: cannot assign key to non-object');
-        }
-
-        if (typeof value === 'object' && value && !Array.isArray(value)) {
-          stack.push({ indent, container: value });
-        }
-      }
-    }
-
-    return root;
-  }
-}
-
-export const yaml: Loader = async (_path, content) => {
-  try {
-    return YAML.parse(content);
-  } catch (error) {
-    throw new Error('Failed to parse YAML', {
-      cause: error,
-    });
-  }
-};
-
 export const ts: Loader = async (path, content) => {
   const ts = await import('typescript');
   const outputPath = `${path}.${Date.now()}.js`;
@@ -161,26 +55,10 @@ export const ts: Loader = async (path, content) => {
   }
 };
 
-export const detect: Loader = async (path, content) => {
-  try {
-    return await yaml(path, content);
-  } catch {
-    try {
-      return await json(path, content);
-    } catch {
-      return undefined;
-    }
-  }
-};
-
 export default Object.freeze({
   '.js': js,
   '.mjs': js,
   '.cjs': js,
-  '.json': json,
-  '.yaml': yaml,
-  '.yml': yaml,
-  '': detect,
   '.ts': ts,
   '.mts': ts,
   '.cts': ts,

@@ -20,6 +20,7 @@
   "devDependencies": {
     "@saykit/babel-plugin": "workspace:^",
     "@saykit/config": "workspace:^",
+    "@saykit/format-po": "workspace:^",
     "@types/react": "^19.2.13"
   }
 }
