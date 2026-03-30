@@ -1,6 +1,6 @@
 {
   "name": "@saykit/babel-plugin",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Babel plugin for saykit macro transforms",
   "keywords": [
     "babel",
