@@ -1,0 +1,170 @@
+---
+title: Runtime
+description: Learn how the Say instance loads messages, activates locales, matches guesses, and becomes read-only
+---
+
+The `Say` instance is the runtime core of SayKit.
+
+It is responsible for:
+
+- storing your available locales
+- loading and assigning messages
+- activating the current locale
+- matching locale guesses to supported locales
+- formatting compiled message descriptors at runtime
+
+## Create a `Say` Instance
+
+You create a `Say` instance with a list of supported locales, plus either preloaded `messages`, a `loader`, or both.
+
+```ts
+import { Say } from 'saykit'
+
+const say = new Say({
+  locales: ['en', 'fr'],
+  messages: {
+    en: await import('./locales/en/messages.json').then((m) => m.default),
+    fr: await import('./locales/fr/messages.json').then((m) => m.default),
+  },
+  // or with a loader:
+  async loader(locale) {
+    return import(`./locales/${locale}/messages.json`).then((m) => m.default)
+  },
+})
+```
+
+Use inline `messages` when some translations are already available at startup, and a `loader` when you want to fetch or import locale data on demand.
+
+## Read Runtime State
+
+A `Say` instance exposes three key pieces of state:
+
+- `say.locales` is the full list of supported locales
+- `say.locale` is the currently active locale
+- `say.messages` is the message catalogue for the active locale
+
+<Callout type="info">
+`say.locale` and `say.messages` require an active locale. `say.messages` also requires messages for that locale to be loaded.
+</Callout>
+
+## Load Messages
+
+Use `load()` to fetch message catalogs through the configured loader.
+
+```ts
+await say.load('fr')
+```
+
+If you call `load()` with no arguments, SayKit loads every configured locale.
+
+```ts
+await say.load()
+```
+
+If a locale is already loaded, it is skipped. If no loader was provided, calling `load()` throws.
+
+## Assign Messages Manually
+
+Use `assign()` when you already have message data and want to attach it directly.
+
+```ts
+say.assign('fr', {
+  greeting: 'Bonjour !',
+})
+```
+
+You can also assign multiple locales at once:
+
+```ts
+say.assign({
+  en: { greeting: 'Hello!' },
+  fr: { greeting: 'Bonjour !' },
+})
+```
+
+This is useful when messages are embedded in the bundle or when another part of your app has already loaded them.
+
+## Activate a Locale
+
+Use `activate()` to make one loaded locale current.
+
+```ts
+await say.load('fr')
+say.activate('fr')
+```
+
+The locale must already be loaded before you activate it.
+
+```ts
+say.activate('fr') // throws if `fr` has not been loaded or assigned
+```
+
+Once a locale is active, compiled messages resolve against that locale.
+
+## Match Locale Guesses
+
+Use `match()` to choose the best supported locale from a list of guesses, such as browser or platform locales.
+
+```ts
+const locale = say.match(['fr-CA', 'en-US'])
+// -> 'fr' if your configured locales include 'fr'
+```
+
+Matching works in this order:
+
+1. exact locale match
+2. language-prefix match such as `fr-CA` -> `fr`
+3. the first configured locale as a final fallback
+
+That makes it a good fit for turning runtime guesses into one of your supported locales before calling `load()` or `activate()`.
+
+## Clone Instances
+
+Use `clone()` when you want a separate `Say` instance with the same locales, messages, and loader.
+
+```ts
+const requestSay = say.clone()
+requestSay.activate('fr')
+```
+
+Cloning is useful when each request, interaction, or render context should have its own active locale without mutating a shared instance.
+
+## Freeze Instances
+
+Use `freeze()` to make a `Say` instance read-only.
+
+```ts
+const readonlySay = say.clone().activate('fr').freeze()
+```
+
+A frozen instance can still read messages and format descriptors, but it can no longer:
+
+- `load()`
+- `assign()`
+- `activate()`
+
+This is useful when you want to pass a `Say` instance around safely after locale selection is complete.
+
+## Formatting Messages
+
+At runtime, compiled message macros end up calling `say.call()` with a descriptor object.
+
+```ts
+say.call({
+  id: 'greeting',
+  name: 'Ada',
+})
+```
+
+In normal application code you usually do not write this by hand. Instead, the compiler transform rewrites <code>say\`Hello, \$\{name}!\`</code> into the appropriate runtime call for you.
+
+## Fallbacks
+
+There are two different fallback ideas in SayKit:
+
+- runtime locale matching, handled by `say.match()`
+- translation fallback chains, configured with `fallbackLocales` during compilation
+
+Today, the `Say` instance itself does not walk a per-message fallback chain at runtime. Instead, fallback translations are applied when translations are compiled, based on [`fallbackLocales`](/core-concepts/configuration).
+
+That means the runtime instance is responsible for selecting and using one locale, while the compile step is responsible for building the final translation catalogue for that locale.

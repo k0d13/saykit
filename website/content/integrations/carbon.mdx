@@ -1,0 +1,90 @@
+---
+title: Carbon
+description: Use SayKit with Carbon to localise commands, components, and replies
+---
+
+SayKit includes a [Carbon](https://carbon.buape.com) integration via `@saykit/carbon`.
+
+The Carbon integration does three things:
+- registers a shared `Say` instance with your Carbon app
+- helps command and component classes expose translated metadata
+- gives interactions and guilds a locale-aware `say` helper
+
+## How It Works
+
+`@saykit/carbon` is built around two pieces:
+- `SayPlugin`, which installs your shared `Say` instance into Carbon
+- `withSay()`, which helps you attach translated properties to Carbon classes
+
+Once the plugin is registered:
+- interactions get `interaction.locale`-aware `interaction.say`
+- guilds get `guild.preferredLocale`-aware `guild.say`
+
+## Register the Plugin
+
+Create your `Say` instance once, then register `SayPlugin` when you create the Carbon client.
+
+```ts
+import { Client } from '@buape/carbon'
+import { SayPlugin } from '@saykit/carbon'
+import say from './i18n'
+
+const client = new Client(
+  { ... },
+  { ... },
+  [new SayPlugin(say)],
+)
+```
+
+If your app registers commands, components, or modals separately, keep using the same shared `say` instance for all of them.
+
+##  Localising Commands
+
+For commands, `withSay()` accepts your shared `Say` instance and a mapping function. That mapping function runs for each locale and is used to build Carbon's localisation data.
+
+```ts
+import { Command, type CommandInteraction } from '@buape/carbon'
+import { withSay } from '@saykit/carbon'
+import type { Say } from 'saykit'
+
+export class PingCommand extends withSay(Command) {
+  constructor(say: Say) {
+    super(say, (say) => ({
+      name: say`ping`,
+      description: say`Ping the bot!`,
+    }))
+  }
+
+  async run(interaction: CommandInteraction) {
+    await interaction.reply({
+      content: interaction.say`Pong!`,
+    })
+  }
+}
+```
+
+<Callout type="info">
+SayKit looks for the `say` identifier when transforming messages. To have a string extracted and compiled, write it with `say`, such as <code>say\`ping\`</code> or <code>interaction.say\`Pong!\`</code>.
+</Callout>
+
+Once your commands are defined, register them with Carbon passing your shared `say` instance as needed.
+
+```ts title="index.ts"
+// ...
+const client = new Client(
+  { ... },
+  { commands: [new PingCommand(say), ...] },
+  [new SayPlugin(say)],
+)
+// ...
+```
+
+Carbon still owns registration and execution. SayKit just provides the translated strings and locale-aware formatting.
+
+## Mental Model
+
+A simple way to think about the integration is:
+
+- define translated metadata with `say`
+- reply to the current Discord context with `interaction.say` or `guild.say`
+- pass one shared `Say` instance through the parts of your app that Carbon registers
