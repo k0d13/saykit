@@ -51,7 +51,7 @@ export const Bucket = z.intersection(
           extract: (id: string, content: string) =>
             v.flatMap((t) => (t.match(id) ? t.extract(id, content) : [])),
           transform: (id: string, content: string) =>
-            v.reduce((p, t) => (t.match(id) ? t.transform(id, content) : p), content),
+            v.reduce((p, t) => (t.match(id) ? t.transform(id, p) : p), content),
         })),
     ]),
   }),
