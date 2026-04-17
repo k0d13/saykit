@@ -12,7 +12,7 @@ export const Message = z.object({
 export type Message = z.infer<typeof Message>;
 
 export const Formatter = z.object({
-  extension: z.string(),
+  extension: z.templateLiteral(['.', z.string()]),
   parse: z.custom<(content: string, context: { locale: string }) => Message[]>(
     (v) => typeof v === 'function',
   ),
