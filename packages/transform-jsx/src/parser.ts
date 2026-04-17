@@ -72,8 +72,6 @@ export function parseJSXOpeningElement(element: t.JSXOpeningElement): CompositeM
 
       if (t.isStringLiteral(a.value)) {
         b.push({ identifier, value: new LiteralMessage(a.value.value) });
-      } else if (t.isLiteral(a.value)) {
-        b.push({ identifier, value: new ArgumentMessage(identifier, a.value) });
       } else if (t.isJSXExpressionContainer(a.value)) {
         if (t.isJSXElement(a.value.expression)) {
           b.push({
