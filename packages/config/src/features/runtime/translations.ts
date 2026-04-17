@@ -3,6 +3,7 @@ import { dirname } from 'node:path';
 import { expandBucketOutputPath } from '~/features/catalogue/path.js';
 import { generateHash } from '~/features/messages/hash.js';
 import type { Bucket, Configuration, Message } from '~/shapes.js';
+import { readCatalogueMessages } from '../catalogue/storage.js';
 
 function getFallbackLocaleChain(config: Configuration, locale: string) {
   return [...(config.fallbackLocales?.[locale] ?? []), config.sourceLocale];
@@ -11,13 +12,12 @@ function getFallbackLocaleChain(config: Configuration, locale: string) {
 export async function hydrateTranslations(
   cache: Map<string, Record<string, string>>,
   config: Configuration,
-  _bucket: Bucket,
+  bucket: Bucket,
   locale: string,
   messages: Message[],
 ) {
   if (cache.has(locale)) return cache.get(locale)!;
-
-  const translations = await applyFallbackTranslations(cache, config, _bucket, locale, messages);
+  const translations = await applyFallbackTranslations(cache, config, bucket, locale, messages);
   cache.set(locale, translations);
   return translations;
 }
@@ -41,13 +41,10 @@ export async function applyFallbackTranslations(
     }
 
     for (const fallbackLocale of fallbackLocales) {
-      const fallbackTranslations = await hydrateTranslations(
-        cache,
-        config,
-        bucket,
-        fallbackLocale,
-        messages,
-      );
+      const fallbackMessages = //
+        await readCatalogueMessages(bucket, fallbackLocale);
+      const fallbackTranslations = //
+        await hydrateTranslations(cache, config, bucket, fallbackLocale, fallbackMessages);
 
       if (fallbackTranslations[key]) {
         translations[key] = fallbackTranslations[key];
