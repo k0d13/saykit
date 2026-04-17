@@ -10,7 +10,6 @@ export async function readCatalogueMessages(
 ) {
   const content = await readFile(path, 'utf8').catch(() => '');
   if (!content) return [];
-
   return bucket.formatter.parse(content, { locale });
 }
 
@@ -20,7 +19,7 @@ export async function writeCatalogueMessages(
   messages: Message[],
   path = expandBucketOutputPath(bucket, locale),
 ) {
-  const content = await bucket.formatter.stringify(messages, { locale });
+  const content = bucket.formatter.stringify(messages, { locale });
   await mkdir(dirname(path), { recursive: true });
   await writeFile(path, content);
 }

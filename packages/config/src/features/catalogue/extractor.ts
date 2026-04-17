@@ -6,8 +6,7 @@ export async function extractMessagesFromFile(path: string, bucket: Bucket): Pro
   const content = await readFile(path, 'utf8').catch(() => '');
   if (!content) return [];
 
-  Error.stackTraceLimit = Infinity;
-  const messages = await bucket.transformer.extract(path, content);
+  const messages = bucket.transformer.extract(path, content);
   return messages.map((message) => ({
     ...message,
     translation: message.translation ?? message.message,
