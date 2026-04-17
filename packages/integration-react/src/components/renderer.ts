@@ -1,9 +1,13 @@
-import { createElement, Fragment, type PropsWithChildren, type ReactNode } from 'react';
+import {
+  type ComponentType,
+  createElement,
+  Fragment,
+  type PropsWithChildren,
+  type ReactNode,
+} from 'react';
 
-type ComponentsMap = Record<string | number, string | React.ComponentType<PropsWithChildren>>;
-type ComponentResolver = (
-  tag?: string,
-) => string | React.ComponentType<PropsWithChildren> | undefined;
+type ComponentsMap = Record<string | number, string | ComponentType<PropsWithChildren>>;
+type ComponentResolver = (tag?: string) => string | ComponentType<PropsWithChildren> | undefined;
 type ComponentsProp = ComponentsMap | ComponentResolver;
 
 export function Renderer({ html, components }: { html: string; components: ComponentsProp }) {

@@ -1,14 +1,14 @@
 {
   "name": "@saykit/babel-plugin",
   "version": "0.0.0",
-  "description": "Babel plugin for saykit macro transforms",
+  "description": "Babel plugin for SayKit",
   "keywords": [
-    "babel",
     "i18n",
-    "macros",
-    "plugin",
+    "rollup",
     "saykit",
-    "transform"
+    "unplugin",
+    "vite",
+    "webpack"
   ],
   "homepage": "https://github.com/k0d13/saykit#readme",
   "bugs": {
@@ -29,10 +29,6 @@
     ".": {
       "types": "./dist/index.d.mts",
       "default": "./dist/index.mjs"
-    },
-    "./core": {
-      "types": "./dist/core/index.d.mts",
-      "default": "./dist/core/index.mjs"
     }
   },
   "publishConfig": {
@@ -41,22 +37,16 @@
   },
   "scripts": {
     "check": "tsc --noEmit",
-    "test": "vitest",
-    "coverage": "vitest run --coverage",
     "build": "tsdown",
     "prepack": "pnpm build"
   },
   "dependencies": {
-    "@babel/generator": "^7.29.1",
-    "@babel/parser": "^7.29.0",
-    "@babel/traverse": "^7.29.0",
-    "@babel/types": "^7.29.0",
-    "js-sha256": "^0.11.1"
+    "@babel/core": "^7.29.0",
+    "@babel/parser": "^7.29.2",
+    "@saykit/config": "workspace:^",
+    "@types/babel__core": "^7.20.5"
   },
   "devDependencies": {
-    "@babel/core": "^7.29.0",
-    "@types/babel__core": "^7.20.5",
-    "@types/babel__generator": "^7.27.0",
-    "@types/babel__traverse": "^7.28.0"
+    "@types/babel__parser": "^7.1.5"
   }
 }

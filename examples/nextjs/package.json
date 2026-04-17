@@ -1,0 +1,29 @@
+{
+  "name": "nextjs-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "extract": "saykit extract",
+    "compile": "saykit compile",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@saykit/react": "workspace:^",
+    "next": "16.1.6",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "saykit": "workspace:^"
+  },
+  "devDependencies": {
+    "@saykit/config": "workspace:^",
+    "@saykit/format-po": "workspace:^",
+    "@saykit/transform-js": "workspace:^",
+    "@saykit/transform-jsx": "workspace:^",
+    "@types/node": "^22.19.17",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3"
+  }
+}

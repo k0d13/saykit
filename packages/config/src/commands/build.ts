@@ -1,7 +1,7 @@
 import { Command } from '@commander-js/extra-typings';
-import { useConfig } from '~/features/loader/resolve.js';
+import { resolveConfig } from '~/features/loader/resolve.js';
 import Logger from '~/features/logger.js';
-import { BucketBuildWorker } from '~/features/worker.js';
+import { BucketBuildWorker } from '~/features/workers/build-worker.js';
 
 export default new Command()
   .name('build')
@@ -10,7 +10,7 @@ export default new Command()
   .option('-q, --quiet', 'suppress all logging', false)
   // .option('-w, --watch', 'watch source files for changes', false)
   .action(async (options) => {
-    const config = await useConfig('saykit');
+    const config = await resolveConfig('saykit');
     const logger = new Logger(options);
     logger.header('🏗 Building Messages');
 
@@ -20,5 +20,5 @@ export default new Command()
       // if (options.watch) await worker.watch();
     });
 
-    await Promise.allSettled(tasks);
+    await Promise.all(tasks);
   });

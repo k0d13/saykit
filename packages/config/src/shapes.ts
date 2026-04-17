@@ -12,35 +12,60 @@ export const Message = z.object({
 export type Message = z.infer<typeof Message>;
 
 export const Formatter = z.object({
-  extension: z.templateLiteral(['.', z.string()]),
-  parse: z.custom<(content: string, context: { locale: string }) => Promise<Message[]>>(
+  extension: z.string(),
+  parse: z.custom<(content: string, context: { locale: string }) => Message[]>(
     (v) => typeof v === 'function',
   ),
-  stringify: z.custom<(messages: Message[], context: { locale: string }) => Promise<string>>(
+  stringify: z.custom<(messages: Message[], context: { locale: string }) => string>(
     (v) => typeof v === 'function',
   ),
 });
 export type Formatter = z.infer<typeof Formatter>;
 
-export const Bucket = z
-  .object({
-    include: z.array(z.string()),
-    exclude: z.array(z.string()).optional(),
+export const Transformer = z.object({
+  match: z.custom<(id: string) => boolean>((v) => typeof v === 'function'),
+  extract: z.custom<(id: string, content: string) => Message[]>((v) => typeof v === 'function'),
+  transform: z.custom<(id: string, content: string) => string>((v) => typeof v === 'function'),
+});
+export type Transformer = z.infer<typeof Transformer>;
+
+export const Bucket = z.intersection(
+  z
+    .object({
+      include: z.string().array(),
+      exclude: z.string().array().optional(),
+    })
+    .transform((v) => ({
+      ...v,
+      match: picomatch(v.include, { ignore: v.exclude }) as (id: string) => boolean,
+    })),
+  z.object({
     output: z.templateLiteral([z.string(), '{locale}', z.string(), '.{extension}']),
     formatter: Formatter,
-  })
-  .transform((v) => ({
-    ...v,
-    match: picomatch(v.include, { ignore: v.exclude }),
-  }));
+    transformer: z.union([
+      Transformer,
+      Transformer.array()
+        .min(1)
+        .transform((v) => ({
+          match: (id: string) => v.some((t) => t.match(id)),
+          extract: (id: string, content: string) =>
+            v.flatMap((t) => (t.match(id) ? t.extract(id, content) : [])),
+          transform: (id: string, content: string) =>
+            v.reduce((p, t) => (t.match(id) ? t.transform(id, content) : p), content),
+        })),
+    ]),
+  }),
+);
 export type Bucket = z.infer<typeof Bucket>;
 
 export const Configuration = z
   .object({
     sourceLocale: z.string(),
     locales: z.tuple([z.string()], z.string()),
-    fallbackLocales: z.record(z.string(), z.array(z.string())).optional(),
-    buckets: z.array(Bucket),
+    fallbackLocales: z.record(z.string(), z.string().array()).optional(),
+    buckets: Bucket.array(),
   })
-  .refine((c) => c.sourceLocale === c.locales[0], 'sourceLocale must be the same as locales[0]');
+  .refine((config) => config.sourceLocale === config.locales[0], {
+    error: 'sourceLocale must be the same as locales[0]',
+  });
 export type Configuration = z.infer<typeof Configuration>;

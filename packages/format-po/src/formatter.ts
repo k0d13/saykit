@@ -1,11 +1,11 @@
 import type { Formatter } from '@saykit/config';
 import PO from 'pofile';
 
-function createFormatter(): Formatter {
+function createPoFormatter(): Formatter {
   return {
     extension: '.po',
 
-    async parse(content, context) {
+    parse(content, context) {
       const po = PO.parse(content);
 
       if (!po.headers['X-Generator']?.startsWith('saykit'))
@@ -30,7 +30,7 @@ function createFormatter(): Formatter {
       });
     },
 
-    async stringify(messages, context) {
+    stringify(messages, context) {
       const po = new PO();
 
       po.headers['Content-Type'] = 'text/plain; charset=UTF-8';
@@ -59,4 +59,4 @@ function createFormatter(): Formatter {
   };
 }
 
-export default createFormatter;
+export default createPoFormatter;

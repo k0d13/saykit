@@ -11,7 +11,8 @@ Create a `saykit.config.ts` in your project root:
 
 ```ts title='saykit.config.ts'
 import { defineConfig } from '@saykit/config';
-import createFormatter from '@saykit/format-po';
+import createPoFormatter from '@saykit/format-po';
+import createJsTransformer from '@saykit/transform-js';
 
 export default defineConfig({
   sourceLocale: 'en',
@@ -20,7 +21,8 @@ export default defineConfig({
     {
       include: ['src/**/*.{ts,tsx}'],
       output: 'src/locales/{locale}.{extension}',
-      formatter: createFormatter(),
+      transformer: createJsTransformer(),
+      formatter: createPoFormatter(),
     },
   ],
 });
@@ -94,6 +96,16 @@ Buckets group related messages and control extraction and output:
       type: '`${string}{locale}${string}{extension}`',
       required: true,
     },
+    transformer: {
+      description: 'Transformer for message extraction and transformation.',
+      type: (
+        <>
+          <a className="text-blue-400" href="#transformer">
+            Transformer
+          </a>
+        </>
+      ),
+    },
     formatter: {
       description: 'Formatter for message serialisation.',
       type: (
@@ -103,6 +115,38 @@ Buckets group related messages and control extraction and output:
           </a>
         </>
       ),
+      required: true,
+    },
+  }}
+/>
+
+#### Transformer
+
+Transformers control how messages are extracted and transformed:
+
+<TypeTable
+  type={{
+    match: {
+      description: 'Function to match file paths.',
+      type: '(id: string) => boolean',
+      required: true,
+    },
+    extract: {
+      description: 'Function to extract messages from file content.',
+      type: (
+        <>
+          (id: string, content: string) {'=>'} Promise{'<'}
+          <a className="text-blue-400" href="#message">
+            Message
+          </a>
+          []{'>'}
+        </>
+      ),
+      required: true,
+    },
+    transform: {
+      description: 'Function to transform extracted messages.',
+      type: '(id: string, content: string) => string',
       required: true,
     },
   }}

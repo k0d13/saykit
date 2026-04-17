@@ -1,25 +1,27 @@
 import { extname } from 'node:path';
 import { Configuration } from '~/shapes.js';
-import { findConfigFile } from './explorer.js';
-import loaders from './loaders.js';
+import { findConfigFile } from './files.js';
+import { configLoaders } from './module.js';
 
-export async function useConfig(name = 'saykit') {
-  const file = await findConfigFile(name, process.cwd());
+function unwrapNamedConfig(config: object) {
+  if (!('saykit' in config) || !config.saykit) return config;
+  return config.saykit;
+}
+
+export function resolveConfig(name = 'saykit') {
+  const file = findConfigFile(name, process.cwd());
   if (!file) throw new Error(`Could not find config file for "${name}"`);
 
   const ext = extname(file.id).toLowerCase();
-  const loader = ext in loaders ? loaders[ext as keyof typeof loaders] : null;
-  if (!loader) throw new Error(`Unsupported config file type "${ext}" for "${name}"`);
+  const load = ext in configLoaders ? configLoaders[ext as keyof typeof configLoaders] : null;
+  if (!load) throw new Error(`Unsupported config file type "${ext}" for "${name}"`);
 
-  let config = await loader(file.id, file.content);
+  let config = load(file.id, file.content);
   if (!config || typeof config !== 'object') throw new Error(`Invalid config file for "${name}"`);
-  if (config && typeof config === 'object' && 'saykit' in config) config = config.saykit;
+  config = unwrapNamedConfig(config);
 
-  const result = await Configuration.safeParseAsync(config);
-  if (result.error)
-    throw new Error(`Invalid config file for "${name}"`, {
-      cause: result.error,
-    });
+  const result = Configuration.safeParse(config);
+  if (result.error) throw new Error(`Invalid config file for "${name}"`, { cause: result.error });
 
   return result.data;
 }

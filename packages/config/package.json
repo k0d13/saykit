@@ -30,6 +30,14 @@
     ".": {
       "types": "./dist/index.d.mts",
       "default": "./dist/index.mjs"
+    },
+    "./features/loader": {
+      "types": "./dist/features/loader/index.d.mts",
+      "default": "./dist/features/loader/index.mjs"
+    },
+    "./features/messages": {
+      "types": "./dist/features/messages/index.d.mts",
+      "default": "./dist/features/messages/index.mjs"
     }
   },
   "publishConfig": {
@@ -38,21 +46,19 @@
   },
   "scripts": {
     "check": "tsc --noEmit",
+    "test": "vitest",
+    "coverage": "vitest run --coverage",
     "build": "tsdown",
     "prepack": "pnpm build"
   },
   "dependencies": {
     "@commander-js/extra-typings": "^14.0.0",
-    "@saykit/babel-plugin": "workspace:*",
     "commander": "^14.0.3",
+    "js-sha256": "^0.11.1",
     "picomatch": "^4.0.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/picomatch": "^4.0.2",
-    "typescript": "^5.9.3"
-  },
-  "peerDependencies": {
-    "typescript": "*"
+    "@types/picomatch": "^4.0.2"
   }
 }

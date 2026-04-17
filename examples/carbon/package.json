@@ -1,0 +1,27 @@
+{
+  "name": "carbon-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "extract": "saykit extract",
+    "compile": "saykit compile",
+    "build": "tsdown",
+    "dev": "wrangler dev"
+  },
+  "dependencies": {
+    "@buape/carbon": "0.14.0",
+    "@sapphire/snowflake": "^3.5.5",
+    "@saykit/carbon": "workspace:^",
+    "saykit": "workspace:^"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260210.0",
+    "@saykit/config": "workspace:^",
+    "@saykit/format-po": "workspace:^",
+    "@saykit/transform-js": "workspace:^",
+    "typescript": "^5.9.3",
+    "unplugin-saykit": "workspace:^",
+    "wrangler": "^4.64.0"
+  }
+}

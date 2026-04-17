@@ -1,14 +1,14 @@
 import { Command } from '@commander-js/extra-typings';
-import { useConfig } from '~/features/loader/resolve.js';
+import { resolveConfig } from '~/features/loader/resolve.js';
 import Logger from '~/features/logger.js';
-import { BucketExtractWorker } from '~/features/worker.js';
+import { BucketExtractWorker } from '~/features/workers/extract-worker.js';
 
 export default new Command('extract')
   .description('Extract messages from source files')
   .option('-v, --verbose', 'enable verbose logging', false)
   .option('-q, --quiet', 'suppress all logging', false)
   .action(async (options) => {
-    const config = await useConfig('saykit');
+    const config = await resolveConfig('saykit');
     const logger = new Logger(options);
     logger.header('🛠 Extracting Messages');
 
@@ -18,5 +18,5 @@ export default new Command('extract')
       await worker.writeAll();
     });
 
-    await Promise.allSettled(tasks);
+    await Promise.all(tasks);
   });
