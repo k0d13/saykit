@@ -3,7 +3,7 @@ import {
   ChoiceMessage,
   CompositeMessage,
   ElementMessage,
-  Message,
+  type Message,
 } from './types.js';
 
 export const AUTO_INCREMENT_IDENTIFIER = Symbol('auto-increment');

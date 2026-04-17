@@ -5,7 +5,7 @@ import {
   CompositeMessage,
   AUTO_INCREMENT_IDENTIFIER,
   LiteralMessage,
-  Message,
+  type Message,
 } from '@saykit/config/features/messages';
 
 export function parseTaggedTemplateExpression(

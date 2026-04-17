@@ -2,6 +2,7 @@
   "name": "nextjs-example",
   "private": true,
   "type": "module",
+  "sideEffects": false,
   "scripts": {
     "check": "tsc --noEmit",
     "extract": "saykit extract",
@@ -12,17 +13,18 @@
   },
   "dependencies": {
     "@saykit/react": "workspace:^",
-    "next": "16.1.6",
+    "next": "16.2.4",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "saykit": "workspace:^"
+    "saykit": "workspace:^",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@saykit/config": "workspace:^",
     "@saykit/format-po": "workspace:^",
     "@saykit/transform-js": "workspace:^",
     "@saykit/transform-jsx": "workspace:^",
-    "@types/node": "^22.19.17",
+    "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3"
   }

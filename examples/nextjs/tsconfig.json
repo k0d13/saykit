@@ -1,10 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src/**/*", ".next/types/**/*.ts"],
-  "compilerOptions": {
-    "jsx": "preserve",
-    "allowJs": true,
-    "noEmit": true,
-    "incremental": true
-  }
+  "include": ["src/**/*", ".next/dev/types/**/*.ts", "next-env.d.ts"],
+  "compilerOptions": { "paths": { "~/*": ["./src/*"] } }
 }

@@ -10,18 +10,18 @@
     "dev": "wrangler dev"
   },
   "dependencies": {
-    "@buape/carbon": "0.14.0",
+    "@buape/carbon": "0.16.0",
     "@sapphire/snowflake": "^3.5.5",
     "@saykit/carbon": "workspace:^",
     "saykit": "workspace:^"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260210.0",
+    "@cloudflare/workers-types": "^4.20260417.1",
     "@saykit/config": "workspace:^",
     "@saykit/format-po": "workspace:^",
     "@saykit/transform-js": "workspace:^",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.3",
     "unplugin-saykit": "workspace:^",
-    "wrangler": "^4.64.0"
+    "wrangler": "^4.83.0"
   }
 }
