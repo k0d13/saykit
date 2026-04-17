@@ -18,5 +18,10 @@ export default new Command('extract')
       await worker.writeAll();
     });
 
-    await Promise.all(tasks);
+    const results = await Promise.allSettled(tasks);
+    const rejections = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
+    if (rejections.length > 0) {
+      const errors = rejections.map((r) => r.reason).join('\n');
+      throw new Error(`Bucket extraction failed:\n${errors}`);
+    }
   });
