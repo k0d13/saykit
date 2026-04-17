@@ -68,7 +68,7 @@ function createJsxTransformer(): Transformer {
       // TODO: Can this just return the messages themselves, and be converted upstream
       return messages.map((message) => ({
         message: message.toICUString(),
-        translation: message.toICUString(),
+        translation: undefined,
         id: message.descriptor.id,
         context: message.descriptor.context,
         comments: message.comments,
