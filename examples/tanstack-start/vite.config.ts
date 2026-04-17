@@ -7,5 +7,5 @@ export default defineConfig({
   server: {
     port: 3000,
   },
-  plugins: [saykit(), tanstackStart(), react()],
+  plugins: [tanstackStart(), react(), saykit()],
 });
