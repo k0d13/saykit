@@ -29,17 +29,10 @@ export const Transformer = z.object({
 });
 export type Transformer = z.infer<typeof Transformer>;
 
-export const Bucket = z.intersection(
-  z
-    .object({
-      include: z.string().array(),
-      exclude: z.string().array().optional(),
-    })
-    .transform((v) => ({
-      ...v,
-      match: picomatch(v.include, { ignore: v.exclude }) as (id: string) => boolean,
-    })),
-  z.object({
+export const Bucket = z
+  .object({
+    include: z.string().array(),
+    exclude: z.string().array().optional(),
     output: z.templateLiteral([z.string(), '{locale}', z.string(), '.{extension}']),
     formatter: Formatter,
     transformer: z.union([
@@ -54,8 +47,11 @@ export const Bucket = z.intersection(
             v.reduce((p, t) => (t.match(id) ? t.transform(id, p) : p), content),
         })),
     ]),
-  }),
-);
+  })
+  .transform((v) => ({
+    ...v,
+    match: picomatch(v.include, { ignore: v.exclude }) as (id: string) => boolean,
+  }));
 export type Bucket = z.infer<typeof Bucket>;
 
 export const Configuration = z
