@@ -99,7 +99,8 @@ export function parseJSXOpeningElement(element: t.JSXOpeningElement): CompositeM
       return b;
     }, []);
 
-    const initialiser = findAttributeValueIfExpressionOrStringLiteral(element.attributes, '_')!;
+    const initialiser = findAttributeValueIfExpressionOrStringLiteral(element.attributes, '_');
+    if (!initialiser) return null;
     const identifier = getExpressionAsIdentifier(initialiser);
     const choice = new ChoiceMessage(kind, identifier, branches, initialiser);
 
