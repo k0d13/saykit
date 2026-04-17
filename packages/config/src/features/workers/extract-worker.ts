@@ -17,7 +17,14 @@ export class BucketExtractWorker extends BucketWorker {
     this.logger.step(`Processing ${relativePath}`);
 
     const messages = await extractMessagesFromFile(path, this.bucket);
-    if (!messages.length) return false;
+    if (!messages.length) {
+      if (this.#indexedMessagesByPath.has(path)) {
+        this.#indexedMessagesByPath.delete(path);
+        this.logger.step(`Removed stale entries for ${relativePath}`);
+        return true;
+      }
+      return false;
+    }
 
     this.#indexedMessagesByPath.set(path, messages);
     this.logger.step(`Found ${messages.length} messages(s) in ${relativePath}`);
