@@ -16,7 +16,7 @@ export function parseTaggedTemplateExpression(
   const [accessor, descriptor] = processed;
 
   const children = tagged.quasi.quasis.reduce<Message[]>((c, q, i) => {
-    c.push(new LiteralMessage(q.value.cooked!));
+    c.push(new LiteralMessage(q.value.cooked ?? q.value.raw));
     if (t.isExpression(tagged.quasi.expressions[i]))
       c.push(parseExpression(tagged.quasi.expressions[i]!, true)!);
     return c;
