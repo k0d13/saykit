@@ -41,3 +41,11 @@
 'package: unplugin':
   - changed-files:
       - any-glob-to-any-file: ['packages/unplugin/**']
+
+'package: transform-js':
+  - changed-files:
+      - any-glob-to-any-file: ['packages/transform-js/**']
+
+'package: transform-jsx':
+  - changed-files:
+      - any-glob-to-any-file: ['packages/transform-jsx/**']

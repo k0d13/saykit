@@ -56,6 +56,14 @@
   description: Related to unplugin-saykit
   color: 06b6d4
 
+- name: 'package: transform-js'
+  description: Related to @saykit/transform-js
+  color: 8b5cf6
+
+- name: 'package: transform-jsx'
+  description: Related to @saykit/transform-jsx
+  color: ec4899
+
 # Labels primarily for both issues and pull requests
 
 - name: blocked
