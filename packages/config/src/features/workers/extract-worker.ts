@@ -27,7 +27,7 @@ export class BucketExtractWorker extends BucketWorker {
     }
 
     this.#indexedMessagesByPath.set(path, messages);
-    this.logger.step(`Found ${messages.length} messages(s) in ${relativePath}`);
+    this.logger.step(`Found ${messages.length} message(s) in ${relativePath}`);
     return true;
   }
 

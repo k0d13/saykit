@@ -49,7 +49,7 @@
   color: 84cc16
 
 - name: 'package: babel-plugin'
-  description: Related to @saykit/babel-plugin
+  description: Related to babel-plugin-saykit
   color: f59e0b
 
 - name: 'package: unplugin'

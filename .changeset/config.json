@@ -9,7 +9,7 @@
       "saykit",
       "@saykit/carbon",
       "@saykit/react",
-      "@saykit/babel-plugin",
+      "babel-plugin-saykit",
       "unplugin-saykit",
       "@saykit/transform-js",
       "@saykit/transform-jsx"
