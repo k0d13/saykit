@@ -13,25 +13,44 @@ export type Message = z.infer<typeof Message>;
 
 export const Formatter = z.object({
   extension: z.templateLiteral(['.', z.string()]),
-  parse: z.custom<(content: string, context: { locale: string }) => Promise<Message[]>>(
+  parse: z.custom<(content: string, context: { locale: string }) => Message[]>(
     (v) => typeof v === 'function',
   ),
-  stringify: z.custom<(messages: Message[], context: { locale: string }) => Promise<string>>(
+  stringify: z.custom<(messages: Message[], context: { locale: string }) => string>(
     (v) => typeof v === 'function',
   ),
 });
 export type Formatter = z.infer<typeof Formatter>;
 
+export const Transformer = z.object({
+  match: z.custom<(id: string) => boolean>((v) => typeof v === 'function'),
+  extract: z.custom<(code: string, id: string) => Message[]>((v) => typeof v === 'function'),
+  transform: z.custom<(code: string, id: string) => string>((v) => typeof v === 'function'),
+});
+export type Transformer = z.infer<typeof Transformer>;
+
 export const Bucket = z
   .object({
-    include: z.array(z.string()),
-    exclude: z.array(z.string()).optional(),
+    include: z.string().array(),
+    exclude: z.string().array().optional(),
     output: z.templateLiteral([z.string(), '{locale}', z.string(), '.{extension}']),
     formatter: Formatter,
+    transformer: Transformer.transform((t) => [t])
+      .or(Transformer.array())
+      .transform(
+        (t) =>
+          ({
+            match: (id: string) => t.some((t) => t.match(id)),
+            extract: (code: string, id: string) =>
+              t.flatMap((t) => (t.match(id) ? t.extract(code, id) : [])),
+            transform: (code: string, id: string) =>
+              t.reduce((p, t) => (t.match(id) ? t.transform(p, id) : p), code),
+          }) satisfies Transformer,
+      ),
   })
   .transform((v) => ({
     ...v,
-    match: picomatch(v.include, { ignore: v.exclude }),
+    match: picomatch(v.include, { ignore: v.exclude }) as (id: string) => boolean,
   }));
 export type Bucket = z.infer<typeof Bucket>;
 
@@ -39,8 +58,10 @@ export const Configuration = z
   .object({
     sourceLocale: z.string(),
     locales: z.tuple([z.string()], z.string()),
-    fallbackLocales: z.record(z.string(), z.array(z.string())).optional(),
-    buckets: z.array(Bucket),
+    fallbackLocales: z.record(z.string(), z.string().array()).optional(),
+    buckets: Bucket.array(),
   })
-  .refine((c) => c.sourceLocale === c.locales[0], 'sourceLocale must be the same as locales[0]');
+  .refine((config) => config.sourceLocale === config.locales[0], {
+    error: 'sourceLocale must be the same as locales[0]',
+  });
 export type Configuration = z.infer<typeof Configuration>;

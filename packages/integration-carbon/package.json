@@ -40,7 +40,7 @@
     "prepack": "pnpm build"
   },
   "devDependencies": {
-    "@buape/carbon": "0.14.0",
+    "@buape/carbon": "0.16.0",
     "saykit": "workspace:^"
   },
   "peerDependencies": {

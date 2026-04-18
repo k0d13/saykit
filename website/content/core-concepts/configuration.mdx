@@ -11,7 +11,8 @@ Create a `saykit.config.ts` in your project root:
 
 ```ts title='saykit.config.ts'
 import { defineConfig } from '@saykit/config';
-import createFormatter from '@saykit/format-po';
+import createPoFormatter from '@saykit/format-po';
+import createJsTransformer from '@saykit/transform-js';
 
 export default defineConfig({
   sourceLocale: 'en',
@@ -20,7 +21,8 @@ export default defineConfig({
     {
       include: ['src/**/*.{ts,tsx}'],
       output: 'src/locales/{locale}.{extension}',
-      formatter: createFormatter(),
+      transformer: createJsTransformer(),
+      formatter: createPoFormatter(),
     },
   ],
 });
@@ -94,6 +96,18 @@ Buckets group related messages and control extraction and output:
       type: '`${string}{locale}${string}{extension}`',
       required: true,
     },
+    transformer: {
+      description: 'Transformer or array of Transformers for message extraction and transformation.',
+      type: (
+        <>
+          <a className="text-blue-400" href="#transformer">
+            Transformer
+          </a>{' '}
+          | <a className="text-blue-400" href="#transformer">Transformer</a>[]
+        </>
+      ),
+      required: true,
+    },
     formatter: {
       description: 'Formatter for message serialisation.',
       type: (
@@ -103,6 +117,34 @@ Buckets group related messages and control extraction and output:
           </a>
         </>
       ),
+      required: true,
+    },
+  }}
+/>
+
+#### Transformer
+
+Transformers control how messages are extracted and transformed:
+
+<TypeTable
+  type={{
+    match: {
+      description: 'Function to match file paths.',
+      type: '(id: string) => boolean',
+      required: true,
+    },
+    extract: {
+      description: 'Function to extract messages from file content. Must be synchronous - cannot return Promise.',
+      type: (
+        <>
+          (code: string, id: string) {'=>'} <a className="text-blue-400" href="#message">Message</a>[]
+        </>
+      ),
+      required: true,
+    },
+    transform: {
+      description: 'Function to transform source code. Must be synchronous - cannot return Promise.',
+      type: '(code: string, id: string) => string',
       required: true,
     },
   }}
@@ -120,27 +162,19 @@ Formatters control how messages are serialized to disk:
       required: true,
     },
     parse: {
-      description: 'Function to parse file content into messages.',
+      description: 'Function to parse file content into messages. Must be synchronous - cannot return Promise.',
       type: (
         <>
-          (content: string, context: {'{ locale: string }'}) {'=>'} Promise{'<'}
-          <a className="text-blue-400" href="#message">
-            Message
-          </a>
-          []{'>'}
+          (content: string, context: {'{ locale: string }'}) {'=>'} <a className="text-blue-400" href="#message">Message</a>[]
         </>
       ),
       required: true,
     },
     stringify: {
-      description: 'Function to serialize messages to file content.',
+      description: 'Function to serialize messages to file content. Must be synchronous - cannot return Promise.',
       type: (
         <>
-          (messages:{' '}
-          <a className="text-blue-400" href="#message">
-            Message
-          </a>
-          [], context: {'{ locale: string }'}) {'=>'} Promise{'<string>'}
+          (messages: <a className="text-blue-400" href="#message">Message</a>[], context: {'{ locale: string }'}) {'=>'} string
         </>
       ),
       required: true,

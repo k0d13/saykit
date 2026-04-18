@@ -1,0 +1,65 @@
+{
+  "name": "@saykit/transform-js",
+  "version": "0.0.0",
+  "description": "JavaScript and TypeScript transformer for SayKit",
+  "keywords": [
+    "i18n",
+    "javascript",
+    "saykit",
+    "transformer",
+    "typescript"
+  ],
+  "homepage": "https://github.com/k0d13/saykit#readme",
+  "bugs": {
+    "url": "https://github.com/k0d13/saykit/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/k0d13/saykit.git",
+    "directory": "packages/transform-js"
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.map"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    },
+    "./parser": {
+      "types": "./dist/parser.d.mts",
+      "default": "./dist/parser.mjs"
+    },
+    "./generator": {
+      "types": "./dist/generator.d.mts",
+      "default": "./dist/generator.mjs"
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "vitest",
+    "coverage": "vitest run --coverage",
+    "build": "tsdown",
+    "prepack": "pnpm build"
+  },
+  "dependencies": {
+    "@babel/generator": "^7.29.1",
+    "@babel/parser": "^7.29.2",
+    "@babel/traverse": "^7.29.0",
+    "@babel/types": "^7.29.0",
+    "@saykit/config": "workspace:^"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@types/babel__core": "^7.20.5",
+    "@types/babel__generator": "^7.27.0",
+    "@types/babel__traverse": "^7.28.0"
+  }
+}

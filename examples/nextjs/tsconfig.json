@@ -1,0 +1,5 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "include": ["src/**/*", ".next/dev/types/**/*.ts", "next-env.d.ts"],
+  "compilerOptions": { "paths": { "~/*": ["./src/*"] } }
+}

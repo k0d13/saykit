@@ -4,13 +4,15 @@
   "commit": false,
   "fixed": [
     [
-      "saykit",
-      "@saykit/react",
-      "@saykit/carbon",
       "@saykit/config",
       "@saykit/format-po",
-      "@saykit/babel-plugin",
-      "unplugin-saykit"
+      "saykit",
+      "@saykit/carbon",
+      "@saykit/react",
+      "babel-plugin-saykit",
+      "unplugin-saykit",
+      "@saykit/transform-js",
+      "@saykit/transform-jsx"
     ]
   ],
   "linked": [],

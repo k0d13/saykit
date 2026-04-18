@@ -4,7 +4,7 @@
 "saykit": patch
 "@saykit/carbon": patch
 "@saykit/react": patch
-"@saykit/babel-plugin": patch
+"babel-plugin-saykit": patch
 "unplugin-saykit": patch
 ---
 

@@ -1,0 +1,34 @@
+{
+  "name": "tanstack-start-example",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "scripts": {
+    "check": "tsc --noEmit",
+    "extract": "saykit extract",
+    "compile": "saykit compile",
+    "build": "vite build && tsc --noEmit",
+    "dev": "vite dev"
+  },
+  "dependencies": {
+    "@saykit/react": "workspace:^",
+    "@tanstack/react-router": "^1.168.22",
+    "@tanstack/react-router-devtools": "^1.166.13",
+    "@tanstack/react-start": "^1.167.41",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "saykit": "workspace:^"
+  },
+  "devDependencies": {
+    "@saykit/config": "workspace:^",
+    "@saykit/format-po": "workspace:^",
+    "@saykit/transform-js": "workspace:^",
+    "@saykit/transform-jsx": "workspace:^",
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "unplugin-saykit": "workspace:^",
+    "vite": "^8.0.8"
+  }
+}

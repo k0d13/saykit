@@ -49,12 +49,20 @@
   color: 84cc16
 
 - name: 'package: babel-plugin'
-  description: Related to @saykit/babel-plugin
+  description: Related to babel-plugin-saykit
   color: f59e0b
 
 - name: 'package: unplugin'
   description: Related to unplugin-saykit
   color: 06b6d4
+
+- name: 'package: transform-js'
+  description: Related to @saykit/transform-js
+  color: 8b5cf6
+
+- name: 'package: transform-jsx'
+  description: Related to @saykit/transform-jsx
+  color: ec4899
 
 # Labels primarily for both issues and pull requests
 
