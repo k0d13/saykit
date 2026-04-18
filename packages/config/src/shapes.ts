@@ -35,18 +35,18 @@ export const Bucket = z
     exclude: z.string().array().optional(),
     output: z.templateLiteral([z.string(), '{locale}', z.string(), '.{extension}']),
     formatter: Formatter,
-    transformer: z.union([
-      Transformer,
-      Transformer.array()
-        .min(1)
-        .transform((v) => ({
-          match: (id: string) => v.some((t) => t.match(id)),
-          extract: (id: string, content: string) =>
-            v.flatMap((t) => (t.match(id) ? t.extract(id, content) : [])),
-          transform: (id: string, content: string) =>
-            v.reduce((p, t) => (t.match(id) ? t.transform(id, p) : p), content),
-        })),
-    ]),
+    transformer: Transformer.transform((t) => [t])
+      .or(Transformer.array())
+      .transform(
+        (t) =>
+          ({
+            match: (id: string) => t.some((t) => t.match(id)),
+            extract: (id: string, content: string) =>
+              t.flatMap((t) => (t.match(id) ? t.extract(id, content) : [])),
+            transform: (id: string, content: string) =>
+              t.reduce((p, t) => (t.match(id) ? t.transform(id, p) : p), content),
+          }) satisfies Transformer,
+      ),
   })
   .transform((v) => ({
     ...v,
