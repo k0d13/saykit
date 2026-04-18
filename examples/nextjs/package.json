@@ -26,6 +26,7 @@
     "@saykit/transform-jsx": "workspace:^",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3"
+    "@types/react-dom": "^19.2.3",
+    "babel-plugin-saykit": "workspace:^"
   }
 }
