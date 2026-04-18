@@ -16,7 +16,7 @@ export default function (): PluginObj {
 
         const id = relative(process.cwd(), id_).replaceAll('\\', '/').split('?')[0]!;
         const bucket = config.buckets.find((b) => b.match(id));
-        const transformed = bucket?.transformer.transform(id, code) ?? code;
+        const transformed = bucket?.transformer.transform(code, id) ?? code;
 
         if (transformed !== code) {
           const ast = parse(transformed, state.file.opts.parserOpts as any);

@@ -24,8 +24,8 @@ export type Formatter = z.infer<typeof Formatter>;
 
 export const Transformer = z.object({
   match: z.custom<(id: string) => boolean>((v) => typeof v === 'function'),
-  extract: z.custom<(id: string, content: string) => Message[]>((v) => typeof v === 'function'),
-  transform: z.custom<(id: string, content: string) => string>((v) => typeof v === 'function'),
+  extract: z.custom<(code: string, id: string) => Message[]>((v) => typeof v === 'function'),
+  transform: z.custom<(code: string, id: string) => string>((v) => typeof v === 'function'),
 });
 export type Transformer = z.infer<typeof Transformer>;
 
@@ -41,10 +41,10 @@ export const Bucket = z
         (t) =>
           ({
             match: (id: string) => t.some((t) => t.match(id)),
-            extract: (id: string, content: string) =>
-              t.flatMap((t) => (t.match(id) ? t.extract(id, content) : [])),
-            transform: (id: string, content: string) =>
-              t.reduce((p, t) => (t.match(id) ? t.transform(id, p) : p), content),
+            extract: (code: string, id: string) =>
+              t.flatMap((t) => (t.match(id) ? t.extract(code, id) : [])),
+            transform: (code: string, id: string) =>
+              t.reduce((p, t) => (t.match(id) ? t.transform(code, id) : p), code),
           }) satisfies Transformer,
       ),
   })

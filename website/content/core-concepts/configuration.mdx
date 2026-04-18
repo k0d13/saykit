@@ -97,14 +97,16 @@ Buckets group related messages and control extraction and output:
       required: true,
     },
     transformer: {
-      description: 'Transformer for message extraction and transformation.',
+      description: 'Transformer or array of Transformers for message extraction and transformation.',
       type: (
         <>
           <a className="text-blue-400" href="#transformer">
             Transformer
-          </a>
+          </a>{' '}
+          | <a className="text-blue-400" href="#transformer">Transformer</a>[]
         </>
       ),
+      required: true,
     },
     formatter: {
       description: 'Formatter for message serialisation.',
@@ -132,21 +134,17 @@ Transformers control how messages are extracted and transformed:
       required: true,
     },
     extract: {
-      description: 'Function to extract messages from file content.',
+      description: 'Function to extract messages from file content. Must be synchronous - cannot return Promise.',
       type: (
         <>
-          (id: string, content: string) {'=>'} Promise{'<'}
-          <a className="text-blue-400" href="#message">
-            Message
-          </a>
-          []{'>'}
+          (code: string, id: string) {'=>'} <a className="text-blue-400" href="#message">Message</a>[]
         </>
       ),
       required: true,
     },
     transform: {
-      description: 'Function to transform extracted messages.',
-      type: '(id: string, content: string) => string',
+      description: 'Function to transform source code. Must be synchronous - cannot return Promise.',
+      type: '(code: string, id: string) => string',
       required: true,
     },
   }}
@@ -164,27 +162,19 @@ Formatters control how messages are serialized to disk:
       required: true,
     },
     parse: {
-      description: 'Function to parse file content into messages.',
+      description: 'Function to parse file content into messages. Must be synchronous - cannot return Promise.',
       type: (
         <>
-          (content: string, context: {'{ locale: string }'}) {'=>'} Promise{'<'}
-          <a className="text-blue-400" href="#message">
-            Message
-          </a>
-          []{'>'}
+          (content: string, context: {'{ locale: string }'}) {'=>'} <a className="text-blue-400" href="#message">Message</a>[]
         </>
       ),
       required: true,
     },
     stringify: {
-      description: 'Function to serialize messages to file content.',
+      description: 'Function to serialize messages to file content. Must be synchronous - cannot return Promise.',
       type: (
         <>
-          (messages:{' '}
-          <a className="text-blue-400" href="#message">
-            Message
-          </a>
-          [], context: {'{ locale: string }'}) {'=>'} Promise{'<string>'}
+          (messages: <a className="text-blue-400" href="#message">Message</a>[], context: {'{ locale: string }'}) {'=>'} string
         </>
       ),
       required: true,

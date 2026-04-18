@@ -13,7 +13,7 @@ export default createUnplugin((_options?: never) => {
       handler: (code, id_) => {
         const id = relative(process.cwd(), id_).replaceAll('\\', '/').split('?')[0]!;
         const bucket = config.buckets.find((b) => b.match(id));
-        return bucket?.transformer.transform(id, code) ?? code;
+        return bucket?.transformer.transform(code, id) ?? code;
       },
     },
   };

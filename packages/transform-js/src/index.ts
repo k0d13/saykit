@@ -8,8 +8,8 @@ import { parseExpression } from './parser.js';
 
 const traverse = ((traverse_ as any).default || traverse_) as typeof traverse_;
 
-function createProgram(id: string, content: string) {
-  const program = parser.parse(content, {
+function createProgram(code: string, id: string) {
+  const program = parser.parse(code, {
     sourceType: 'module',
     sourceFilename: id,
     plugins: ['typescript'],
@@ -37,8 +37,8 @@ function createJsTransformer(): Transformer {
       return ['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts'].some((e) => id.endsWith(e));
     },
 
-    extract(id: string, content: string) {
-      const program = createProgram(id, content);
+    extract(code: string, id: string) {
+      const program = createProgram(code, id);
       const messages: CompositeMessage[] = [];
 
       traverse(program, {
@@ -64,8 +64,8 @@ function createJsTransformer(): Transformer {
       }));
     },
 
-    transform(id: string, content: string) {
-      const program = createProgram(id, content);
+    transform(code: string, id: string) {
+      const program = createProgram(code, id);
 
       traverse(program, {
         Expression(path) {
