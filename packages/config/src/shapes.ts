@@ -44,7 +44,7 @@ export const Bucket = z
             extract: (code: string, id: string) =>
               t.flatMap((t) => (t.match(id) ? t.extract(code, id) : [])),
             transform: (code: string, id: string) =>
-              t.reduce((p, t) => (t.match(id) ? t.transform(code, id) : p), code),
+              t.reduce((p, t) => (t.match(id) ? t.transform(p, id) : p), code),
           }) satisfies Transformer,
       ),
   })
