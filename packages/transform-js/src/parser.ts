@@ -149,7 +149,7 @@ export function parseExpression(expression: t.Expression, fallback?: boolean) {
     return message;
   } else if (fallback) {
     const key = getExpressionAsKey(expression);
-    return new ArgumentMessage(key as string, expression);
+    return new ArgumentMessage(key, expression);
   } else {
     return null;
   }
