@@ -1,6 +1,6 @@
 {
   "name": "@saykit/transform-jsx",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "JSX and TSX source transformer for SayKit",
   "keywords": [
     "i18n",

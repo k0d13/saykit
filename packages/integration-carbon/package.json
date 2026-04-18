@@ -1,6 +1,6 @@
 {
   "name": "@saykit/carbon",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Carbon Discord framework integration for saykit",
   "keywords": [
     "bot",

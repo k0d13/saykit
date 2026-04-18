@@ -1,6 +1,6 @@
 {
   "name": "@saykit/config",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "CLI and configuration tooling for saykit",
   "keywords": [
     "cli",
