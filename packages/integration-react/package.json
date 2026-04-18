@@ -1,6 +1,6 @@
 {
   "name": "@saykit/react",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "React integration for saykit, i18n hooks and components",
   "keywords": [
     "i18n",
