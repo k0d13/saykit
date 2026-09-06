@@ -152,7 +152,7 @@ import { SayProvider, useSay } from '@saykit/react/client';
 
 ### `<SayProvider>`
 
-Render `SayProvider` once near the top of your client tree. It takes either a [store](/core-concepts/runtime), or a locale and its messages.
+Render `SayProvider` once near the top of your client tree. It takes either a [store](/core-concepts/runtime), or a catalogue and a locale.
 
 A store owns the catalogue, so it can switch locale at runtime. That is what a browser app wants: every locale is loadable, and switching re-renders the tree.
 
@@ -160,8 +160,8 @@ Build the store in your `i18n` module and export it, so the provider and everyth
 
 ```ts title="src/i18n.ts"
 import { createCatalogue, createStore } from 'saykit';
-import en from './locales/en.po';
-import fr from './locales/fr.po';
+import en from './locales/en.js';
+import fr from './locales/fr.js';
 
 export const catalogue = createCatalogue({ en, fr });
 
@@ -177,11 +177,11 @@ import { store } from './i18n';
 </SayProvider>;
 ```
 
-A store is a live object and cannot cross the server/client boundary, so a server-rendered app hands over the locale and its messages instead:
+A server-rendered app has the server choose the locale instead. A store is a live object and cannot cross the server/client boundary, but a locale and its messages can: messages compile to data rather than to functions, so they serialise like any other JSON.
 
 ```tsx
 <SayProvider locale={locale} messages={messages}>
-  <App />
+  {children}
 </SayProvider>
 ```
 
@@ -250,13 +250,14 @@ export const withSay = createWithSay(catalogue);
 
 ```tsx title="src/app/[locale]/layout.tsx"
 import { SayProvider } from '@saykit/react/client';
-import { catalogue, withSay } from '../../i18n';
+import { getSay } from '@saykit/react/server';
+import { withSay } from '../../i18n';
 
 async function RootLayout({ params, children }) {
   const { locale } = await params;
 
   return (
-    <html lang={catalogue.match(locale)}>
+    <html lang={getSay().locale}>
       <body>
         <SayProvider>{children}</SayProvider>
       </body>
@@ -267,7 +268,7 @@ async function RootLayout({ params, children }) {
 export default withSay(RootLayout, (props) => props.params.then((params) => params.locale));
 ```
 
-`<SayProvider>` takes no props here. In a server component it resolves to the `react-server` build of `@saykit/react/client`, which reads the established view and serialises that locale and its messages across the boundary, which is all a client component can be given.
+`<SayProvider>` takes no props here. In a server component it resolves to the `react-server` build of `@saykit/react/client`, which reads the established view and hands that locale and its messages across the boundary.
 
 <Callout type="warn">
   Wrap every segment that renders messages, not just the outermost one. A framework is free to
@@ -323,7 +324,7 @@ A simple way to think about the integration:
 
 - render translated content with `<Say>` in any component, server or client
 - on the server, `withSay` binds one view per request, and `getSay()` reads it
-- on the client, `SayProvider` supplies a store to follow, or the single locale the server sent, so the tree hydrates consistently
+- on the client, `SayProvider` supplies a store to follow, or a catalogue bound to the locale the server sent, so the tree hydrates consistently
 
 ## Next
 

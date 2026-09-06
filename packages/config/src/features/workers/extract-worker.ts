@@ -1,6 +1,7 @@
 import { access } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { Message } from '#/shapes.js';
+import { emitCatalogueModule } from '../catalogue/emit';
 import { extractMessagesFromFile } from '../catalogue/extractor';
 import { mergeExtractedMessages } from '../catalogue/merge';
 import { expandBucketOutputPath } from '../catalogue/path';
@@ -83,7 +84,17 @@ export class BucketExtractWorker extends BucketWorker {
       await writeCatalogueMessages(this.bucket, locale, []);
     }
 
+    await this.compile();
+
     this.logger.success(`Extraction complete for bucket: ${this.bucket.include}`);
+  }
+
+  /** Compile every locale's catalogue into the module the app imports. */
+  async compile() {
+    for (const locale of this.config.locales) {
+      const { path, count } = await emitCatalogueModule(this.config, this.bucket, locale);
+      this.logger.step(`Compiled ${count} message(s) to ${normalisePathForLogs(path)}`);
+    }
   }
 
   async update(path: string) {
@@ -96,9 +107,18 @@ export class BucketExtractWorker extends BucketWorker {
     this.logger.header(`👀 Watching bucket for changes: ${this.bucket.include}`);
 
     for await (const event of watchDebounced('.', { recursive: true })) {
-      if (!event.filename || !this.bucket.match(event.filename)) continue;
+      if (!event.filename) continue;
       const path = join(process.cwd(), event.filename);
-      await this.update(path);
+
+      if (this.bucket.match(event.filename)) {
+        await this.update(path);
+        continue;
+      }
+
+      // A translation changed rather than a call site, which is a recompile and
+      // nothing else: extraction only ever writes the source locale, and this
+      // is how an edit in a `.po` reaches the running app
+      if (this.bucket.output.match(event.filename)) await this.compile();
     }
   }
 }

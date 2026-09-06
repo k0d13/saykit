@@ -4,10 +4,10 @@ export const locales = ['en', 'fr', 'pl', 'ja'] as const;
 export type Locale = (typeof locales)[number];
 
 export const catalogue = createCatalogue({
-  en: () => import('./locales/en.po'),
-  fr: () => import('./locales/fr.po'),
-  pl: () => import('./locales/pl.po'),
-  ja: () => import('./locales/ja.po'),
+  en: () => import('./locales/en.js'),
+  fr: () => import('./locales/fr.js'),
+  pl: () => import('./locales/pl.js'),
+  ja: () => import('./locales/ja.js'),
 });
 
 const initial = catalogue.match(navigator.languages as string[]);

@@ -57,7 +57,7 @@ SayKit wires up like this:
 1. You **author** messages with `` say`...` `` or `<Say>...</Say>` in source files.
 2. The `saykit` CLI **extracts** them into per-locale files (`src/locales/en.po`, `fr.po`, &hellip;).
 3. Translators (or you) fill in the translations in those files.
-4. At build time a SayKit plugin **transforms** your source, macros become small runtime calls, and `import en from './locales/en.po'` becomes a plain JS object.
+4. At build time a SayKit plugin **transforms** your source, macros become small runtime calls, and `import en from './locales/en.js'` becomes a plain JS object.
 5. At runtime, `catalogue.locale(...)` returns the locale-bound `View` that **formats** messages on demand.
 
 There's no SaaS, no proxy, no extra service. Translation files live in your repo, next to the code they describe.

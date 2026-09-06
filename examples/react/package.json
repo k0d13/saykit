@@ -10,7 +10,11 @@
     "extract": "saykit extract",
     "build": "vite build",
     "dev": "vite dev",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "compile": "saykit compile",
+    "predev": "saykit compile",
+    "prebuild": "saykit compile",
+    "precheck": "saykit compile"
   },
   "dependencies": {
     "@saykit/react": "workspace:^",

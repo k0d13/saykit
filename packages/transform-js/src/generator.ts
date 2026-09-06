@@ -2,6 +2,7 @@ import * as t from '@babel/types';
 import {
   ArgumentMessage,
   ChoiceMessage,
+  compileMessage,
   CompositeMessage,
   ElementMessage,
   type Message,
@@ -21,11 +22,15 @@ export function isLoneArgument(message: CompositeMessage) {
 
 /**
  * The property a call looks its message up by: an id into the catalogue, or
- * the ICU message itself when nothing was extracted.
+ * the message itself when nothing was extracted, compiled the way the CLI
+ * compiles a catalogue's, so the runtime formats both from the same data.
  */
 export function generateDescriptorProperty(message: CompositeMessage) {
   if (isLoneArgument(message))
-    return t.objectProperty(t.identifier('message'), t.stringLiteral(message.toICUString()));
+    return t.objectProperty(
+      t.identifier('message'),
+      t.valueToNode(compileMessage(message.toICUString())),
+    );
   const id = message.descriptor.id ?? message.toHashString();
   return t.objectProperty(t.identifier('id'), t.stringLiteral(id));
 }

@@ -4,8 +4,12 @@
   "scripts": {
     "check": "tsc --noEmit",
     "extract": "saykit extract",
-    "build": "babel src --extensions .ts --out-dir dist --ignore \"src/**/*.d.po.ts\"",
-    "start": "pnpm build && node dist/main.js"
+    "build": "babel src --extensions .ts,.js --out-dir dist --ignore \"src/**/*.d.ts\"",
+    "start": "pnpm build && node dist/main.js",
+    "compile": "saykit compile",
+    "prebuild": "saykit compile",
+    "precheck": "saykit compile",
+    "prestart": "saykit compile"
   },
   "dependencies": {
     "saykit": "workspace:^"

@@ -176,7 +176,7 @@ Formats the time portion of a `Date` or timestamp. Same props as `<Say.Date>`; s
 
 Wraps a client tree with the view its descendants resolve against. Required before any client-side use of `<Say>` or `useSay()`.
 
-It takes either a `Store`, or a locale and its messages. A store owns a catalogue and can switch locale; it is a live object, so it belongs to an application that holds its catalogue on the client. A locale and its messages are plain data and are what a server can send across the boundary; the provider builds a single-locale store over them, which has nothing to switch to.
+It takes either a `Store`, or a locale and its messages. A store owns a catalogue and can switch locale, which is what a client that chooses its own locale wants. A locale and its messages are the serialisable form: messages compile to data rather than to functions, so a server can hand them straight across the boundary.
 
 ```tsx
 <SayProvider store={store}>{children}</SayProvider>
@@ -196,11 +196,12 @@ Props:
       type: 'Store',
     },
     locale: {
-      description: 'The active locale string. Use with `messages`, instead of `store`.',
+      description: 'The locale to bind. Use with `messages`, instead of `store`.',
       type: 'string',
     },
     messages: {
-      description: 'The message catalogue for the locale. Use with `locale`, instead of `store`.',
+      description:
+        'The compiled messages for that locale. Should be referentially stable rather than a fresh object literal per render.',
       type: 'View.Messages',
     },
     options: {
@@ -230,7 +231,7 @@ function Title({ name }: { name: string }) {
 }
 ```
 
-There is no hook for the store behind it. A store is a module-scope value you already hold, so switching is `store.set('fr')` on the one you built; a provider given a locale and its messages has no catalogue to switch through anyway.
+There is no hook for the store behind it. A store is a module-scope value you already hold, so switching is `store.set('fr')` on the one you built.
 
 ## `@saykit/react/server`
 

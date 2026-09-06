@@ -38,8 +38,8 @@ The simplest setup:
 
 ```ts title="src/i18n.ts"
 import { createCatalogue } from 'saykit';
-import en from './locales/en.po';
-import fr from './locales/fr.po';
+import en from './locales/en.js';
+import fr from './locales/fr.js';
 
 export const catalogue = createCatalogue({ en, fr });
 ```
@@ -52,10 +52,10 @@ Both catalogues are part of the bundle. `catalogue.locale('fr')` is synchronous,
 import { createCatalogue } from 'saykit';
 
 export const catalogue = createCatalogue({
-  en: () => import('./locales/en.po'),
-  fr: () => import('./locales/fr.po'),
-  ja: () => import('./locales/ja.po'),
-  de: () => import('./locales/de.po'),
+  en: () => import('./locales/en.js'),
+  fr: () => import('./locales/fr.js'),
+  ja: () => import('./locales/ja.js'),
+  de: () => import('./locales/de.js'),
 });
 ```
 
@@ -68,7 +68,7 @@ const say = await catalogue.load('fr');
 Writing one thunk per locale rather than one function keyed by locale is deliberate: every import is a literal a bundler can see, so the set of shipped locales is decided at build time, and there is no locale the catalogue lists but cannot produce.
 
 <Callout type="warn">
-  `babel-plugin-saykit` currently rewrites **static** `import en from './locales/en.po'` only. For
+  `babel-plugin-saykit` currently rewrites **static** `import en from './locales/en.js'` only. For
   dynamic imports, the bundler does the work, the formatter still parses the file, but through the
   bundler's loader pipeline rather than SayKit's. This works fine for `unplugin-saykit` (Vite,
   Rolldown, Rollup, Webpack, &hellip;).
@@ -80,13 +80,13 @@ Inline the source locale, lazy-load everything else:
 
 ```ts title="src/i18n.ts"
 import { createCatalogue } from 'saykit';
-import en from './locales/en.po';
+import en from './locales/en.js';
 
 export const catalogue = createCatalogue({
   en,
-  fr: () => import('./locales/fr.po'),
-  ja: () => import('./locales/ja.po'),
-  de: () => import('./locales/de.po'),
+  fr: () => import('./locales/fr.js'),
+  ja: () => import('./locales/ja.js'),
+  de: () => import('./locales/de.js'),
 });
 ```
 
@@ -122,10 +122,10 @@ On the server, you usually load only the locale this request needs:
 import { createCatalogue } from 'saykit';
 
 export const catalogue = createCatalogue({
-  en: () => import('./locales/en.po'),
-  fr: () => import('./locales/fr.po'),
-  ja: () => import('./locales/ja.po'),
-  de: () => import('./locales/de.po'),
+  en: () => import('./locales/en.js'),
+  fr: () => import('./locales/fr.js'),
+  ja: () => import('./locales/ja.js'),
+  de: () => import('./locales/de.js'),
 });
 
 export function getSayFor(locale: string) {

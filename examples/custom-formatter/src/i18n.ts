@@ -1,7 +1,7 @@
 import { createCatalogue } from 'saykit';
-import de from './locales/de.yml';
-import en from './locales/en.yml';
-import fr from './locales/fr.yml';
+import de from './locales/de.js';
+import en from './locales/en.js';
+import fr from './locales/fr.js';
 
 export const locales = ['en', 'fr', 'de'] as const;
 export type Locale = (typeof locales)[number];

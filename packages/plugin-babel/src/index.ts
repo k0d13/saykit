@@ -1,7 +1,6 @@
-import { dirname, relative, resolve } from 'node:path';
-import type { ConfigAPI, PluginObj, parse as Parse, types } from '@babel/core';
+import { relative } from 'node:path';
+import type { ConfigAPI, PluginObj, parse as Parse } from '@babel/core';
 import { resolveConfig } from '@saykit/config/features/loader';
-import { loadCatalogue } from './catalogue.js';
 
 declare module '@babel/core' {
   interface PluginObj {
@@ -9,68 +8,20 @@ declare module '@babel/core' {
   }
 }
 
-export interface Options {
-  /**
-   * How a catalogue import is resolved.
-   *
-   * `'inline'` (the default) replaces the import with the assembled record, so
-   * the Babel plugin is enough on its own. The cost is that the record lands in
-   * the importing module, which a bundler only re-reads when that module's own
-   * bytes change, editing a catalogue will not hot-reload.
-   *
-   * `'module'` leaves the import for a bundler integration to serve, either
-   * `babel-plugin-saykit/next` or `babel-plugin-saykit/metro`. Set this
-   * whenever one of those is wired up, or the import gets inlined before the
-   * integration is ever asked for the module.
-   */
-  catalogues?: 'inline' | 'module';
-}
-
-export default (
-  { types: t }: ConfigAPI & { types: typeof types },
-  { catalogues = 'inline' }: Options = {},
-): PluginObj => {
+/**
+ * Rewrite `say` call sites into the descriptors the runtime formats.
+ *
+ * Catalogues are not this plugin's business: the CLI compiles each locale into
+ * an ordinary `.js` module, so Next, Metro and everything else load it the way
+ * they load any other module.
+ */
+export default (_api: ConfigAPI): PluginObj => {
   const config = resolveConfig();
 
   return {
     name: 'saykit',
 
-    visitor:
-      catalogues === 'module'
-        ? {}
-        : {
-            // TODO: This is fragile, it does not work with dynamic imports, document this
-            ImportDeclaration(path, state) {
-              const importee = path.node.source.value;
-              if (!importee.startsWith('.')) return;
-              const importer = state.filename ?? state.file.opts.filename;
-              if (!importer) return;
-
-              const catalogue = loadCatalogue(config, resolve(dirname(importer), importee));
-              if (!catalogue) return;
-
-              // The whole declaration is replaced by one binding, so anything
-              // bound alongside the default would be dropped silently
-              const [specifier, ...rest] = path.node.specifiers;
-              if (specifier?.type !== 'ImportDefaultSpecifier' || rest.length > 0)
-                throw path.buildCodeFrameError(
-                  'SayKit inline imports require a single default import',
-                );
-
-              path.replaceWith(
-                t.variableDeclaration('const', [
-                  t.variableDeclarator(
-                    t.identifier(specifier.local.name),
-                    t.objectExpression(
-                      Object.entries(catalogue.record).map(([key, value]) =>
-                        t.objectProperty(t.stringLiteral(key), t.stringLiteral(value)),
-                      ),
-                    ),
-                  ),
-                ]),
-              );
-            },
-          },
+    visitor: {},
 
     parserOverride(code, opts, parse) {
       const id_ = opts.sourceFileName;

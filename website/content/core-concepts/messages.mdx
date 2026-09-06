@@ -305,7 +305,7 @@ say.time(opensAt, { style: 'short' }); // → "19:30"
 
 Written on its own, with no text around it, a fragment is still formatted for the locale but is not
 extracted: it has nothing a translator could change, so it never reaches the catalogue. The
-transform writes the ICU into the call instead of an id.
+transform writes the compiled message into the call instead of an id.
 
 `style` is optional, and omitting it still gives locale-aware output, `{n, number}` applies the right
 grouping separators and decimal mark. An unrecognised style fails the build.

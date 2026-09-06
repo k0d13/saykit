@@ -49,7 +49,7 @@ describe('server runtime', () => {
   it('withSay negotiates the locale, loads it, and renders the component', async () => {
     const Component = vi.fn((props: { params: Promise<{ locale: string }> }) => {
       void props;
-      return createElement('span', null, getSay().messages.greeting);
+      return createElement('span', null, getSay().call({ id: 'greeting' }));
     });
     const Wrapped = createWithSay(make())(Component, (props) =>
       props.params.then((params) => params.locale),
@@ -82,6 +82,7 @@ describe('server runtime', () => {
     const element = SayProvider({ children: null });
     const props = element.props as { locale: string; messages: { greeting: string } };
     expect(props.locale).toBe('en');
+    // Data, which is the only thing that crosses the boundary
     expect(props.messages.greeting).toBe('Hi');
   });
 

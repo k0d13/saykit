@@ -41,11 +41,5 @@
     "check": "tsc --noEmit",
     "build": "tsdown",
     "prepack": "pnpm build && node -e \"require('fs').cpSync('../../skills', 'skills', { recursive: true })\""
-  },
-  "dependencies": {
-    "@messageformat/date-skeleton": "2.0.0-0",
-    "@messageformat/number-skeleton": "2.0.0-0",
-    "@messageformat/parser": "^5.2.0",
-    "messageformat": "^4.1.0"
   }
 }

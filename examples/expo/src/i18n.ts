@@ -1,8 +1,8 @@
 import { getLocales } from 'expo-localization';
 import { createCatalogue, createStore } from 'saykit';
-import en from './locales/en.json';
-import fr from './locales/fr.json';
-import ja from './locales/ja.json';
+import en from './locales/en.js';
+import fr from './locales/fr.js';
+import ja from './locales/ja.js';
 
 export const locales = ['en', 'fr', 'ja'] as const;
 export type Locale = (typeof locales)[number];

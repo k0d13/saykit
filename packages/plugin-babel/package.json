@@ -29,18 +29,6 @@
     ".": {
       "types": "./dist/index.d.cts",
       "default": "./dist/index.cjs"
-    },
-    "./metro": {
-      "types": "./dist/metro/index.d.cts",
-      "default": "./dist/metro/index.cjs"
-    },
-    "./next": {
-      "types": "./dist/next/index.d.cts",
-      "default": "./dist/next/index.cjs"
-    },
-    "./next/loader": {
-      "types": "./dist/next/loader.d.cts",
-      "default": "./dist/next/loader.cjs"
     }
   },
   "publishConfig": {
