@@ -8,7 +8,10 @@
   "scripts": {
     "check": "tsc --noEmit",
     "extract": "saykit extract",
-    "dev": "expo start"
+    "dev": "expo start",
+    "compile": "saykit compile",
+    "predev": "saykit compile",
+    "precheck": "saykit compile"
   },
   "dependencies": {
     "@formatjs/intl-getcanonicallocales": "^3.2.12",

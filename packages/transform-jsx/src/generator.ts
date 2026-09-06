@@ -11,13 +11,15 @@ import { generateDescriptorProperty } from '@saykit/transform-js/generator';
 export function generateSayJSXElement(message: CompositeMessage) {
   const children = generateChildExpressions(message.children);
 
-  // The same lookup a call makes, written as a prop: an id, or the message
-  // itself when there was nothing to extract
+  // The same lookup a call makes, written as a prop: an id, or the compiled
+  // message itself when there was nothing to extract
   const descriptor = generateDescriptorProperty(message);
   const attributes = [
     t.jsxAttribute(
       t.jsxIdentifier((descriptor.key as t.Identifier).name),
-      descriptor.value as t.StringLiteral,
+      t.isStringLiteral(descriptor.value)
+        ? descriptor.value
+        : t.jsxExpressionContainer(descriptor.value as t.Expression),
     ),
     ...(message.whitespace === undefined
       ? []

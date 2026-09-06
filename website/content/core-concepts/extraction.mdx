@@ -23,17 +23,17 @@ The end result is a set of files like:
 
 ```
 src/locales/
-  en.po         # source locale, freshly generated from your source
-  en.d.po.ts    # auto-generated TS declaration for *.po imports
-  fr.po         # other locales, left untouched (or created empty if missing)
-  fr.d.po.ts
+  en.po       # source locale, freshly generated from your source
+  en.js       # the compiled module your app imports
+  en.d.ts     # its declaration
+  fr.po       # other locales, left untouched (or created empty if missing)
+  fr.js
+  fr.d.ts
 ```
 
 <Callout type="info">
-  The `.d.po.ts` files are emitted next to each catalogue so that `import en from './locales/en.po'`
-  type-checks even without a build plugin running. The `.d.{extension}.ts` name is the one
-  TypeScript actually looks for, and non-JSON extensions need `allowArbitraryExtensions`; see [typed
-  messages](/guides/typed-messages).
+  The `.po` is what a translator edits; the `.js` beside it is what your app imports, compiled by
+  [`saykit compile`](/reference/cli#saykit-compile), which extraction runs as its last step.
 </Callout>
 
 ## Source-only writes
@@ -46,9 +46,9 @@ Extraction writes **only** the source locale (the first entry in `locales`). It 
 
 This keeps diffs small (changing one string touches one file) and treats translated content as owned by your translation management system, not by extraction. You can run `saykit extract` as often as you like; your translators' work is never touched.
 
-### Fallback at load time
+### Fallback at compile time
 
-Because non-source files no longer carry the source strings, an untranslated (or missing) key is resolved through a **fallback chain** when the build plugin loads a catalogue, not at runtime. By default the chain ends at the source locale, so an untranslated key renders the source string. You can insert intermediate locales with [`fallbackLocales`](/core-concepts/configuration#fallback-locales):
+Because non-source files no longer carry the source strings, an untranslated (or missing) key is resolved through a **fallback chain** when the catalogue is compiled, not at runtime. By default the chain ends at the source locale, so an untranslated key renders the source string. You can insert intermediate locales with [`fallbackLocales`](/core-concepts/configuration#fallback-locales):
 
 ```ts title="saykit.config.ts"
 fallbackLocales: {
@@ -57,7 +57,7 @@ fallbackLocales: {
 },
 ```
 
-The chain is baked into the emitted JS module at build time, so the runtime still loads a single locale. See [Vite](/integrations/vite) / [Babel](/integrations/babel) for how loading works.
+The chain is resolved into the compiled module, so your app still imports a single module per locale.
 
 ### Pruning other locales yourself
 
@@ -134,12 +134,13 @@ This fails the build if anyone forgot to run extraction, useful for keeping tran
 
 For each bucket output:
 
-| File               | Purpose                                                            |
-| ------------------ | ------------------------------------------------------------------ |
-| `{locale}.po`      | The catalogue, in whatever format the bucket's formatter produces  |
-| `{locale}.d.po.ts` | Generic TS declaration so `import en from './locales/en.po'` types |
+| File            | Purpose                                                           |
+| --------------- | ----------------------------------------------------------------- |
+| `{locale}.po`   | The catalogue, in whatever format the bucket's formatter produces |
+| `{locale}.js`   | The compiled module your app imports, one entry per message       |
+| `{locale}.d.ts` | Its declaration, so `import en from './locales/en.js'` types      |
 
-SayKit doesn't write a `.gitignore`: it's up to you which generated files to commit or ignore. The `.po` catalogues are canonical and should be committed; the `.d.po.ts` declarations are regenerated on every extraction, so you can either commit them (handy for CI type-checking) or ignore them via your project's `.gitignore`.
+SayKit doesn't write a `.gitignore`: it's up to you which generated files to commit or ignore. The `.po` catalogues are canonical and should be committed. The `.js` is build output, so most projects ignore it and run `saykit compile` before anything that reads it. The `.d.ts` is two lines and never changes, so committing that keeps `tsc` passing on a fresh clone before anything has been generated.
 
 ## Next
 

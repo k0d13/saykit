@@ -21,15 +21,16 @@ SayContext.displayName = 'SayContext';
  * cross the server/client boundary.
  *
  * A locale and its messages are the serialisable form a server can hand across
- * that boundary. Only that one locale comes over, so the provider built from
- * it has nothing to switch to: switching is the server's to do, normally
+ * that boundary, which compiling messages to data rather than to functions is
+ * what makes possible. Only that one locale comes over, so the provider built
+ * from it has nothing to switch to: switching is the server's to do, normally
  * through navigation.
  */
 export type SayProviderProps =
   | { store: Store; locale?: never; messages?: never; options?: never }
   | { store?: never; locale: string; messages: View.Messages; options?: View.Options }
-  // Nothing at all, which is what `<SayProvider>` on the server is: the
-  // server build of this module reads the scope and fills the props in
+  // Nothing at all, which is what `<SayProvider>` on the server is: the server
+  // build of this module reads the established view and fills the props in
   | { store?: never; locale?: never; messages?: never; options?: never };
 
 /**

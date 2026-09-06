@@ -4,3 +4,7 @@ node_modules/
 .coverage/
 dist/
 RELEASE_NOTES.md
+# Locale modules the saykit CLI compiles from the catalogues beside them.
+# Their declarations are committed, so `tsc` passes before anything is generated.
+examples/**/locales/*.js
+examples/**/_locales/**/*.js

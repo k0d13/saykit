@@ -10,7 +10,12 @@
     "extract": "saykit extract",
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "compile": "saykit compile",
+    "predev": "saykit compile",
+    "prebuild": "saykit compile",
+    "precheck": "saykit compile",
+    "prestart": "saykit compile"
   },
   "dependencies": {
     "@saykit/react": "workspace:^",

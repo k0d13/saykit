@@ -24,23 +24,13 @@ pnpm add -D @saykit/config @saykit/format-po @saykit/transform-js @saykit/transf
 ```json title=".babelrc"
 {
   "presets": ["next/babel"],
-  "plugins": [["saykit", { "catalogues": "module" }]]
+  "plugins": ["saykit"]
 }
 ```
 
 Adding a `.babelrc` switches Next.js from SWC to Babel for compilation. SayKit doesn't have a SWC plugin, so this is the supported way to use SayKit with Next.js today.
 
-`catalogues: 'module'` hands catalogues to a loader instead of inlining them; see [Catalogues](#catalogues). Wrap your Next config to register it:
-
-```js title="next.config.mjs"
-import { withSayKit } from 'babel-plugin-saykit/next';
-
-export default withSayKit({
-  // your config
-});
-```
-
-`withSayKit` derives the rules from your `saykit.config.*`, one per bucket, for both Turbopack and `next --webpack`. Each targets that bucket's `output` exactly, so changing a bucket's path or format needs no change here, and no other file of the same extension is routed through the loader.
+Nothing else to register: `next.config.mjs` needs no SayKit wrapper.
 
 ### Generic Babel
 
@@ -65,7 +55,7 @@ React Native uses Babel via Metro. Add the plugin to your Babel config:
 ```js title="babel.config.js"
 module.exports = {
   presets: ['module:metro-react-native-babel-preset'],
-  plugins: [['saykit', { catalogues: 'module' }]],
+  plugins: ['saykit'],
 };
 ```
 
@@ -78,66 +68,25 @@ module.exports = function (api) {
   api.cache(true);
   return {
     presets: ['babel-preset-expo'],
-    plugins: [['saykit', { catalogues: 'module' }]],
+    plugins: ['saykit'],
   };
 };
 ```
 
-Metro never runs Babel over `.json`, so catalogues are assembled by a transform worker instead. Wrap your Metro config:
-
-```js title="metro.config.js"
-const { getDefaultConfig } = require('expo/metro-config');
-const { withSayKit } = require('babel-plugin-saykit/metro');
-
-module.exports = withSayKit(getDefaultConfig(__dirname));
-```
-
-`withSayKit` also registers non-JSON catalogue extensions (e.g. `.po`) with Metro's resolver, since a file Metro cannot resolve is not a module it can reload.
+`metro.config.js` needs no SayKit wrapper either.
 
 ## What it does
 
-The Babel plugin runs the matching SayKit transformer over every non-`node_modules` source file, rewriting macros to `say.call(...)` invocations.
+The Babel plugin runs the matching SayKit transformer over every non-`node_modules` source file, rewriting macros to `say.call(...)` invocations. That is the whole of its job.
 
-Assembling a catalogue means walking the locale's [fallback chain](/core-concepts/configuration#fallback-locales), parsing every file in it with the bucket's formatter, and merging the results into one record so untranslated keys fall back through the chain to the source string. Under the default `'inline'` mode the plugin does that itself, at the import; under `'module'` it leaves the import alone and the Next.js loader or Metro transformer assembles the record instead.
+Catalogues are not its business. [`saykit compile`](/reference/cli#saykit-compile) turns each one into an ordinary `{locale}.js` module, walking the locale's [fallback chain](/core-concepts/configuration#fallback-locales) so untranslated keys fall back to the source string. Your app imports that module, and every bundler already knows how to load, watch and hot-update a module.
 
-The result: no `.po` parser at runtime, no SayKit extractor in the bundle, just small `say.call()` calls and one plain JS object per locale.
-
-## Catalogues
-
-Where that record is assembled is controlled by the `catalogues` option, and the choice decides whether editing a catalogue hot-reloads.
-
-### `'inline'` (default)
-
-The import is replaced with the record, in the module that imported it. Babel alone is enough, with no bundler configuration at all.
-
-The cost is hot reload. A bundler re-reads a module when that module's own bytes change, and a record baked into an importer lives in a file that does not change when you edit a catalogue. So new and edited strings only appear after a cache-clearing restart (`expo start --clear`, deleting `.next`).
-
-That is usually fine for a plain Babel build or a library, and painful in a dev server.
-
-### `'module'`
-
-The import is left alone, and the catalogue is served by a bundler integration: `babel-plugin-saykit/next` for Next.js, `babel-plugin-saykit/metro` for Metro. Catalogues stay **real modules**, which is exactly what makes them hot-reloadable.
-
-Set it whenever one of those is wired up. The two are mutually exclusive: if the plugin inlines the import, the integration is never asked for the module and nothing hot-reloads.
-
-Those two are the whole list, because they are the two bundlers that cannot be reached any other way: Metro never runs Babel over `.json`, and Turbopack runs loaders but not plugins. On webpack, Vite, Rollup or esbuild proper, use [`unplugin-saykit`](/integrations/unplugin) and skip the Babel plugin's catalogue handling entirely.
+The result: no message parser at runtime, no SayKit extractor in the bundle, just small `say.call()` calls and one plain module per locale.
 
 <Callout type="info">
-  Under webpack and Turbopack the fallback files are registered as dependencies too, so editing a
-  source locale updates every locale that falls back to it.
-</Callout>
-
-<Callout type="warn">
-  Under **Metro** only the locale's own file is tracked. Metro keys its transform cache on each
-  file's bytes and offers no equivalent of `addDependency`, so editing a *fallback* locale (e.g.
-  `en.json` while viewing `fr`) does not refresh the locale that falls back to it. Editing the
-  locale you are viewing works normally.
-</Callout>
-
-<Callout type="warn">
-  Only **static** imports of catalogues are handled. `import('./locales/en.po')` (dynamic import) is
-  not. For dynamic locale loading, write a thunk per locale in `messages` and let your bundler
-  handle the imports.
+  Run `saykit compile` before anything that reads those modules. A `predev` and `prebuild` script
+  is the usual way; `saykit extract` also compiles as its last step, and `saykit extract --watch`
+  recompiles when a translation changes.
 </Callout>
 
 ## `unplugin` vs Babel: which one?

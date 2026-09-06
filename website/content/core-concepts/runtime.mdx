@@ -21,8 +21,8 @@ You usually create one catalogue per app. Framework integrations wrap it, `SayPr
 
 ```ts
 import { createCatalogue } from 'saykit';
-import en from './locales/en.po';
-import fr from './locales/fr.po';
+import en from './locales/en.js';
+import fr from './locales/fr.js';
 
 const catalogue = createCatalogue({ en, fr });
 ```
@@ -36,8 +36,8 @@ The keys are your locales, so there is no separate list to keep in step. Each en
 ```ts
 const catalogue = createCatalogue({
   en,
-  fr: () => import('./locales/fr.po'),
-  ja: () => import('./locales/ja.po'),
+  fr: () => import('./locales/fr.js'),
+  ja: () => import('./locales/ja.js'),
 });
 ```
 
@@ -228,8 +228,8 @@ A typical client-side bootstrap:
 
 ```ts title="src/i18n.ts"
 import { createCatalogue, createStore } from 'saykit';
-import en from './locales/en.po';
-import fr from './locales/fr.po';
+import en from './locales/en.js';
+import fr from './locales/fr.js';
 
 export const catalogue = createCatalogue({ en, fr });
 
@@ -244,8 +244,8 @@ A typical per-request server-side bootstrap:
 import { createCatalogue } from 'saykit';
 
 const catalogue = createCatalogue({
-  en: () => import('./locales/en.po'),
-  fr: () => import('./locales/fr.po'),
+  en: () => import('./locales/en.js'),
+  fr: () => import('./locales/fr.js'),
 });
 
 export function getSayFor(headers: Headers) {

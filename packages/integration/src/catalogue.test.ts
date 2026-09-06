@@ -6,12 +6,15 @@ type Locale = 'en' | 'fr' | 'de';
 const messages = {
   en: {
     greeting: 'Hello',
-    items: '{count, plural, one {# item} other {# items}}',
-    named: 'Hello, {name}',
-    identified: 'Order {id}',
-    underscored: 'Total {_total}',
+    items: ['?', ['=', ['v', '_count'], 1], '1 item', ['c', ['v', '_count'], ' items']],
+    named: ['c', 'Hello, ', ['v', '_name']],
+    identified: ['c', 'Order ', ['v', '_id']],
+    underscored: ['c', 'Total ', ['v', '__total']],
   },
-  fr: { greeting: 'Bonjour', items: '{count, plural, one {# article} other {# articles}}' },
+  fr: {
+    greeting: 'Bonjour',
+    items: ['?', ['=', ['v', '_count'], 1], '1 article', ['c', ['v', '_count'], ' articles']],
+  },
 } satisfies Partial<Record<Locale, View.Messages>>;
 
 /**
@@ -106,7 +109,7 @@ describe('Catalogue#load', () => {
     const view = catalogue.load('de');
     expect(view).toBe(catalogue.locale('de'));
     expect(thunk).toHaveBeenCalledOnce();
-    expect(catalogue.locale('de').messages).toEqual({ greeting: 'Hallo' });
+    expect(catalogue.locale('de').call({ id: 'greeting' })).toBe('Hallo');
   });
 
   it('does not call a thunk for a locale that already has messages', () => {
@@ -123,12 +126,17 @@ describe('Catalogue#load', () => {
     const catalogue = createCatalogue({ de: async () => ({ default: { greeting: 'Hallo' } }) });
 
     const view = await catalogue.load('de');
-    expect(view.messages).toEqual({ greeting: 'Hallo' });
+    expect(view.call({ id: 'greeting' })).toBe('Hallo');
   });
 
   it('shares one call between loads that overlap', async () => {
     let call = 0;
-    const catalogue = createCatalogue({ de: async () => ({ greeting: `load-${++call}` }) });
+    const catalogue = createCatalogue({
+      de: async () => {
+        const loaded = `load-${++call}`;
+        return { greeting: loaded };
+      },
+    });
 
     // Two loads in flight at once: the second finds the first still running
     // and waits on it rather than starting the thunk again
@@ -148,7 +156,7 @@ describe('Catalogue#load', () => {
     });
 
     await expect(catalogue.load('de')).rejects.toThrow('offline');
-    expect((await catalogue.load('de')).messages).toEqual({ greeting: 'Hallo' });
+    expect((await catalogue.load('de')).call({ id: 'greeting' })).toBe('Hallo');
   });
 
   it('throws for a locale the catalogue does not have', () => {
@@ -165,7 +173,7 @@ describe('Catalogue#load', () => {
     expect(catalogue.load('en')).not.toBeInstanceOf(Promise);
     const result = catalogue.load('de');
     expect(result).toBeInstanceOf(Promise);
-    expect((await result).messages).toEqual({ greeting: 'Hallo' });
+    expect((await result).call({ id: 'greeting' })).toBe('Hallo');
   });
 });
 

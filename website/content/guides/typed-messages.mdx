@@ -3,49 +3,35 @@ title: Typed messages
 description: How translation file imports are typed, and how to push typing further
 ---
 
-SayKit emits a declaration file alongside every translation file so that importing it from your source compiles without complaint:
+SayKit writes a declaration beside every compiled locale module, so importing one from your source compiles without complaint:
 
 ```text
 src/locales/
   en.po
-  en.d.po.ts
+  en.js
+  en.d.ts
   fr.po
-  fr.d.po.ts
+  fr.js
+  fr.d.ts
 ```
 
 ```ts
-import en from './locales/en.po';
-// en is typed as: Record<string, string>
+import en from './locales/en.js';
+// en is typed as: Record<string, (values: any) => string>
 ```
 
-The auto-generated declaration is intentionally simple:
+The declaration is intentionally simple:
 
-```ts title="src/locales/en.d.po.ts"
-declare const translations: Record<string, string>;
-export default translations;
+```ts title="src/locales/en.d.ts"
+declare const messages: Record<string, (values: any) => string>;
+export default messages;
 ```
 
-That's enough to make the import type-check, even before your build plugin has run, and it's the only declaration shape your tooling needs to handle.
-
-## The `.d.{extension}.ts` name
-
-The name isn't arbitrary. To type an import of `./locales/en.po`, TypeScript strips the extension it's given and looks for `en.d.po.ts`, the sibling-declaration convention for non-TypeScript files. A file named `en.po.d.ts` is _not_ consulted for a specifier TypeScript recognises, so it would silently do nothing.
-
-For any extension other than `.json`, this also requires a compiler flag:
-
-```json title="tsconfig.json"
-{
-  "compilerOptions": {
-    "allowArbitraryExtensions": true
-  }
-}
-```
-
-Without it, `import en from './locales/en.po'` fails to resolve no matter what the declaration is called. JSON catalogues need `resolveJsonModule` instead, which `moduleResolution: "bundler"` already implies.
+That's enough to make the import type-check before anything has been compiled, and it's the only declaration shape your tooling needs to handle. Since the module is a `.js` file, no compiler flag is needed for it: `allowArbitraryExtensions` and `resolveJsonModule` are not involved.
 
 ## Why generic?
 
-You'll notice the declaration is `Record<string, string>` rather than something narrow like `{ "abc123": string; "def456": string }`. That's deliberate:
+You'll notice the declaration is a plain `Record` rather than something narrow like `{ "abc123": (values: { name: string }) => string }`. That's deliberate:
 
 - Identifiers are content hashes by default. They're stable, but not meant to be consumed by hand.
 - The macros (`` say`...` ``, `<Say>`) are what your application code writes. The transform inserts the right id at build time, so your code never needs to know about hashes.
@@ -58,29 +44,30 @@ In short: **you never reference an id from application code**. The build does th
 SayKit doesn't manage a `.gitignore` for you: it's up to you which generated files to commit or ignore. A common setup:
 
 - **Commit** the `.po` files. They're the canonical translations.
-- Either commit or ignore the `.d.po.ts` files. SayKit regenerates them on every extraction, so ignoring them keeps diffs quiet; committing them lets CI type-check without an extra extraction step.
+- **Ignore** the `.js` modules. They're build output, regenerated from the `.po` by `saykit compile`.
+- **Commit** the `.d.ts` files. Each is two lines and never changes, so they add no diff noise, and they keep `tsc` passing on a fresh clone before anything has been compiled.
 
-If you want to ignore the declarations, add a line like `*.d.po.ts` to your project's `.gitignore`.
+A `.gitignore` line like `src/locales/*.js` covers the middle one.
 
 ## Importing in different bundlers
 
-The actual JS module is produced by the SayKit build-tool plugin (or the formatter, at extraction time, indirectly). All of these work:
+The module is produced by [`saykit compile`](/reference/cli#saykit-compile) and is an ordinary ES module, so every bundler handles it with no SayKit involvement. All of these work:
 
 ```ts
 // Bundled at build time, synchronous, in the initial chunk
-import en from './locales/en.po';
+import en from './locales/en.js';
 ```
 
 ```ts
 // Code-split, dynamic import per locale
-const en = await import('./locales/en.po').then((m) => m.default);
+const en = await import('./locales/en.js').then((m) => m.default);
 ```
 
 ```ts
 // A thunk per locale (recommended for many locales)
 createCatalogue({
-  en: () => import('./locales/en.po'),
-  fr: () => import('./locales/fr.po'),
+  en: () => import('./locales/en.js'),
+  fr: () => import('./locales/fr.js'),
 });
 ```
 
@@ -103,4 +90,4 @@ The runtime `say.call({ id: 'greeting.hello' })` works exactly the same way as f
 ## Next
 
 - [Extraction](/core-concepts/extraction): how files are generated
-- [Custom formatter](/guides/custom-formatter): if you want different generated declarations
+- [CLI](/reference/cli#saykit-compile): what compilation writes

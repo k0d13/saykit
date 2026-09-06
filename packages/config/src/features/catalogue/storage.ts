@@ -1,12 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import type { Bucket, Message } from '#/shapes.js';
-import { declarationPathFor, expandBucketOutputPath } from './path.js';
-
-const DECLARATION_CONTENT = `
-declare const messages: Record<string, string>;
-export default messages;
-`.trimStart();
+import { expandBucketOutputPath } from './path.js';
 
 export async function readCatalogueMessages(
   bucket: Bucket,
@@ -26,11 +21,9 @@ export async function writeCatalogueMessages(
 ) {
   const existingContent = await readFile(path, 'utf8').catch(() => undefined);
   const catalogueContent = bucket.formatter.stringify(messages, { locale, existingContent });
-  const declarationPath = declarationPathFor(path);
 
+  // No declaration beside it: a catalogue is what a translator edits, not what
+  // the app imports. The generated module carries that, and its own `.d.ts`
   await mkdir(dirname(path), { recursive: true });
-  await Promise.all([
-    writeFile(path, catalogueContent),
-    writeFile(declarationPath, DECLARATION_CONTENT),
-  ]);
+  await writeFile(path, catalogueContent);
 }
