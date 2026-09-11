@@ -174,7 +174,7 @@ describe('translator comments', () => {
     ['a declaration', '// TRANSLATORS: hi\nconst x = <Say>Hello</Say>;'],
     ['a return', 'function C() {\n  // TRANSLATORS: hi\n  return <Say>Hello</Say>;\n}'],
     ['an implicit return', 'const C = () => (\n  // TRANSLATORS: hi\n  <Say>Hello</Say>\n);'],
-    ['a self-closing element', '// TRANSLATORS: hi\nconst x = <Say.Number _={total} />;'],
+    ['a self-closing element', '// TRANSLATORS: hi\nconst x = <Say.Plural _={n} other="days" />;'],
   ])('reads a comment written above %s', (_, code) => {
     expect(comments(code)).toEqual([['hi']]);
   });
@@ -198,7 +198,7 @@ describe('translator comments', () => {
   it('reads a comment child standing in front of a self-closing message', () => {
     expect(
       comments(
-        'const x = (\n  <div>\n    {/* TRANSLATORS: hi */}\n    <Say.Number _={total} />\n  </div>\n);',
+        'const x = (\n  <div>\n    {/* TRANSLATORS: hi */}\n    <Say.Plural _={n} other="days" />\n  </div>\n);',
       ),
     ).toEqual([['hi']]);
   });
@@ -268,6 +268,15 @@ describe('createJsxTransformer.transform', () => {
     expect(output).toContain('_who={user.name}');
     // The single-key object that named it is gone, not passed as a prop value
     expect(output).not.toContain('{ who:');
+  });
+
+  it('compiles a lone element to its message rather than an id', () => {
+    const code = 'const x = <Say.Date _={{ scheduled_at: at }} style="::d" />;';
+    expect(transformer.extract(code, 'file.tsx')).toEqual([]);
+    const output = transformer.transform(code, 'file.tsx');
+    expect(output).toContain('message="{scheduled_at, date, ::d}"');
+    expect(output).toContain('_scheduled_at={at}');
+    expect(output).not.toContain('id=');
   });
 
   it('leaves code without messages untouched', () => {

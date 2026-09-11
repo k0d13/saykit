@@ -57,6 +57,17 @@ describe('Say', () => {
     expect(props.components()).toBeUndefined();
   });
 
+  it('passes a message through in place of an id', () => {
+    const call = vi.fn(() => '1,234');
+    globalThis.GET_SAY = () => ({ call });
+
+    const message = '{n, number}';
+    const element = (Say as (p: unknown) => ReactElement)({ message, _n: 1234 });
+
+    expect((element.props as { html: string }).html).toBe('1,234');
+    expect(call).toHaveBeenCalledWith({ message, _n: 1234 });
+  });
+
   it('lets a value be named after one of Say’s own props', () => {
     const call = vi.fn(() => '<id/> and <whitespace/>');
     globalThis.GET_SAY = () => ({ call });

@@ -60,6 +60,10 @@ describe('View#call', () => {
     expect(fr.call({ id: 'items', count: 2 })).toBe('2 articles');
   });
 
+  it('formats a message carried in place of an id', () => {
+    expect(say.call({ message: '{n, number}', _n: 1234.5 })).toBe('1,234.5');
+  });
+
   it('throws when the message id is not found', () => {
     expect(() => say.call({ id: 'missing' })).toThrow('Message for missing is not a string');
   });

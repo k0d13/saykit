@@ -16,11 +16,11 @@ import type {
  *
  * Built from own entries, so a value named `__proto__` stays a placeholder.
  */
-function resolveDescriptorValues(descriptor: { id: string; [match: string | number]: unknown }) {
+function resolveDescriptorValues(descriptor: View.Descriptor) {
   return Object.fromEntries(
     Object.entries(descriptor)
-      // The id names the message, it is not one of its values
-      .filter(([key]) => key !== 'id')
+      // The id or the message names the message, it is not one of its values
+      .filter(([key]) => key !== 'id' && key !== 'message')
       .map(([key, value]) => [key.startsWith('_') ? key.slice(1) : key, value]),
   );
 }
@@ -31,6 +31,15 @@ function macro(name: string): never {
 
 export namespace View {
   export type Messages = { [key: string]: string };
+
+  /**
+   * What the transform compiles a message down to: the id it was extracted
+   * under, or the ICU message itself when there was nothing to extract, with
+   * its values behind one underscore each.
+   */
+  export type Descriptor = ({ id: string } | { message: string }) & {
+    [match: string | number]: unknown;
+  };
 }
 
 /**
@@ -81,13 +90,17 @@ export interface View<Locale extends string = string> {
   readonly messages: Readonly<View.Messages>;
 
   /**
-   * Format the message a descriptor names.
+   * Format the message a descriptor names, or the message it carries.
+   *
+   * A message with nothing to translate, a lone `say.date(x)` with no text
+   * around it, is never extracted: the transform writes the ICU into the call
+   * instead of an id.
    *
    * @param descriptor Descriptor to format
    * @returns The formatted message
    * @throws If the id has no message
    */
-  call(descriptor: { id: string; [match: string | number]: unknown }): string;
+  call(descriptor: View.Descriptor): string;
 
   /**
    * Define a pluralised message.
@@ -246,13 +259,14 @@ export function createView<Locale extends string>(
     throw new Error("'say' is a macro and must be used with the relevant saykit plugin");
   }) as unknown as View<Locale>;
 
-  function call(descriptor: { id: string; [match: string | number]: unknown }) {
-    const message = own[descriptor.id];
-    if (typeof message !== 'string')
-      throw new Error(`Message for ${descriptor.id} is not a string`);
+  function call(descriptor: View.Descriptor) {
+    // An inline message is its own cache key: two lone dates with the same
+    // style share one format
+    const { id, message = own[id] } = descriptor as { id: string; message?: string };
+    if (typeof message !== 'string') throw new Error(`Message for ${id} is not a string`);
 
-    let format = formats.get(descriptor.id);
-    if (!format) formats.set(descriptor.id, (format = compile(locale, message)));
+    let format = formats.get(message);
+    if (!format) formats.set(message, (format = compile(locale, message)));
 
     return String(format.format(resolveDescriptorValues(descriptor)));
   }

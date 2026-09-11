@@ -145,7 +145,9 @@ describe('translator comments', () => {
   });
 
   it('reads a comment written above an argument call', () => {
-    expect(comments('// TRANSLATORS: hi\nconst a = say.number(total);')).toEqual([['hi']]);
+    expect(comments('// TRANSLATORS: hi\nconst a = say`${say.number(total)} left`;')).toEqual([
+      ['hi'],
+    ]);
   });
 
   it('keeps several comments in the order they were written', () => {
@@ -210,6 +212,21 @@ describe('createJsTransformer.transform', () => {
     expect(() =>
       transformer.transform("const t = say`${{ 'cart total': x }}`;", 'file.ts'),
     ).toThrow("Invalid placeholder name 'cart total'");
+  });
+
+  // A lone formatted value has nothing a translator could change, so it is
+  // never extracted: the style resolves at build time and the call formats it
+  it('compiles a lone argument to its message rather than an id', () => {
+    const code = 'const d = say.date(at, { style: "::yMMM" });';
+    expect(transformer.extract(code, 'file.ts')).toEqual([]);
+    const output = transformer.transform(code, 'file.ts');
+    expect(output).toContain('message: "{at, date, ::yMMM}"');
+    expect(output).toContain('_at: at');
+    expect(output).not.toMatch(/\bid:/);
+  });
+
+  it('still extracts an argument written into a sentence', () => {
+    expect(transformer.extract('const d = say`Due ${say.date(at)}`;', 'file.ts')).toHaveLength(1);
   });
 
   it('leaves code without messages untouched', () => {
