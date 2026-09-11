@@ -7,12 +7,34 @@ import {
   type Message,
 } from '@saykit/config/features/messages';
 
-export function generateSayCallExpression(message: CompositeMessage) {
+/**
+ * Whether a message is one formatted value and nothing else: `say.date(x)` on
+ * its own rather than inside a sentence. The style and the locale already
+ * decide what it renders as, so there is nothing in it for a translator to
+ * change: it is never extracted, and the call carries the message itself
+ * rather than an id to look one up by.
+ */
+export function isLoneArgument(message: CompositeMessage) {
+  const [child] = message.children;
+  return message.children.length === 1 && child instanceof ArgumentMessage && !!child.format;
+}
+
+/**
+ * The property a call looks its message up by: an id into the catalogue, or
+ * the ICU message itself when nothing was extracted.
+ */
+export function generateDescriptorProperty(message: CompositeMessage) {
+  if (isLoneArgument(message))
+    return t.objectProperty(t.identifier('message'), t.stringLiteral(message.toICUString()));
   const id = message.descriptor.id ?? message.toHashString();
+  return t.objectProperty(t.identifier('id'), t.stringLiteral(id));
+}
+
+export function generateSayCallExpression(message: CompositeMessage) {
   const children = generateChildExpressions(message.children);
 
   const properties = t.objectExpression([
-    t.objectProperty(t.identifier('id'), t.stringLiteral(id)),
+    generateDescriptorProperty(message),
     // An identifier can repeat, the same argument interpolated twice, but it
     // is one property either way.
     //

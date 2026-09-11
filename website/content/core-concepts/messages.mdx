@@ -289,6 +289,10 @@ Naming works as it does anywhere else. The reason to write these rather than cal
 that the formatting lands **in the catalogue**, so a locale that words the sentence differently can
 put the number somewhere else entirely.
 
+Written on its own, with no text around it, a fragment is still formatted for the locale but is not
+extracted: `say.date(scheduledAt, { style: '::d' })` or a bare `<Say.Date />` has nothing a
+translator could change, so it never reaches the catalogue.
+
 `style` is optional, and omitting it still gives locale-aware output, `{n, number}` applies the right
 grouping separators and decimal mark. An unrecognised style fails the build.
 

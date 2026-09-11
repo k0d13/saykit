@@ -29,25 +29,29 @@ declare function GET_SAY(): import('saykit').View;
  * @returns The translation node for the descriptor
  * @remark This is a macro and must be used with the relevant saykit plugin
  */
-// @ts-expect-error macro
 export function Say(
   props: PropsWithSayChildren<Disallow<{ context?: string; whitespace?: boolean }, 'id'>>,
 ): ReactElement;
-export function Say(props: { id: string; whitespace?: boolean; [match: string]: unknown }) {
-  if (!('id' in props))
+export function Say(props: {
+  id?: string;
+  message?: string;
+  whitespace?: boolean;
+  [match: string]: unknown;
+}) {
+  if (!('id' in props) && !('message' in props))
     throw new Error("'Say' is a macro and must be used with the relevant saykit plugin", {
       cause: new Error("The 'id' property is required for a descriptor"),
     });
 
   const say = GET_SAY();
-  const { id, whitespace, ...rest } = props;
+  const { id, message, whitespace, ...rest } = props;
   const values = resolveValuePropKeys(rest);
 
   return createElement(Renderer, {
     // The props go through still prefixed, since `View#call` does the single
     // strip for every caller. The id is merged in last, so a message free to
     // name a value `id` cannot displace the message being looked up
-    html: say.call({ ...rest, id }),
+    html: say.call(message === undefined ? { ...rest, id: id! } : { ...rest, message }),
     whitespace,
     components(tag?: string) {
       if (tag && tag in values && isValidElement(values[tag])) {

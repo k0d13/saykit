@@ -3,7 +3,7 @@ import * as parser from '@babel/parser';
 import traverse_ from '@babel/traverse';
 import type { Transformer } from '@saykit/config';
 import { assignSequenceIdentifiers, CompositeMessage } from '@saykit/config/features/messages';
-import { generateSayCallExpression } from './generator.js';
+import { generateSayCallExpression, isLoneArgument } from './generator.js';
 import { collectLeadingComments, isEquivalentPlaceholder, parseExpression } from './parser.js';
 
 const traverse = ((traverse_ as any).default || traverse_) as typeof traverse_;
@@ -56,15 +56,19 @@ function createJsTransformer(): Transformer {
         },
       });
 
+      // A lone value carries nothing a translator could change, so it never
+      // reaches the catalogue: the transform formats it directly
       // TODO: Can this just return the messages themselves, and be converted upstream
-      return messages.map((message) => ({
-        message: message.toICUString(),
-        translation: undefined,
-        id: message.descriptor.id,
-        context: message.descriptor.context,
-        comments: message.comments,
-        references: message.references,
-      }));
+      return messages
+        .filter((message) => !isLoneArgument(message))
+        .map((message) => ({
+          message: message.toICUString(),
+          translation: undefined,
+          id: message.descriptor.id,
+          context: message.descriptor.context,
+          comments: message.comments,
+          references: message.references,
+        }));
     },
 
     transform(code: string, id: string) {
