@@ -146,7 +146,7 @@ say`Total: ${{ cartTotal: getTotal() }}`; // Total: {cartTotal}
 say`Hello, ${user.name}`; // Hello, {0}   (not an identifier, so numbered)
 
 say.plural(count, { 0: 'No items', one: '1 item', other: `${count} items` });
-say.ordinal(n, { 1: `${n}st`, 2: `${n}nd`, 3: `${n}rd`, other: `${n}th` });
+say.ordinal(n, { one: `${n}st`, two: `${n}nd`, few: `${n}rd`, other: `${n}th` });
 say.select(status, { active: 'Active', archived: 'Archived', other: 'Unknown' });
 ```
 
@@ -201,7 +201,7 @@ import { Say } from '@saykit/react';
 <Say>Read the <a href="/docs" say-tag="link">docs</a></Say>
 
 <Say.Plural _={count} _0="Nothing here" one={<>{count} item</>} other={<>{count} items</>} />
-<Say.Ordinal _={n} _1={<>{n}st</>} _2={<>{n}nd</>} _3={<>{n}rd</>} other={<>{n}th</>} />
+<Say.Ordinal _={n} one={<>{n}st</>} two={<>{n}nd</>} few={<>{n}rd</>} other={<>{n}th</>} />
 <Say.Select _={status} active="Active" archived="Archived" other="Unknown" />
 
 <Say>Due <Say.Date _={dueAt} style="medium" /></Say>
@@ -247,7 +247,9 @@ say`Hello`; // formats against fr
 Browser, where the locale changes:
 
 ```ts
-export const store = createStore(catalogue, catalogue.match(navigator.languages));
+const initial = catalogue.match(navigator.languages);
+await catalogue.load(initial); // no-op for an eager locale; required when `initial` is lazy
+export const store = createStore(catalogue, initial);
 
 store.say`Hello`; // read per call; identity changes on switch
 store.subscribe((say) => {
@@ -256,7 +258,7 @@ store.subscribe((say) => {
 await store.set('fr'); // loads if needed; last switch wins; a failed load keeps the current view
 ```
 
-A store exposes `say`, `set` and `subscribe` only; keep the catalogue for `locales`. Do not hold `const say = store.say` across a switch. When every locale is lazy, `await catalogue.load(initial)` at the top of the i18n module before building the store.
+A store exposes `say`, `set` and `subscribe` only; keep the catalogue for `locales`. Do not hold `const say = store.say` across a switch. `createStore` throws when its initial locale is lazy and unloaded, so `await catalogue.load(initial)` before building the store whenever any locale is lazy, including a mixed catalogue.
 
 Server: no store. Look a view up per request with `catalogue.load(catalogue.match(guesses))`, splitting an `Accept-Language` header into its tags first (`header.split(',').map((s) => s.split(';')[0].trim())`), since `match` compares whole strings; views are safe to share between requests. For code that cannot be handed a view, `createScope(new AsyncLocalStorage())` from `saykit` gives a `scope.say` resolving to whatever `scope.run(view, fn)` established.
 
@@ -310,7 +312,7 @@ import { SayProvider } from '@saykit/react/client';
 import { getSay } from '@saykit/react/server';
 import { withSay } from '../../i18n';
 
-function Layout({ children }: { children: React.ReactNode }) {
+function Layout({ children }: LayoutProps<'/[locale]'>) {
   return (
     <html lang={getSay().locale}>
       <body>
@@ -320,7 +322,7 @@ function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default withSay(Layout, (props) => props.params.then((params) => params.locale));
+export default withSay(Layout, (p) => p.params.then((p) => p.locale));
 ```
 
 `withSay(Component, getLocale)` runs `getLocale` (returns a string, array, or nullish, sync or async), passes it through `catalogue.match`, loads the view and establishes it in React's per-request `cache()` before rendering. Wrap **every** layout and page that renders messages, not only the root: Next renders a page before its layout, so an unwrapped page's `getSay()` throws `'getSay' must be called below a 'withSay'`. `<SayProvider>` written in a server component takes no props; the `react-server` build serialises the established locale and messages to the client. `getSay()` is the server `useSay()`, for the locale as data or a string in a handler. `setSay(view)` establishes a view you resolved yourself. One view per request: a second locale replaces the first for everything rendered after it.
