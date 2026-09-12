@@ -1,5 +1,11 @@
 # @saykit/carbon
 
+## 0.11.0
+
+### Minor Changes
+
+- 07d25a8: Replace `withSay` with `createWithSay`, so a command takes its properties mapping alone instead of a catalogue as well
+
 ## 0.10.0
 
 ### Minor Changes
