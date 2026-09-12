@@ -1,5 +1,12 @@
 # saykit
 
+## 0.11.0
+
+### Patch Changes
+
+- 1092130: Remove Catalogue.Options, createCatalogue takes Record<Locale, Catalogue.Source> directly
+- b6ac149: Format a lone `say.date`, `say.number`, `say.time` or `<Say.Date />` directly instead of extracting it, since it carries nothing a translator can change
+
 ## 0.10.0
 
 ### Minor Changes

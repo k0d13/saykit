@@ -1,6 +1,6 @@
 {
   "name": "@saykit/transform-js",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "JavaScript and TypeScript transformer for SayKit",
   "keywords": [
     "i18n",

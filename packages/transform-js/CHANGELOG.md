@@ -1,5 +1,12 @@
 # @saykit/transform-js
 
+## 0.11.0
+
+### Patch Changes
+
+- b6ac149: Format a lone `say.date`, `say.number`, `say.time` or `<Say.Date />` directly instead of extracting it, since it carries nothing a translator can change
+  - @saykit/config@0.11.0
+
 ## 0.10.0
 
 ### Patch Changes

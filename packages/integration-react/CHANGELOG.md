@@ -1,5 +1,15 @@
 # @saykit/react
 
+## 0.11.0
+
+### Minor Changes
+
+- b873167: Replace `<SayScope>` with `createWithSay` and `setSay` on the server, so a route segment establishes its own view instead of inheriting one from a parent that may not have rendered yet
+
+### Patch Changes
+
+- b6ac149: Format a lone `say.date`, `say.number`, `say.time` or `<Say.Date />` directly instead of extracting it, since it carries nothing a translator can change
+
 ## 0.10.0
 
 ### Minor Changes
