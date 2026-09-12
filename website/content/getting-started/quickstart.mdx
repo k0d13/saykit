@@ -71,7 +71,7 @@ export default defineConfig({
 Write messages inline using the `say` tagged template (or `<Say>` in JSX):
 
 ```tsx title="src/app.tsx"
-import { Say, SayProvider } from '@saykit/react/client';
+import { Say } from '@saykit/react';
 import { useState } from 'react';
 
 function Counter({ name }: { name: string }) {
@@ -93,13 +93,18 @@ function Counter({ name }: { name: string }) {
 }
 ```
 
-You can also use the runtime form when you need a string:
+Outside React, or anywhere you need a plain string, the same macros hang off a view. Ask the catalogue for one locale and call `say` on it:
 
-```ts
-import { useSay } from '@saykit/react/client';
+```ts title="src/notify.ts"
+import { catalogue } from './i18n';
 
-const say = useSay();
-const greeting = say`Hello, ${name}!`;
+const say = catalogue.locale('fr');
+
+document.title = say`Hello, ${name}!`;
+const summary = say.plural(count, {
+  one: 'You have 1 message',
+  other: `You have ${count} messages`,
+});
 ```
 
 ## 5. Extract messages

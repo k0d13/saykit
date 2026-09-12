@@ -13,7 +13,7 @@ import { Code2, Cog, Wand2, FileType2, Plug } from 'lucide-react';
   <Card
     icon={<Code2 />}
     title="Runtime"
-    description="The Say class. Holds locales, messages, and the active locale. Formats compiled message descriptors."
+    description="createCatalogue, createView, createStore. A catalogue holds locales and their messages, a view formats one locale, a store switches between them."
   />
   <Card
     icon={<Cog />}
@@ -91,6 +91,8 @@ A catalogue is a container for locales and messages. A view is one of its locale
 
 ```ts
 import { createCatalogue } from 'saykit';
+import en from './locales/en.po';
+import fr from './locales/fr.po';
 
 const catalogue = createCatalogue({ en, fr });
 

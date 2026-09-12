@@ -39,8 +39,14 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
     },
     id: {
       description:
-        'Custom id. When omitted, SayKit hashes the message text. Mutually exclusive with `context` is not enforced; both can be present.',
+        'Custom id. When omitted, SayKit hashes the message text. Can be combined with `context`.',
       type: 'string',
+    },
+    whitespace: {
+      description:
+        'Whether whitespace-only text between elements is rendered. Set `false` in React Native, where a bare string outside `<Text>` throws.',
+      type: 'boolean',
+      default: 'true',
     },
   }}
 />
@@ -105,6 +111,65 @@ Props:
   }}
 />
 
+### `<Say.Number>`
+
+```tsx
+<Say>You have <Say.Number _={items.length} /> items</Say>
+<Say.Number _={total} style="::currency/EUR" />
+```
+
+Formats a number the way the active locale writes one. Usually a fragment inside a `<Say>`; on its
+own it is formatted but not extracted, since there is nothing to translate.
+
+<TypeTable
+  type={{
+    _: {
+      description: 'The number to format.',
+      type: 'number',
+      required: true,
+    },
+    style: {
+      description:
+        '`integer`, `percent`, a skeleton such as `::currency/EUR`, or a pattern such as `#,##0.00`.',
+      type: 'string',
+    },
+  }}
+/>
+
+### `<Say.Date>`
+
+```tsx
+<Say>Published <Say.Date _={post.publishedAt} style="medium" /></Say>
+<Say.Date _={post.publishedAt} style="::yMMMM" />
+```
+
+Formats the date portion of a `Date` or timestamp.
+
+<TypeTable
+  type={{
+    _: {
+      description: 'The date to format.',
+      type: 'Date | number',
+      required: true,
+    },
+    style: {
+      description: '`short`, `medium`, `long`, `full`, or a skeleton such as `::yMMMM`.',
+      type: 'string',
+    },
+  }}
+/>
+
+### `<Say.Time>`
+
+```tsx
+<Say>
+  Doors open at <Say.Time _={opensAt} style="short" />
+</Say>
+```
+
+Formats the time portion of a `Date` or timestamp. Same props as `<Say.Date>`; skeletons look like
+`::Hm`.
+
 ## `@saykit/react/client`
 
 ### `<SayProvider>`
@@ -153,10 +218,10 @@ Returns the current `View` from the nearest `<SayProvider>`. Throws if no provid
 
 Subscribes to the provider's store with `useSyncExternalStore`, so the component re-renders when the locale changes.
 
-```ts
-function fn() {
+```tsx
+function Title({ name }: { name: string }) {
   const say = useSay();
-  return say`Hello, ${name}!`;
+  return <h1 title={say`Hello, ${name}!`}>{say.locale}</h1>;
 }
 ```
 

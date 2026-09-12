@@ -12,29 +12,65 @@ A `<Say>` component for rendering translated content in server and client compon
 pnpm add @saykit/react saykit
 ```
 
-You will also need a SayKit build-tool plugin and a `saykit.config.ts`.
+You will also need a SayKit build-tool plugin ([`unplugin-saykit`](https://github.com/k0d13/saykit/tree/main/packages/plugin-unplugin) or [`babel-plugin-saykit`](https://github.com/k0d13/saykit/tree/main/packages/plugin-babel)) and a `saykit.config.ts` with `@saykit/transform-jsx` in the bucket.
 
 ## Usage
 
-```tsx
-import { Say } from '@saykit/react';
-import { SayProvider } from '@saykit/react/client';
+```ts title="src/i18n.ts"
 import { createCatalogue, createStore } from 'saykit';
 
-const en = { greeting: 'Hello, {name}!' };
-const fr = { greeting: 'Bonjour, {name} !' };
+export const catalogue = createCatalogue({
+  en: () => import('./locales/en.po'),
+  fr: () => import('./locales/fr.po'),
+});
 
-const store = createStore(createCatalogue({ en, fr }), 'fr');
+const initial = catalogue.match(navigator.languages);
+await catalogue.load(initial);
 
-function App() {
+export const store = createStore(catalogue, initial);
+export type Locale = (typeof catalogue.locales)[number];
+```
+
+```tsx title="src/app.tsx"
+import { Say } from '@saykit/react';
+import { SayProvider, useSay } from '@saykit/react/client';
+import { type Locale, store } from './i18n.js';
+
+function Cart({ name, items }: { name: string; items: string[] }) {
+  return (
+    <p>
+      <Say>Hello, {name}!</Say>{' '}
+      <Say.Plural
+        _={items.length}
+        _0="Your cart is empty."
+        one="You have 1 item."
+        other={<>You have {items.length} items.</>}
+      />
+    </p>
+  );
+}
+
+function LocalePicker() {
+  const say = useSay();
+  return (
+    <select value={say.locale} onChange={(event) => store.set(event.target.value as Locale)}>
+      <option value="en">English</option>
+      <option value="fr">Français</option>
+    </select>
+  );
+}
+
+export function App() {
   return (
     <SayProvider store={store}>
-      <Say>Hello, {name}!</Say>
-      <Say.Plural _={count} one={<>{count} item</>} other={<>{count} items</>} />
+      <LocalePicker />
+      <Cart name="Ada" items={[]} />
     </SayProvider>
   );
 }
 ```
+
+Elements inside a message survive translation as numbered tags: `<Say>Read the <a href="/docs">docs</a></Say>` extracts as `Read the <0>docs</0>`.
 
 ## Documentation
 

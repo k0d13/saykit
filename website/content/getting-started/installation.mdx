@@ -11,7 +11,7 @@ Every SayKit project needs the same set of pieces:
 
 | Package                      | Why                                                                |
 | ---------------------------- | ------------------------------------------------------------------ |
-| `saykit`                     | The core runtime, the `Say` class and ICU formatting               |
+| `saykit`                     | The core runtime: catalogues, views, stores and ICU formatting     |
 | `@saykit/config`             | The config schema (`defineConfig`) and the `saykit` CLI            |
 | One **formatter**            | Reads and writes your translation files (e.g. `@saykit/format-po`) |
 | One or more **transformers** | Extracts and rewrites macros from your source files                |
@@ -33,28 +33,34 @@ For a **React + Vite** project, including **TanStack Start** (or any other [unpl
   <Tab value="pnpm">
 
 ```sh
-pnpm add saykit @saykit/react pnpm add -D @saykit/config @saykit/format-po
-@saykit/transform-js @saykit/transform-jsx unplugin-saykit
+pnpm add saykit @saykit/react
+pnpm add -D @saykit/config @saykit/format-po @saykit/transform-js @saykit/transform-jsx unplugin-saykit
 ```
 
   </Tab>
   <Tab value="npm">
+
 ```sh
-npm install saykit @saykit/react npm install -D @saykit/config @saykit/format-po
-@saykit/transform-js @saykit/transform-jsx unplugin-saykit
+npm install saykit @saykit/react
+npm install -D @saykit/config @saykit/format-po @saykit/transform-js @saykit/transform-jsx unplugin-saykit
 ```
+
   </Tab>
   <Tab value="yarn">
+
 ```sh
-yarn add saykit @saykit/react yarn add -D @saykit/config @saykit/format-po
-@saykit/transform-js @saykit/transform-jsx unplugin-saykit
+yarn add saykit @saykit/react
+yarn add -D @saykit/config @saykit/format-po @saykit/transform-js @saykit/transform-jsx unplugin-saykit
 ```
+
   </Tab>
   <Tab value="bun">
+
 ```sh
-bun add saykit @saykit/react bun add -D @saykit/config @saykit/format-po
-@saykit/transform-js @saykit/transform-jsx unplugin-saykit
+bun add saykit @saykit/react
+bun add -D @saykit/config @saykit/format-po @saykit/transform-js @saykit/transform-jsx unplugin-saykit
 ```
+
   </Tab>
 </Tabs>
 
@@ -64,28 +70,34 @@ For a **Next.js, React Native, Expo, or other Babel-driven** project:
   <Tab value="pnpm">
 
 ```sh
-pnpm add saykit @saykit/react pnpm add -D @saykit/config @saykit/format-po
-@saykit/transform-js @saykit/transform-jsx babel-plugin-saykit
+pnpm add saykit @saykit/react
+pnpm add -D @saykit/config @saykit/format-po @saykit/transform-js @saykit/transform-jsx babel-plugin-saykit
 ```
 
   </Tab>
   <Tab value="npm">
+
 ```sh
-npm install saykit @saykit/react npm install -D @saykit/config @saykit/format-po
-@saykit/transform-js @saykit/transform-jsx babel-plugin-saykit
+npm install saykit @saykit/react
+npm install -D @saykit/config @saykit/format-po @saykit/transform-js @saykit/transform-jsx babel-plugin-saykit
 ```
+
   </Tab>
   <Tab value="yarn">
+
 ```sh
-yarn add saykit @saykit/react yarn add -D @saykit/config @saykit/format-po
-@saykit/transform-js @saykit/transform-jsx babel-plugin-saykit
+yarn add saykit @saykit/react
+yarn add -D @saykit/config @saykit/format-po @saykit/transform-js @saykit/transform-jsx babel-plugin-saykit
 ```
+
   </Tab>
   <Tab value="bun">
+
 ```sh
-bun add saykit @saykit/react bun add -D @saykit/config @saykit/format-po
-@saykit/transform-js @saykit/transform-jsx babel-plugin-saykit
+bun add saykit @saykit/react
+bun add -D @saykit/config @saykit/format-po @saykit/transform-js @saykit/transform-jsx babel-plugin-saykit
 ```
+
   </Tab>
 </Tabs>
 
@@ -95,28 +107,34 @@ For a **Carbon Discord bot** (with tsdown + Cloudflare Workers):
   <Tab value="pnpm">
 
 ```sh
-pnpm add saykit @saykit/carbon pnpm add -D @saykit/config @saykit/format-po
-@saykit/transform-js unplugin-saykit
+pnpm add saykit @saykit/carbon
+pnpm add -D @saykit/config @saykit/format-po @saykit/transform-js unplugin-saykit
 ```
 
   </Tab>
   <Tab value="npm">
+
 ```sh
-npm install saykit @saykit/carbon npm install -D @saykit/config @saykit/format-po
-@saykit/transform-js unplugin-saykit
+npm install saykit @saykit/carbon
+npm install -D @saykit/config @saykit/format-po @saykit/transform-js unplugin-saykit
 ```
+
   </Tab>
   <Tab value="yarn">
+
 ```sh
-yarn add saykit @saykit/carbon yarn add -D @saykit/config @saykit/format-po
-@saykit/transform-js unplugin-saykit
+yarn add saykit @saykit/carbon
+yarn add -D @saykit/config @saykit/format-po @saykit/transform-js unplugin-saykit
 ```
+
   </Tab>
   <Tab value="bun">
+
 ```sh
-bun add saykit @saykit/carbon bun add -D @saykit/config @saykit/format-po
-@saykit/transform-js unplugin-saykit
+bun add saykit @saykit/carbon
+bun add -D @saykit/config @saykit/format-po @saykit/transform-js unplugin-saykit
 ```
+
   </Tab>
 </Tabs>
 
@@ -127,7 +145,8 @@ import { Boxes, Cog, Atom, Bot, Hammer, FileType2 } from 'lucide-react';
 <Cards>
 
 <Card icon={<Boxes />} title="saykit" href="/reference/api/saykit">
-  The core runtime. Exports the `Say` class. Almost every SayKit app depends on it.
+  The core runtime: `createCatalogue`, `createStore`, the `say` macros and ICU formatting. Every
+  SayKit app depends on it.
 </Card>
 
 <Card icon={<Cog />} title="@saykit/config" href="/reference/api/config">

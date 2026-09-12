@@ -125,7 +125,7 @@ Persist the choice (cookie, profile, &hellip;) and either:
 
 - **Reload**: simplest, works with any routing strategy.
 - **Re-route**: for URL-based locales, push the new path.
-- **Re-render**: hold `catalogue.locale(newLocale)` in state and re-render the tree.
+- **Re-render**: call `store.set(newLocale)` on a [store](/core-concepts/runtime#switching-locale); everything below a `SayProvider` following it re-renders.
 
 ```tsx
 function LocaleSwitcher() {

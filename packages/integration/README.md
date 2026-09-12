@@ -6,7 +6,7 @@
 
 The core runtime for [SayKit](https://saykit.js.org). Exports `createCatalogue`, which holds your locales and where each one's messages come from, `createView`, which binds one locale and formats messages using ICU MessageFormat, and `createStore`, which holds the current view and swaps it when you switch locale.
 
-You author messages with the `` say`...` `` tagged template (and `say.plural`, `say.ordinal`, `say.select`); a SayKit build-tool plugin rewrites them at build time into small runtime calls.
+You author messages with the `` say`...` `` tagged template (and `say.plural`, `say.ordinal`, `say.select`), and format numbers, dates and times for the locale with `say.number`, `say.date` and `say.time`; a SayKit build-tool plugin rewrites them at build time into small runtime calls.
 
 ## Install
 
@@ -29,6 +29,8 @@ const say = catalogue.locale('en');
 
 say`Hello, ${name}!`;
 say.plural(count, { one: '1 item', other: `${count} items` });
+say`Total: ${say.number(total, { style: '::currency/EUR' })}`;
+say.date(new Date(), { style: 'long' });
 ```
 
 In a browser, where the locale can change, hold a store instead of a view:

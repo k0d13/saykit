@@ -93,7 +93,7 @@ content, since that comes from the translation.
 ### Numbers, dates, times
 
 `<Say.Number>`, `<Say.Date>`, and `<Say.Time>` format a value the way the active locale writes it.
-They are fragments rather than whole messages, so they nest inside a `<Say>`:
+They are fragments rather than whole messages, so they usually nest inside a `<Say>`:
 
 ```tsx
 <Say>
@@ -111,6 +111,18 @@ an ICU skeleton, which is how you ask for a currency or for fields the named sty
   Total <Say.Number _={total} style="::currency/EUR" /> since
   <Say.Date _={{ joined }} style="::yMMMM" />
 </Say>
+```
+
+They also stand on their own, where there is nothing to translate and nothing is extracted, as a
+locale-aware replacement for calling `Intl` yourself:
+
+```tsx
+<td>
+  <Say.Number _={row.total} style="::currency/EUR" />
+</td>
+<time dateTime={post.publishedAt.toISOString()}>
+  <Say.Date _={post.publishedAt} style="long" />
+</time>
 ```
 
 See [Messages](/core-concepts/messages#numbers-dates-and-times) for what each one extracts to.

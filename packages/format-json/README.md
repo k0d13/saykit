@@ -21,7 +21,7 @@ pnpm add -D @saykit/format-json
 import json from '@saykit/format-json';
 
 // inside a bucket:
-formatter: json();
+formatter: json(),
 ```
 
 Each catalogue is a pretty-printed, flat map keyed by the message id (falling
@@ -50,7 +50,7 @@ standard JSON layout:
   where each key maps to a `{ message, description }` object.
 
 ```ts
-formatter: json({ dialect: 'arb' });
+formatter: json({ dialect: 'arb' }),
 ```
 
 ```json title="ARB"

@@ -30,7 +30,7 @@ declare function GET_SAY(): import('saykit').View;
  * @remark This is a macro and must be used with the relevant saykit plugin
  */
 export function Say(
-  props: PropsWithSayChildren<Disallow<{ context?: string; whitespace?: boolean }, 'id'>>,
+  props: PropsWithSayChildren<{ id?: string; context?: string; whitespace?: boolean }>,
 ): ReactElement;
 export function Say(props: {
   id?: string;
