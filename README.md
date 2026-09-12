@@ -111,8 +111,8 @@ entries from other locale files when your TMS doesn't do it for you.
 
 ## React
 
-Add `@saykit/react` and `@saykit/transform-jsx`, put `jsx()` beside `js()` in the bucket, and
-messages become JSX:
+Add `@saykit/react` and `@saykit/transform-jsx`, put `jsx()` beside `js()` in the bucket, widen
+`include` to `src/**/*.{ts,tsx}`, and messages become JSX:
 
 ```sh
 pnpm add @saykit/react
@@ -155,11 +155,20 @@ export function App() {
 
 Elements inside a message extract as numbered tags (`Hello, <0>{name}</0>!`), so translators can
 reorder them and the original elements, handlers included, are put back at render time.
-`store.set('fr')` switches every `<Say>` below the provider. On the server, `withSay` and `getSay()`
-from `@saykit/react/server` do the same job per request.
+`store.set('fr')` switches every `<Say>` below the provider. On the server, `getSay()` and a
+`withSay` bound with `createWithSay(catalogue)` from `@saykit/react/server` do the same job per
+request.
 
 For framework-specific setup, see the [React](./website/content/integrations/react.mdx) and
 [Carbon](./website/content/integrations/carbon.mdx) integration docs.
+
+## Agent skill
+
+A [skill](https://skills.sh) that teaches a coding agent SayKit lives in [`skills/saykit`](./skills/saykit/SKILL.md):
+
+```sh
+npx skills add k0d13/saykit
+```
 
 ## Development
 

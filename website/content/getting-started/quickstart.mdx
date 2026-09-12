@@ -100,11 +100,13 @@ import { catalogue } from './i18n';
 
 const say = catalogue.locale('fr');
 
-document.title = say`Hello, ${name}!`;
-const summary = say.plural(count, {
-  one: 'You have 1 message',
-  other: `You have ${count} messages`,
-});
+export function notify(name: string, count: number) {
+  document.title = say`Hello, ${name}!`;
+  return say.plural(count, {
+    one: 'You have 1 message',
+    other: `You have ${count} messages`,
+  });
+}
 ```
 
 ## 5. Extract messages
