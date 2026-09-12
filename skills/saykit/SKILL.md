@@ -9,7 +9,7 @@ Compile-time i18n. Messages are written inline, `` say`Hello, ${name}!` `` or `<
 
 Docs: https://saykit.js.org. Source and end-to-end examples (`examples/*`): https://github.com/k0d13/saykit.
 
-Written for SayKit **0.10**. All SayKit packages are released together and must share one version; if the project's `saykit` version differs from this, prefer the installed version's docs and tell the user to run `npx skills update` (or `npx skills add k0d13/saykit`) for the matching skill. Pre-1.0, so APIs still move between minors.
+Written for SayKit **0.11**. All SayKit packages are released together and must share one version; if the project's `saykit` version differs from this, prefer the installed version's docs and tell the user to run `npx skills update` (or `npx skills add k0d13/saykit`) for the matching skill. Pre-1.0, so APIs still move between minors.
 
 ## Packages
 
