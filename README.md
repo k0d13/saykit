@@ -109,7 +109,66 @@ translated content to your TMS. Untranslated keys fall back to a configurable fa
 ultimately the source string) at load time, and `saykit clean` can prune orphaned and untranslated
 entries from other locale files when your TMS doesn't do it for you.
 
-For framework-specific setup, see the React and Carbon integration docs.
+## React
+
+Add `@saykit/react` and `@saykit/transform-jsx`, put `jsx()` beside `js()` in the bucket, widen
+`include` to `src/**/*.{ts,tsx}`, and messages become JSX:
+
+```sh
+pnpm add @saykit/react
+pnpm add -D @saykit/transform-jsx
+```
+
+```tsx title="src/app.tsx"
+import { Say } from '@saykit/react';
+import { SayProvider } from '@saykit/react/client';
+import { createCatalogue, createStore } from 'saykit';
+import en from './locales/en.po';
+import fr from './locales/fr.po';
+
+const store = createStore(createCatalogue({ en, fr }), 'en');
+
+function Cart({ name, items }: { name: string; items: string[] }) {
+  return (
+    <p>
+      <Say>
+        Hello, <strong>{name}</strong>!
+      </Say>{' '}
+      <Say.Plural
+        _={items.length}
+        _0="Your cart is empty."
+        one="You have 1 item."
+        other={<>You have {items.length} items.</>}
+      />
+    </p>
+  );
+}
+
+export function App() {
+  return (
+    <SayProvider store={store}>
+      <Cart name="Ada" items={[]} />
+    </SayProvider>
+  );
+}
+```
+
+Elements inside a message extract as numbered tags (`Hello, <0>{name}</0>!`), so translators can
+reorder them and the original elements, handlers included, are put back at render time.
+`store.set('fr')` switches every `<Say>` below the provider. On the server, `getSay()` and a
+`withSay` bound with `createWithSay(catalogue)` from `@saykit/react/server` do the same job per
+request.
+
+For framework-specific setup, see the [React](./website/content/integrations/react.mdx) and
+[Carbon](./website/content/integrations/carbon.mdx) integration docs.
+
+## Agent skill
+
+A [skill](https://skills.sh) that teaches a coding agent SayKit lives in [`skills/saykit`](./skills/saykit/SKILL.md):
+
+```sh
+npx skills add k0d13/saykit
+```
 
 ## Development
 

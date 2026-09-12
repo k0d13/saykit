@@ -18,7 +18,7 @@ pnpm add -D @saykit/transform-js
 import js from '@saykit/transform-js';
 
 // inside a bucket:
-transformer: js();
+transformer: js(),
 ```
 
 For JSX/TSX, combine with [`@saykit/transform-jsx`](https://github.com/k0d13/saykit/tree/main/packages/transform-jsx):
@@ -28,7 +28,7 @@ import js from '@saykit/transform-js';
 import jsx from '@saykit/transform-jsx';
 
 // inside a bucket:
-transformer: [js(), jsx()];
+transformer: [js(), jsx()],
 ```
 
 ## Documentation

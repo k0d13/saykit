@@ -24,14 +24,6 @@ export namespace Catalogue {
    * resolves to, which holds them as its default export.
    */
   export type Produced = View.Messages | { default: View.Messages };
-
-  /**
-   * Where each locale's messages come from, keyed by locale.
-   *
-   * The keys are the catalogue's locales, in the order they are written, and
-   * the first of them is the default locale.
-   */
-  export type Options<Locale extends string> = Record<Locale, Source>;
 }
 
 /**
@@ -120,11 +112,13 @@ export interface Catalogue<Locale extends string = string> {
  * const say = catalogue.locale('en');
  * ```
  *
- * @param messages Where each locale's messages come from, keyed by locale
+ * @param messages Where each locale's messages come from, keyed by locale. The
+ *   keys are the catalogue's locales, in the order they are written, and the
+ *   first of them is the default locale
  * @returns The catalogue
  */
 export function createCatalogue<const Locale extends string = string>(
-  messages: Catalogue.Options<Locale>,
+  messages: Record<Locale, Catalogue.Source>,
 ): Catalogue<Locale> {
   // Null prototype, so a locale named after something on `Object.prototype`,
   // such as `constructor`, reads as unconfigured rather than as a source

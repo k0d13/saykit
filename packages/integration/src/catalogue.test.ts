@@ -46,7 +46,7 @@ describe('createCatalogue', () => {
 
   it('copies the locales it was given, so the caller cannot add one later', () => {
     const sources: Partial<Record<Locale, Catalogue.Source>> = { en: messages.en };
-    const catalogue = createCatalogue(sources as Catalogue.Options<'en'>);
+    const catalogue = createCatalogue(sources as Record<'en', Catalogue.Source>);
     sources.fr = messages.fr;
     expect(catalogue.locales).toEqual(['en']);
   });

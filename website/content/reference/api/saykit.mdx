@@ -19,7 +19,7 @@ locale bound to a set of messages: callable, immutable, and the only thing appli
 ## `createCatalogue(messages)`
 
 ```ts
-createCatalogue<Locale>(messages: Catalogue.Options<Locale>): Catalogue<Locale>;
+createCatalogue<Locale>(messages: Record<Locale, Catalogue.Source>): Catalogue<Locale>;
 ```
 
 ```ts
@@ -182,7 +182,9 @@ Format a compiled message descriptor against this view's messages.
 say.call({ id: 'abc123', name: 'Ada' }); // → "Hello, Ada!"
 ```
 
-The descriptor must have an `id`. Extra properties are ICU placeholder values.
+The descriptor names the message by `id`, or carries it inline as `message`, which is what the
+transform emits for a lone `say.date(x)` with no text to extract. Extra properties are ICU
+placeholder values.
 
 The transform emits each value behind one underscore (`{ id: 'abc123', _name: 'Ada' }`), which keeps
 a message's values in their own namespace, so a value named `id` cannot displace the message being
@@ -270,7 +272,7 @@ Listen for switches. Returns a function that removes the listener.
 const unsubscribe = store.subscribe((say) => render(say));
 ```
 
-The listener is called after `current` has changed, with the view that is now current. It is not
+The listener is called after `say` has changed, with the view that is now current. It is not
 called on subscribe, the current view is already readable.
 
 ## Macros
@@ -325,6 +327,41 @@ say.select(gender, {
 });
 ```
 
+### `say.number(value, options?)`
+
+Format a number the way the view's locale writes one. A fragment rather than a whole message, so
+it usually goes inside one, but it also works alone, where it is formatted but not extracted.
+
+```ts
+say`You have ${say.number(items.length)} items`;
+say`Battery at ${say.number(level, { style: 'percent' })}`;
+say.number(total, { style: '::currency/EUR' }); // → "€1,234.50"
+```
+
+`style` is `integer`, `percent`, a [skeleton](#skeleton), or a literal `NumberFormat` pattern such
+as `#,##0.00`.
+
+### `say.date(value, options?)`
+
+Format the date portion of a `Date` or timestamp.
+
+```ts
+say`Published ${say.date(post.publishedAt, { style: 'long' })}`;
+say.date(post.publishedAt); // → "13 Sept 2026"
+```
+
+`style` is `short`, `medium`, `long`, `full`, or a skeleton such as `::yMMMM`.
+
+### `say.time(value, options?)`
+
+Format the time portion of a `Date` or timestamp. Same styles as `say.date`; skeletons look like
+`::Hm`.
+
+```ts
+say`Doors open at ${say.time(opensAt, { style: 'short' })}`;
+say.time(opensAt); // → "19:30:00"
+```
+
 ### Named placeholders
 
 Interpolating a single-key object names the placeholder that value becomes, for the values that
@@ -377,11 +414,6 @@ namespace Store {
   type Listener<Locale extends string> = (view: View<Locale>) => void;
 }
 ```
-
-### `Catalogue.Options<Locale>`
-
-`Record<Locale, Catalogue.Source>`: where each locale's messages come from, keyed by locale. The
-keys are the catalogue's locales, and the first of them is the fallback `match()` resolves to.
 
 ### `NumeralOptions` / `SelectOptions`
 

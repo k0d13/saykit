@@ -269,7 +269,7 @@ writes ICU, while you never have to think about it in source.
 ## Numbers, dates, and times
 
 `say.number`, `say.date`, and `say.time` format a value the way the active locale writes it. Unlike
-the macros above, these are **fragments** rather than whole messages, so they go inside one:
+the macros above, these are **fragments** rather than whole messages, so they usually go inside one:
 
 ```ts
 say`You have ${say.number(items.length)} items`;
@@ -289,9 +289,23 @@ Naming works as it does anywhere else. The reason to write these rather than cal
 that the formatting lands **in the catalogue**, so a locale that words the sentence differently can
 put the number somewhere else entirely.
 
+They also work on their own, as a locale-aware `Intl` with the view's locale already applied:
+
+```ts
+say.number(1234.5); // → "1,234.5" in en, "1 234,5" in fr
+say.number(total, { style: '::currency/EUR' }); // → "€1,234.50"
+say.date(post.publishedAt, { style: 'long' }); // → "13 September 2026"
+say.time(opensAt, { style: 'short' }); // → "19:30"
+```
+
+```tsx
+<td><Say.Number _={row.total} style="::currency/EUR" /></td>
+<time dateTime={post.publishedAt.toISOString()}><Say.Date _={post.publishedAt} style="medium" /></time>
+```
+
 Written on its own, with no text around it, a fragment is still formatted for the locale but is not
-extracted: `say.date(scheduledAt, { style: '::d' })` or a bare `<Say.Date />` has nothing a
-translator could change, so it never reaches the catalogue.
+extracted: it has nothing a translator could change, so it never reaches the catalogue. The
+transform writes the ICU into the call instead of an id.
 
 `style` is optional, and omitting it still gives locale-aware output, `{n, number}` applies the right
 grouping separators and decimal mark. An unrecognised style fails the build.

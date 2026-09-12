@@ -57,13 +57,6 @@ For each bucket:
 5. Writes the **source** locale catalogue via the bucket's formatter, and creates an empty placeholder for any locale that has no file yet. Existing non-source files are left untouched.
 6. Writes a `{locale}.d.{extension}.ts` declaration next to each catalogue.
 
-### Exit codes
-
-| Code | Meaning                                           |
-| ---- | ------------------------------------------------- |
-| 0    | Success.                                          |
-| 1    | Failure during config load, extraction, or write. |
-
 The CLI throws on unrecoverable errors (missing config, invalid config, formatter parse failure). Use `--verbose` to see the full stack.
 
 ## `saykit clean`

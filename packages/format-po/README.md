@@ -18,7 +18,7 @@ pnpm add -D @saykit/format-po
 import po from '@saykit/format-po';
 
 // inside a bucket:
-formatter: po();
+formatter: po(),
 ```
 
 ### Options

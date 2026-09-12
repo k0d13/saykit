@@ -218,7 +218,7 @@ say.call({
 // → "Hello, Ada!"
 ```
 
-In application code you rarely write this directly, the build transform generates it from your `` say`...` `` and `<Say>` macros. The descriptor always has an `id`; extra properties become ICU placeholders. The transform emits each value behind one underscore so it cannot collide with the descriptor's own keys, and `call` strips exactly one back off, keys written without one are passed through unchanged.
+In application code you rarely write this directly, the build transform generates it from your `` say`...` `` and `<Say>` macros. The descriptor names the message by `id`, or carries the ICU inline as `message` when there was nothing to extract, as for a lone `say.date(x)`; extra properties become ICU placeholders. The transform emits each value behind one underscore so it cannot collide with the descriptor's own keys, and `call` strips exactly one back off, keys written without one are passed through unchanged.
 
 Each view caches the formats it compiles, so a message is parsed once per locale for the life of the process.
 
