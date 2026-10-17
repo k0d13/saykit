@@ -1,6 +1,6 @@
 import { relative } from 'node:path';
-import type Logger from '~/features/logger.js';
-import type { Bucket, Config } from '~/shapes.js';
+import type Logger from '#/features/logger.js';
+import type { Bucket, Config } from '#/shapes.js';
 
 export function normalisePathForLogs(path: string) {
   return relative(process.cwd(), path).replaceAll('\\', '/');

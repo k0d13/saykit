@@ -1,8 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
   "include": ["App.tsx", "index.ts", "src/**/*"],
-  "compilerOptions": {
-    "types": [],
-    "paths": { "~/*": ["./src/*"] }
-  }
+  "compilerOptions": { "types": [] }
 }

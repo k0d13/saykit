@@ -1,6 +1,6 @@
 import { type ReactNode, isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
-import { Renderer } from '~/components/renderer.js';
+import { Renderer } from '#/components/renderer.js';
 
 // The compiled message for two adjacent elements inside a `<Say>` keeps the
 // literal whitespace between the slots, e.g.

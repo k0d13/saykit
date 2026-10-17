@@ -2,6 +2,9 @@
   "name": "browser-extension-example",
   "private": true,
   "type": "module",
+  "imports": {
+    "#/*": "./src/*"
+  },
   "scripts": {
     "check": "tsc --noEmit",
     "extract": "saykit extract",

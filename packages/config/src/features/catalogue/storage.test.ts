@@ -2,7 +2,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
-import type { Bucket } from '~/shapes.js';
+import type { Bucket } from '#/shapes.js';
 import { readCatalogueMessages, writeCatalogueMessages } from './storage.js';
 
 const dir = mkdtempSync(join(tmpdir(), 'saykit-storage-'));

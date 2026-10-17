@@ -25,6 +25,9 @@
   ],
   "type": "module",
   "sideEffects": false,
+  "imports": {
+    "#/*": "./src/*"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.mts",

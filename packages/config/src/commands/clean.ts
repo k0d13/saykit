@@ -1,8 +1,8 @@
 import { Command } from '@commander-js/extra-typings';
-import { pruneLocaleMessages } from '~/features/catalogue/merge.js';
-import { readCatalogueMessages, writeCatalogueMessages } from '~/features/catalogue/storage.js';
-import { resolveConfig } from '~/features/loader/index.js';
-import Logger from '~/features/logger.js';
+import { pruneLocaleMessages } from '#/features/catalogue/merge.js';
+import { readCatalogueMessages, writeCatalogueMessages } from '#/features/catalogue/storage.js';
+import { resolveConfig } from '#/features/loader/index.js';
+import Logger from '#/features/logger.js';
 
 export default new Command('clean')
   .description('Remove orphaned and untranslated entries from non-source locale files')

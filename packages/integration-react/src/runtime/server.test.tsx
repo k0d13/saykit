@@ -24,8 +24,8 @@ vi.mock('react', async (importOriginal) => {
   };
 });
 
-const { createWithSay, getSay, setSay } = await import('~/runtime/server.js');
-const { SayProvider } = await import('~/runtime/client.server.js');
+const { createWithSay, getSay, setSay } = await import('#/runtime/server.js');
+const { SayProvider } = await import('#/runtime/client.server.js');
 
 const make = () =>
   createCatalogue({

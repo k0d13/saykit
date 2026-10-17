@@ -26,6 +26,9 @@
     "!dist/**/*.map"
   ],
   "type": "module",
+  "imports": {
+    "#/*": "./src/*"
+  },
   "exports": {
     ".": {
       "require": {

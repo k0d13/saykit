@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Bucket, Config } from '~/shapes.js';
+import type { Bucket, Config } from '#/shapes.js';
 import { assembleCatalogueRecord, resolveFallbackChain } from './record.js';
 
 const config = (fallbackLocales?: Config['fallbackLocales']) =>

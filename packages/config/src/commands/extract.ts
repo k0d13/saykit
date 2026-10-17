@@ -1,7 +1,7 @@
 import { Command } from '@commander-js/extra-typings';
-import { resolveConfig } from '~/features/loader/index.js';
-import Logger from '~/features/logger.js';
-import { BucketExtractWorker } from '~/features/workers/extract-worker.js';
+import { resolveConfig } from '#/features/loader/index.js';
+import Logger from '#/features/logger.js';
+import { BucketExtractWorker } from '#/features/workers/extract-worker.js';
 
 export default new Command('extract')
   .description('Extract messages from source files')

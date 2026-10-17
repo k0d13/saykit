@@ -1,5 +1,5 @@
 import { parse, resolve } from 'node:path';
-import type { Bucket } from '~/shapes.js';
+import type { Bucket } from '#/shapes.js';
 
 export function expandBucketOutputPath(
   bucket: Bucket,

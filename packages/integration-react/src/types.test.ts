@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveValuePropKeys } from '~/types.js';
+import { resolveValuePropKeys } from '#/types.js';
 
 describe('resolveValuePropKeys', () => {
   it('strips the leading underscore every value prop carries', () => {

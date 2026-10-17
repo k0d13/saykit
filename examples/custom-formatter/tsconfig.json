@@ -6,6 +6,5 @@
     "email-transformer.ts",
     "saykit.config.ts",
     "tsdown.config.ts"
-  ],
-  "compilerOptions": { "paths": { "~/*": ["./src/*"] } }
+  ]
 }

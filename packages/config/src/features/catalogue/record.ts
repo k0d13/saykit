@@ -1,6 +1,6 @@
 import { resolve } from 'node:path';
-import { generateHash } from '~/features/messages/hash.js';
-import type { Bucket, Config } from '~/shapes.js';
+import { generateHash } from '#/features/messages/hash.js';
+import type { Bucket, Config } from '#/shapes.js';
 import { expandBucketOutputPath } from './path.js';
 
 /**

@@ -2,6 +2,9 @@
   "name": "custom-formatter-example",
   "private": true,
   "type": "module",
+  "imports": {
+    "#/*": "./src/*"
+  },
   "scripts": {
     "check": "tsc --noEmit",
     "extract": "saykit extract",
