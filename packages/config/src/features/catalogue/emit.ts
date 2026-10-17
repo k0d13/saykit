@@ -29,10 +29,23 @@ declare const messages: Record<string, Message>;
 export default messages;
 `.trimStart();
 
-/** Where a locale's generated module goes: beside its catalogue, as `.js`. */
+/**
+ * Where a locale's generated module goes: beside its catalogue, as `.js`.
+ *
+ * @throws If that is the catalogue itself, as it is for a formatter whose
+ *   extension is `.js`: compiling would overwrite the file a translator edits
+ *   with generated output
+ */
 export function modulePathFor(bucket: Bucket, locale: string) {
-  const { dir, name } = parsePath(expandBucketOutputPath(bucket, locale));
-  return resolve(dir, `${name}.js`);
+  const catalogue = resolve(expandBucketOutputPath(bucket, locale));
+  const { dir, name } = parsePath(catalogue);
+  const path = resolve(dir, `${name}.js`);
+  if (path === catalogue)
+    throw new Error(
+      `Catalogue ${catalogue} is where its compiled module would be written. ` +
+        `Use a formatter whose extension is not '.js'`,
+    );
+  return path;
 }
 
 /**

@@ -72,6 +72,11 @@ describe('generateCatalogueModule', () => {
 });
 
 describe('emitCatalogueModule', () => {
+  it('refuses a catalogue that is where its module would be written', () => {
+    const colliding = { ...bucket, formatter: { ...bucket.formatter, extension: '.js' } } as Bucket;
+    expect(() => modulePathFor(colliding, 'en')).toThrow(/compiled module would be written/);
+  });
+
   it('compiles the source locale, hashing a key when a message carries no id', async () => {
     write('en', [
       { message: 'Hello', translation: 'Hello', id: 'greeting' },
