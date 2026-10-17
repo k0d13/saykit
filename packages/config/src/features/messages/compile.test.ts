@@ -77,43 +77,27 @@ describe('choices', () => {
     const icu = '{count, plural, one {# item} other {# items}}';
     expect(compileMessage(icu)).toMatchInlineSnapshot(`
       [
-        "?",
+        "p",
         [
-          "=",
-          [
-            "f",
-            "plural",
-            [
-              "v",
-              "_count",
-            ],
-          ],
-          "one",
+          "v",
+          "_count",
         ],
-        [
-          "c",
-          [
-            "f",
-            "number",
+        {
+          "one": [
+            "c",
             [
-              "v",
-              "_count",
+              "#",
             ],
+            " item",
           ],
-          " item",
-        ],
-        [
-          "c",
-          [
-            "f",
-            "number",
+          "other": [
+            "c",
             [
-              "v",
-              "_count",
+              "#",
             ],
+            " items",
           ],
-          " items",
-        ],
+        },
       ]
     `);
     expect(format(icu, { _count: 1 })).toBe('1 item');
@@ -123,7 +107,7 @@ describe('choices', () => {
   it('matches an exact case before a category, however the message writes them', () => {
     const icu = '{count, plural, one {# item} =0 {nothing} other {# items}}';
     expect(JSON.stringify(compileMessage(icu))).toMatchInlineSnapshot(
-      `"["?",["=",["s",["v","_count"]],"0"],"nothing",["?",["=",["f","plural",["v","_count"]],"one"],["c",["f","number",["v","_count"]]," item"],["c",["f","number",["v","_count"]]," items"]]]"`,
+      `"["p",["v","_count"],{"one":["c",["#"]," item"],"=0":"nothing","other":["c",["#"]," items"]}]"`,
     );
     expect(format(icu, { _count: 0 })).toBe('nothing');
     expect(format(icu, { _count: 1 })).toBe('1 item');
@@ -158,7 +142,7 @@ describe('choices', () => {
 
   it('compiles an ordinal', () => {
     const icu = '{n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}';
-    expect(JSON.stringify(compileMessage(icu))).toContain('["f","plural",["v","_n"],"ordinal"]');
+    expect(compileMessage(icu)).toMatchObject(['p', ['v', '_n'], {}, 0, 1]);
     expect(format(icu, { _n: 1 })).toBe('1st');
     expect(format(icu, { _n: 2 })).toBe('2nd');
     expect(format(icu, { _n: 3 })).toBe('3rd');
@@ -168,7 +152,7 @@ describe('choices', () => {
   it('compiles a select', () => {
     const icu = '{g, select, male {He} female {She} other {They}}';
     expect(JSON.stringify(compileMessage(icu))).toMatchInlineSnapshot(
-      `"["?",["=",["s",["v","_g"]],"male"],"He",["?",["=",["s",["v","_g"]],"female"],"She","They"]]"`,
+      `"["s",["v","_g"],{"male":"He","female":"She","other":"They"}]"`,
     );
     expect(format(icu, { _g: 'female' })).toBe('She');
     expect(format(icu, { _g: 'other' })).toBe('They');
@@ -187,6 +171,14 @@ describe('choices', () => {
     expect(format('{tier, select, 0 {Free} 1 {Pro} other {Custom}}', { _tier: tier })).toBe(
       expected,
     );
+  });
+
+  it('writes an exact key the one way the runtime looks it up', () => {
+    expect(compileMessage('{n, plural, =01 {one} other {#}}')).toMatchObject([
+      'p',
+      ['v', '_n'],
+      { '=1': 'one' },
+    ]);
   });
 
   it('writes nothing when a choice has no other case and none matched', () => {
@@ -234,13 +226,13 @@ describe('numbers', () => {
 
   it('applies a scale as a multiplier, since Intl has no option for one', () => {
     expect(JSON.stringify(compileMessage('{v, number, ::scale/100}'))).toMatchInlineSnapshot(
-      `"["f","number",["*",["v","_v"],100]]"`,
+      `"["n",["v","_v"],{},100]"`,
     );
   });
 
   it('falls back to a plain number for an unreadable number style', () => {
     expect(JSON.stringify(compileMessage('{n, number, ::bogus}'))).toMatchInlineSnapshot(
-      `"["f","number",["v","_n"]]"`,
+      `"["n",["v","_n"]]"`,
     );
     expect(format('{n, number, ::bogus}', { _n: 1234.5 })).toBe('1,234.5');
   });
@@ -289,19 +281,12 @@ describe('dates and times', () => {
 });
 
 describe('other argument types', () => {
-  // No macro authors a `duration`, so this only ever arrives from a catalogue
-  // written by hand
-  it('compiles a duration to the runtime helper', () => {
-    expect(JSON.stringify(compileMessage('{s, duration}'))).toMatchInlineSnapshot(
-      `"["f","duration",["v","_s"]]"`,
-    );
-    expect(format('{s, duration}', { _s: 3661 })).toBe('1:01:01');
-  });
-
   // An argument type with no formatter still writes its value, rather than
-  // taking the rest of the message down with it
+  // taking the rest of the message down with it. No macro authors either of
+  // these, so they only ever arrive from a catalogue written by hand
   it('falls back to the plain value for an unknown argument type', () => {
     expect(JSON.stringify(compileMessage('{n, spellout}'))).toMatchInlineSnapshot(`"["v","_n"]"`);
     expect(format('{n, spellout}', { _n: 42 })).toBe('42');
+    expect(format('{s, duration}', { _s: 3661 })).toBe('3661');
   });
 });

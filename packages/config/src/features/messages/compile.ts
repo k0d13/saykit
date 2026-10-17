@@ -14,7 +14,7 @@ import { dateTimeStyle, type NumberOptions, numberStyle, StyleError } from './st
  *
  * Everything a message needs is known here: a style resolves to an `Intl`
  * options bag and is written into the tree as a literal, so what ships is data
- * over four runtime helpers, and nothing parses anything at runtime.
+ * over the `Intl` objects it names, and nothing parses anything at runtime.
  *
  * Data rather than source is what makes a locale serialisable, which is what a
  * server handing its messages to a client tree needs. It is also what keeps ICU
@@ -94,93 +94,51 @@ export function compileMessage(icu: string): Message {
     switch (token.key) {
       case 'date':
       case 'time': {
+        const kind = token.key;
         const options = resolve(
-          (s) => dateTimeStyle(token.key as 'date' | 'time', s),
-          () => dateTimeStyle(token.key as 'date' | 'time', ''),
+          (s) => dateTimeStyle(kind, s),
+          () => dateTimeStyle(kind, ''),
         );
-        return ['f', 'datetime', value, options];
+        return ['d', value, options];
       }
 
       case 'number': {
         const { scale, ...options } = resolve<NumberOptions>(numberStyle, () => ({}));
-        // `Intl` has no option for a scale, so it stays what it is: a
-        // multiplier on the value
-        const scaled: Message = scale === undefined ? value : ['*', value, scale];
-        return Object.keys(options).length === 0
-          ? ['f', 'number', scaled]
-          : ['f', 'number', scaled, options];
+        // `Intl` has no option for a scale, so it rides along as a multiplier
+        if (scale !== undefined) return ['n', value, options, scale];
+        return Object.keys(options).length === 0 ? ['n', value] : ['n', value, options];
       }
 
-      case 'duration':
-        return ['f', 'duration', value];
-
-      // An argument type we have no formatter for still writes its value
+      // An argument type we have no formatter for still writes its value.
+      // `duration`, `spellout` and RBNF `ordinal` land here: no macro authors
+      // them, and `Intl` has nothing to write them with
       default:
         return value;
     }
   }
 
-  /**
-   * Build the conditional for a `plural`, `selectordinal` or `select`.
-   *
-   * @param hash The node a `#` in scope prints, if any
-   */
-  function choice(token: Select, hash: Message | null): Message {
+  /** Build the switch for a `plural`, `selectordinal` or `select`. */
+  function choice(token: Select): Message {
     const value = reference(token.arg);
-    const offset = token.pluralOffset ?? 0;
-    // ponytail: a plural offset on a `bigint` count throws, since the two
-    // cannot be subtracted. Coerce here if one ever turns up
-    const shifted: Message = offset === 0 ? value : ['-', value, offset];
-
-    // A `#` inside a `select` still refers to the plural enclosing it; inside a
-    // plural it refers to that plural's own offset value
-    const inner = token.type === 'select' ? hash : shifted;
-
-    let fallback: Message = '';
-    const arms: { exact: boolean; test: Message; value: Message }[] = [];
+    const cases: Message.Cases = {};
 
     for (const branch of token.cases) {
-      const written = pattern(branch.tokens, inner);
-
-      if (branch.key === 'other') {
-        fallback = written;
-        continue;
-      }
-
-      if (token.type === 'select') {
-        // A select matches its cases as literal strings, and the selector may
-        // be written as a number
-        arms.push({ exact: false, test: ['=', ['s', value], branch.key], value: written });
-        continue;
-      }
-
-      if (EXACT.test(branch.key)) {
-        // Matched against the number as written, before the offset, so `=1`
-        // still means one. Compared as text, so a bigint or a numeric string
-        // matches the same case a number does
-        arms.push({
-          exact: true,
-          test: ['=', ['s', value], String(Number(branch.key.slice(1)))],
-          value: written,
-        });
-        continue;
-      }
-
-      const category: Message =
-        token.type === 'selectordinal'
-          ? ['f', 'plural', shifted, 'ordinal']
-          : ['f', 'plural', shifted];
-      arms.push({ exact: false, test: ['=', category, branch.key], value: written });
+      // `=01` and `=1` name the same number, and the runtime matches the
+      // number as text, so the key is written the one way it is looked up
+      const key = EXACT.test(branch.key) ? `=${Number(branch.key.slice(1))}` : branch.key;
+      // The first case written for a key wins, as it would in a chain of tests
+      if (!Object.hasOwn(cases, key)) cases[key] = pattern(branch.tokens);
     }
 
-    // An exact case beats a category, however the message writes them
-    const ordered = [...arms.filter((a) => a.exact), ...arms.filter((a) => !a.exact)];
+    if (token.type === 'select') return ['s', value, cases];
 
-    return ordered.reduceRight<Message>((rest, arm) => ['?', arm.test, arm.value, rest], fallback);
+    const offset = token.pluralOffset ?? 0;
+    if (token.type === 'selectordinal') return ['p', value, cases, offset, 1];
+    return offset === 0 ? ['p', value, cases] : ['p', value, cases, offset];
   }
 
   /** One token, as the node it contributes. */
-  function fragment(token: Token, hash: Message | null): Message {
+  function fragment(token: Token): Message {
     switch (token.type) {
       case 'content':
         return token.value;
@@ -189,18 +147,18 @@ export function compileMessage(icu: string): Message {
       case 'function':
         return argument(token);
       case 'octothorpe':
-        // The parser only makes a `#` a token when a plural encloses it
-        /* v8 ignore next */
-        return hash ? ['f', 'number', hash] : '#';
+        // The parser only makes a `#` a token when a plural encloses it, and a
+        // `#` in a select inside that plural still writes the plural's number
+        return ['#'];
       default:
-        return choice(token, hash);
+        return choice(token);
     }
   }
 
   /** A run of tokens, as one node. */
-  function pattern(tokens: Token[], hash: Message | null): Message {
-    return concat(tokens.map((token) => fragment(token, hash)));
+  function pattern(tokens: Token[]): Message {
+    return concat(tokens.map(fragment));
   }
 
-  return pattern(parse(icu) as Token[], null);
+  return pattern(parse(icu) as Token[]);
 }

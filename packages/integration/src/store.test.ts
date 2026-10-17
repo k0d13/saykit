@@ -7,14 +7,18 @@ type Locale = 'en' | 'fr' | 'de';
 const messages = {
   en: {
     greeting: 'Hello',
-    items: ['?', ['=', ['v', '_count'], 1], '1 item', ['c', ['v', '_count'], ' items']],
+    items: ['p', ['v', '_count'], { one: ['c', ['#'], ' item'], other: ['c', ['#'], ' items'] }],
     named: ['c', 'Hello, ', ['v', '_name']],
     identified: ['c', 'Order ', ['v', '_id']],
     underscored: ['c', 'Total ', ['v', '__total']],
   },
   fr: {
     greeting: 'Bonjour',
-    items: ['?', ['=', ['v', '_count'], 1], '1 article', ['c', ['v', '_count'], ' articles']],
+    items: [
+      'p',
+      ['v', '_count'],
+      { one: ['c', ['#'], ' article'], other: ['c', ['#'], ' articles'] },
+    ],
   },
 } satisfies Partial<Record<Locale, View.Messages>>;
 
