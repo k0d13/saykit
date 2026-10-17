@@ -105,6 +105,12 @@ export interface View<Locale extends string = string> {
   readonly messages: Readonly<View.Messages>;
 
   /**
+   * How this view formats its messages. Plain data, so it can cross a
+   * server/client boundary alongside {@link locale} and {@link messages}.
+   */
+  readonly options: Readonly<View.Options>;
+
+  /**
    * Format the message a descriptor names, or the message it carries.
    *
    * A message with nothing to translate, a lone `say.date(x)` with no text
@@ -266,6 +272,8 @@ export function createView<Locale extends string>(
   options: View.Options = {},
 ): View<Locale> {
   const { bidiIsolation } = options;
+  // Only what was set, so a view built with no options reports none
+  const ownOptions: View.Options = Object.freeze(bidiIsolation ? { bidiIsolation } : {});
 
   // Copied and frozen: formats are compiled once and kept, so a record that
   // could change afterwards would leave `call` formatting from the old string
@@ -294,6 +302,7 @@ export function createView<Locale extends string>(
     Object.defineProperties(say, {
       locale: { value: locale, enumerable: true },
       messages: { value: own, enumerable: true },
+      options: { value: ownOptions, enumerable: true },
       // Own, so it shadows `Function.prototype.call`: the transform compiles
       // every message down to `say.call({ id, ... })`
       call: { value: call },

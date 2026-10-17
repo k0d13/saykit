@@ -119,8 +119,14 @@ describe('bidi isolation', () => {
     );
   });
 
+  it('reports no options when a view is built with none', () => {
+    expect(createView('en', {}).options).toEqual({});
+  });
+
   it('leaves values as given when a view is built with none', () => {
     const say = createView('en', {}, { bidiIsolation: 'none' });
+    expect(say.options).toEqual({ bidiIsolation: 'none' });
+    expect(Object.isFrozen(say.options)).toBe(true);
     expect(say.call({ ...channel, _channel: '<#123>', _multiplier: '2x' })).toBe(
       '<#123> has a 2x multiplier',
     );

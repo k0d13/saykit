@@ -83,6 +83,13 @@ describe('server runtime', () => {
     expect(props.messages.greeting).toBe('Hi');
   });
 
+  it('the server build of SayProvider passes the view options to the client', () => {
+    setSay(createCatalogue({ en: { greeting: 'Hi' } }, { bidiIsolation: 'none' }).locale('en'));
+
+    const element = SayProvider({ children: null });
+    expect((element.props as { options: unknown }).options).toEqual({ bidiIsolation: 'none' });
+  });
+
   // The cell above is one request for the whole file, and the views already
   // established have changed its locale, so this counts the warnings the file
   // produced rather than establishing more of its own

@@ -26,11 +26,11 @@ SayContext.displayName = 'SayContext';
  * through navigation.
  */
 export type SayProviderProps =
-  | { store: Store; locale?: never; messages?: never }
-  | { store?: never; locale: string; messages: View.Messages }
+  | { store: Store; locale?: never; messages?: never; options?: never }
+  | { store?: never; locale: string; messages: View.Messages; options?: View.Options }
   // Nothing at all, which is what `<SayProvider>` on the server is: the
   // server build of this module reads the scope and fills the props in
-  | { store?: never; locale?: never; messages?: never };
+  | { store?: never; locale?: never; messages?: never; options?: never };
 
 /**
  * Provide a {@link View} to descendant **client** components via context.
@@ -42,21 +42,27 @@ export type SayProviderProps =
  *   locale by the server
  * @param props.messages The messages for that locale, which should be
  *   referentially stable rather than a fresh object literal per render
+ * @param props.options How that locale's view formats its messages, as the
+ *   server's view was built with
  */
 export function SayProvider({
   store,
   locale,
   messages,
+  options,
   children,
 }: PropsWithChildren<SayProviderProps>) {
+  // Read out, so a fresh options literal per render does not rebuild the store
+  const bidiIsolation = options?.bidiIsolation;
+
   // One locale and no catalogue, so this store holds the only view there is.
   // Consumers then read a store either way, and `useSay` has one shape
   const held = useMemo(() => {
     if (store) return store;
     if (locale === undefined || !messages)
       throw new Error("'SayProvider' must be given a store, or a locale and its messages");
-    return createStore(createCatalogue({ [locale]: messages }), locale);
-  }, [store, locale, messages]);
+    return createStore(createCatalogue({ [locale]: messages }, { bidiIsolation }), locale);
+  }, [store, locale, messages, bidiIsolation]);
 
   return createElement(SayContext.Provider, { value: held }, children);
 }
