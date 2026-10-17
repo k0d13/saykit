@@ -120,7 +120,9 @@ export function compileMessage(icu: string): Message {
   /** Build the switch for a `plural`, `selectordinal` or `select`. */
   function choice(token: Select): Message {
     const value = reference(token.arg);
-    const cases: Message.Cases = {};
+    // No prototype, so a branch named `__proto__` is a key like any other
+    // rather than a prototype assigned to `{}`
+    const cases: Message.Cases = Object.create(null);
 
     for (const branch of token.cases) {
       // `=01` and `=1` name the same number, and the runtime matches the

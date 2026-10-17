@@ -49,6 +49,19 @@ export function modulePathFor(bucket: Bucket, locale: string) {
 }
 
 /**
+ * A value as JS source.
+ *
+ * JSON is nearly that, except for a `__proto__` key: in an object literal it
+ * sets the prototype rather than adding a property, so a select branch by that
+ * name would vanish on import. Written as a computed key it is an own property
+ * like any other. Only a key is a quoted string followed by a colon, since one
+ * inside a string has its quotes escaped
+ */
+function toSource(value: unknown) {
+  return JSON.stringify(value).replace(/([{,])"__proto__":/g, '$1["__proto__"]:');
+}
+
+/**
  * Build the source of a locale's generated module from its assembled record.
  *
  * The module is data and nothing else: no imports, no functions, no locale
@@ -71,7 +84,8 @@ export function generateCatalogueModule(record: Record<string, string>) {
       .split(/\r\n|[\n\r\u2028\u2029]/)
       .map((line) => `  // ${line}`)
       .join('\n');
-    return `${comment}\n  ${JSON.stringify(id)}: ${JSON.stringify(message)},`;
+    const key = id === '__proto__' ? '["__proto__"]' : JSON.stringify(id);
+    return `${comment}\n  ${key}: ${toSource(message)},`;
   });
 
   return (

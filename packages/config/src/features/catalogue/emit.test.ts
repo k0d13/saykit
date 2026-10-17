@@ -69,6 +69,21 @@ describe('generateCatalogueModule', () => {
       expect((globalThis as { pwned?: boolean }).pwned).toBeUndefined();
     }
   });
+
+  // In an object literal, a plain `__proto__` key sets the prototype instead
+  it('keeps a key named __proto__ on import', async () => {
+    const source = generateCatalogueModule(
+      Object.fromEntries([
+        ['__proto__', 'Hi'],
+        ['a', '{g, select, __proto__ {A} other {B}}'],
+      ]),
+    );
+    const module = await import(
+      `data:text/javascript;base64,${Buffer.from(source).toString('base64')}`
+    );
+    expect(Object.hasOwn(module.default, '__proto__')).toBe(true);
+    expect(compileMessage(module.default.a, 'en')({ _g: '__proto__' })).toBe('A');
+  });
 });
 
 describe('emitCatalogueModule', () => {
