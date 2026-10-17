@@ -13,11 +13,13 @@ export type SayNode = ReactNode | Named<unknown> | Iterable<SayNode>;
 export type PropsWithSayChildren<P = unknown> = P & { children?: SayNode };
 
 export type PropsWithJSXSafeKeys<T> = {
-  [K in keyof T as K extends number | `${number}${string}`
-    ? `_${K}`
-    : K extends `_${number}${string}`
-      ? never
-      : K]: T[K];
+  [
+    K in keyof T as K extends number | `${number}${string}`
+      ? `_${K}`
+      : K extends `_${number}${string}`
+        ? never
+        : K
+  ]: T[K];
 };
 
 /**

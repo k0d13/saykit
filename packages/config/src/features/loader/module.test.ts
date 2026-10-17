@@ -59,7 +59,7 @@ describe('ts loader', () => {
     const previous = hooks['.ts'];
     hooks['.ts'] = (module, filename) => {
       const source = nodeModule.stripTypeScriptTypes(readFileSync(filename, 'utf8'), {
-        mode: 'transform',
+        mode: 'strip',
       });
       (module as unknown as { _compile: (code: string, filename: string) => void })._compile(
         source,

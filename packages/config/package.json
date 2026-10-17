@@ -82,9 +82,9 @@
     "@messageformat/date-skeleton": "2.0.0-0",
     "@messageformat/number-skeleton": "2.0.0-0",
     "commander": "^15.0.0",
-    "js-sha256": "^0.12.0",
-    "picomatch": "^4.0.5",
-    "zod": "^4.4.3"
+    "js-sha256": "^1.0.0",
+    "picomatch": "^4.0.7",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/picomatch": "^4.0.3"

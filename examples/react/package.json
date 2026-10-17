@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@saykit/react": "workspace:^",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "saykit": "workspace:^"
   },
   "devDependencies": {
@@ -20,11 +20,11 @@
     "@saykit/format-po": "workspace:^",
     "@saykit/transform-js": "workspace:^",
     "@saykit/transform-jsx": "workspace:^",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.4",
-    "typescript": "^6.0.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "typescript": "^7.0.2",
     "unplugin-saykit": "workspace:^",
-    "vite": "^8.1.5"
+    "vite": "^8.3.4"
   }
 }

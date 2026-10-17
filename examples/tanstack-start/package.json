@@ -11,11 +11,11 @@
   },
   "dependencies": {
     "@saykit/react": "workspace:^",
-    "@tanstack/react-router": "^1.170.18",
-    "@tanstack/react-router-devtools": "^1.167.0",
-    "@tanstack/react-start": "^1.168.32",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
+    "@tanstack/react-router": "^1.170.44",
+    "@tanstack/react-router-devtools": "^1.167.2",
+    "@tanstack/react-start": "^1.169.2",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "saykit": "workspace:^"
   },
   "devDependencies": {
@@ -23,11 +23,11 @@
     "@saykit/format-json": "workspace:^",
     "@saykit/transform-js": "workspace:^",
     "@saykit/transform-jsx": "workspace:^",
-    "@types/node": "^25.9.5",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.4",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
     "unplugin-saykit": "workspace:^",
-    "vite": "^8.1.5"
+    "vite": "^8.3.4"
   }
 }

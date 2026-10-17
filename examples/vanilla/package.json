@@ -16,8 +16,8 @@
     "@saykit/config": "workspace:^",
     "@saykit/format-po": "workspace:^",
     "@saykit/transform-js": "workspace:^",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "unplugin-saykit": "workspace:^",
-    "vite": "^8.1.5"
+    "vite": "^8.3.4"
   }
 }

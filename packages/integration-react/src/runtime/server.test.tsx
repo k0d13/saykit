@@ -34,8 +34,10 @@ const make = () =>
   });
 
 // Kept for the whole file: the views below share one request cell, so the
-// warning a second locale produces belongs to the file rather than to a test
-const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+// warning a second locale produces belongs to the file rather than to a test.
+// Collected here rather than read off the spy, whose calls are cleared per test
+const warnings: unknown[] = [];
+vi.spyOn(console, 'warn').mockImplementation((message) => void warnings.push(message));
 
 describe('server runtime', () => {
   // Runs first, before anything established a view, so the request cell is
@@ -94,14 +96,14 @@ describe('server runtime', () => {
   // established have changed its locale, so this counts the warnings the file
   // produced rather than establishing more of its own
   it('warns once when a second view changes the locale in one request', async () => {
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0]?.[0]).toContain("A view for 'en' was established");
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain("A view for 'en' was established");
 
     // The same locale again is not a change, and a change has already been
     // reported
     setSay(await make().load('en'));
     setSay(await make().load('fr'));
-    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warnings).toHaveLength(1);
     expect(getSay().locale).toBe('fr');
   });
 });
