@@ -63,19 +63,18 @@ Eagerly load locales so the bot can answer immediately on cold start:
 ```ts title="src/i18n.ts"
 import { createCatalogue } from 'saykit';
 
-export const catalogue = createCatalogue({
-  en: await import('./locales/en.po').then((m) => m.default),
-  fr: await import('./locales/fr.po').then((m) => m.default),
-});
+export const catalogue = createCatalogue(
+  {
+    en: await import('./locales/en.po').then((m) => m.default),
+    fr: await import('./locales/fr.po').then((m) => m.default),
+  },
+  { bidiIsolation: 'none' },
+);
 ```
 
-By default every value substituted into a message is wrapped in Unicode bidi isolation marks, which
-breaks a mention such as `<#123>` or `<@&456>` interpolated into a sentence. If your messages carry
-mentions, turn isolation off:
-
-```ts
-export const catalogue = createCatalogue({ en, fr }, { bidiIsolation: 'none' });
-```
+`bidiIsolation: 'none'` keeps substituted values exactly as given. By default each one is wrapped in
+Unicode bidi isolation marks, which breaks a mention such as `<#123>` or `<@&456>` interpolated into
+a sentence.
 
 ### Register `SayPlugin`
 
