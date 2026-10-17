@@ -1,5 +1,11 @@
 # @saykit/react
 
+## 0.11.1
+
+### Patch Changes
+
+- 6318cdd: Add a `bidiIsolation` option to `createCatalogue` and `createView`, so `'none'` can keep substituted values such as Discord mentions free of bidi isolation marks, and carry a view's options across the React server/client boundary
+
 ## 0.11.0
 
 ### Minor Changes
