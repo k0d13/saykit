@@ -72,7 +72,7 @@ saykit compile --quiet
 For each bucket, and each configured locale, `compile`:
 
 1. Reads the locale's catalogue and its [fallback chain](/core-concepts/runtime), most specific first, so an untranslated key resolves to a fallback string.
-2. Compiles each ICU message into a JavaScript function, with its locale and every number and date format already resolved.
+2. Compiles each ICU message into a [`Message`](/reference/api/saykit), a tree of arrays and strings with every number and date style already resolved to its `Intl` options.
 3. Writes `{locale}.js`, and a `{locale}.d.ts` beside it.
 
 The output is meant to be read, with the message each entry came from written above it:
@@ -82,10 +82,9 @@ The output is meant to be read, with the message each entry came from written ab
 export default {
   // {count, plural, one {# article} other {# articles}}
   c4Ef_2: [
-    '?',
-    ['=', ['f', 'plural', ['v', '_count']], 'one'],
-    ['c', ['f', 'number', ['v', '_count']], ' article'],
-    ['c', ['f', 'number', ['v', '_count']], ' articles'],
+    'p',
+    ['v', '_count'],
+    { one: ['c', ['#'], ' article'], other: ['c', ['#'], ' articles'] },
   ],
 };
 ```
@@ -110,8 +109,8 @@ Because every format is resolved here, nothing parses a message at runtime and n
 />
 
 <Callout type="info">
-  The generated `.js` is build output, so keep it out of version control. The `.d.ts` beside it is
-  two lines and never changes, so committing that leaves `tsc` passing on a fresh clone before
+  The generated `.js` is build output, so keep it out of version control. The `.d.ts` beside it is a
+  few lines and never changes, so committing that leaves `tsc` passing on a fresh clone before
   anything has been generated.
 </Callout>
 

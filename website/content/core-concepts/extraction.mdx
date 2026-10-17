@@ -140,7 +140,7 @@ For each bucket output:
 | `{locale}.js`   | The compiled module your app imports, one entry per message       |
 | `{locale}.d.ts` | Its declaration, so `import en from './locales/en.js'` types      |
 
-SayKit doesn't write a `.gitignore`: it's up to you which generated files to commit or ignore. The `.po` catalogues are canonical and should be committed. The `.js` is build output, so most projects ignore it and run `saykit compile` before anything that reads it. The `.d.ts` is two lines and never changes, so committing that keeps `tsc` passing on a fresh clone before anything has been generated.
+SayKit doesn't write a `.gitignore`: it's up to you which generated files to commit or ignore. The `.po` catalogues are canonical and should be committed. The `.js` is build output, so most projects ignore it and run `saykit compile` before anything that reads it. The `.d.ts` is a few lines and never changes, so committing that keeps `tsc` passing on a fresh clone before anything has been generated.
 
 ## Next
 
