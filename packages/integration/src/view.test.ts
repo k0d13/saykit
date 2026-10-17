@@ -109,6 +109,36 @@ describe('View#call', () => {
   });
 });
 
+describe('bidi isolation', () => {
+  const channel = { id: 'mention', message: '{channel} has a {multiplier} multiplier' };
+
+  it('isolates substituted values by default', () => {
+    const say = createView('en', {});
+    expect(say.call({ ...channel, _channel: '<#123>', _multiplier: '2x' })).toBe(
+      '⁨<#123>⁩ has a ⁨2x⁩ multiplier',
+    );
+  });
+
+  it('leaves values as given when a view is built with none', () => {
+    const say = createView('en', {}, { bidiIsolation: 'none' });
+    expect(say.call({ ...channel, _channel: '<#123>', _multiplier: '2x' })).toBe(
+      '<#123> has a 2x multiplier',
+    );
+  });
+
+  it('is passed by a catalogue to every view it hands back, lazy or not', async () => {
+    const catalogue = createCatalogue(
+      { en: { mention: channel.message }, fr: () => ({ mention: '{channel} a {multiplier}' }) },
+      { bidiIsolation: 'none' },
+    );
+    expect(catalogue.locale('en').call({ id: 'mention', _channel: '<@&1>', _multiplier: 2 })).toBe(
+      '<@&1> has a 2 multiplier',
+    );
+    const fr = await catalogue.load('fr');
+    expect(fr.call({ id: 'mention', _channel: '<#9>', _multiplier: 3 })).toBe('<#9> a 3');
+  });
+});
+
 describe('View immutability', () => {
   it('is frozen', () => {
     expect(Object.isFrozen(make().locale('en'))).toBe(true);

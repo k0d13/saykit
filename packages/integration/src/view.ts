@@ -40,6 +40,21 @@ export namespace View {
   export type Descriptor = ({ id: string } | { message: string }) & {
     [match: string | number]: unknown;
   };
+
+  export interface Options {
+    /**
+     * Whether a substituted value is wrapped in Unicode bidi isolation marks,
+     * U+2068 and U+2069, so right-to-left text cannot reorder the sentence
+     * around it.
+     *
+     * `'none'` leaves values byte-for-byte as given, for output that is parsed
+     * after it is formatted: a Discord mention such as `<#123>` stops being
+     * one once the id inside it is isolated.
+     *
+     * @default 'default'
+     */
+    bidiIsolation?: 'default' | 'none';
+  }
 }
 
 /**
@@ -242,12 +257,16 @@ export interface View<Locale extends string = string> {
  *
  * @param locale The locale to bind to
  * @param messages The messages this view formats against
+ * @param options How this view formats its messages
  * @returns The view
  */
 export function createView<Locale extends string>(
   locale: Locale,
   messages: View.Messages,
+  options: View.Options = {},
 ): View<Locale> {
+  const { bidiIsolation } = options;
+
   // Copied and frozen: formats are compiled once and kept, so a record that
   // could change afterwards would leave `call` formatting from the old string
   // while `view.messages` shows the new one
@@ -266,7 +285,7 @@ export function createView<Locale extends string>(
     if (typeof message !== 'string') throw new Error(`Message for ${id} is not a string`);
 
     let format = formats.get(message);
-    if (!format) formats.set(message, (format = compile(locale, message)));
+    if (!format) formats.set(message, (format = compile(locale, message, { bidiIsolation })));
 
     return String(format.format(resolveDescriptorValues(descriptor)));
   }

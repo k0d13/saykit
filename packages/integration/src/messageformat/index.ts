@@ -1,5 +1,5 @@
 import { parse } from '@messageformat/parser';
-import { MessageFormat } from 'messageformat';
+import { MessageFormat, type MessageFormatOptions } from 'messageformat';
 import { toMessage } from './convert.js';
 import { functions } from './functions.js';
 
@@ -29,9 +29,14 @@ import { functions } from './functions.js';
  *
  * @param locale Locale to format in
  * @param source The message, in ICU MessageFormat 1 syntax
+ * @param options Whether substituted values are wrapped in bidi isolation marks
  * @returns A formatter for the message
  * @throws If the message is not valid ICU MessageFormat 1
  */
-export function compile(locale: string, source: string) {
-  return new MessageFormat(locale, toMessage(parse(source)), { functions });
+export function compile(
+  locale: string,
+  source: string,
+  options?: Pick<MessageFormatOptions, 'bidiIsolation'>,
+) {
+  return new MessageFormat(locale, toMessage(parse(source)), { ...options, functions });
 }

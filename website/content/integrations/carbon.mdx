@@ -69,6 +69,14 @@ export const catalogue = createCatalogue({
 });
 ```
 
+By default every value substituted into a message is wrapped in Unicode bidi isolation marks, which
+breaks a mention such as `<#123>` or `<@&456>` interpolated into a sentence. If your messages carry
+mentions, turn isolation off:
+
+```ts
+export const catalogue = createCatalogue({ en, fr }, { bidiIsolation: 'none' });
+```
+
 ### Register `SayPlugin`
 
 ```ts title="src/index.ts"
