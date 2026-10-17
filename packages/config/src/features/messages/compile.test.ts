@@ -158,6 +158,13 @@ describe('choices', () => {
     expect(format(icu, { _g: 'other' })).toBe('They');
   });
 
+  // Assigned into `{}`, this key would set the prototype rather than add a case
+  it('keeps a select branch named __proto__', () => {
+    const icu = '{g, select, __proto__ {A} other {B}}';
+    expect(JSON.stringify(compileMessage(icu))).toContain('"__proto__":"A"');
+    expect(format(icu, { _g: '__proto__' })).toBe('A');
+  });
+
   /**
    * ICU `select` has no exact-value syntax: `=0` there is a parse error, while
    * a bare `0` matches the number and the string alike.
