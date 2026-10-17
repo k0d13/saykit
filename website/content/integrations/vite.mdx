@@ -122,7 +122,13 @@ The plugin takes no options, everything it needs lives in your `saykit.config.ts
 
 For every file in your bucket's `include` globs, the plugin asks the configured transformers to rewrite the source. Macros like `` say`Hello, ${name}!` `` become small `say.call({ id: '...', _name: name })` runtime invocations.
 
-For every import that matches a bucket's `output` template, e.g. `import fr from './locales/fr.js'`, the plugin resolves that locale's [fallback chain](/core-concepts/configuration#fallback-locales), parses each file in it with the bucket's formatter, and emits a single JS module exporting the merged catalogue, real translations overlaying their fallbacks, untranslated keys resolving to the source string. There is no `.po` file at runtime; just plain JS objects, and still only one locale per module. Each source file in the chain is registered as a watch dependency, so editing the source locale re-runs the load for dependent locales in dev.
+That is all it does. Catalogues are not its business: [`saykit compile`](/reference/cli#saykit-compile) turns each one into an ordinary `{locale}.js` module next to it, and the bundler loads, watches and hot-updates that module like any other. There is no `.po` file at runtime, and still only one locale per module.
+
+<Callout type="info">
+  Run `saykit compile` before anything that reads those modules. A `predev` and `prebuild` script is
+  the usual way; `saykit extract` also compiles as its last step, and `saykit extract --watch`
+  recompiles when a translation changes.
+</Callout>
 
 ## Plugin ordering
 
