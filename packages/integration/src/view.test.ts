@@ -139,6 +139,18 @@ describe('View immutability', () => {
   it('freezes its messages', () => {
     expect(Object.isFrozen(createView('en', { greeting: 'Hello' }).messages)).toBe(true);
   });
+
+  it('copies the trees inside its messages too', () => {
+    const source: View.Messages = { greeting: ['c', 'Hello, ', ['v', '_name']] };
+    const say = createView('en', source, { bidiIsolation: 'none' });
+    (source.greeting as unknown[])[1] = 'Goodbye, ';
+    expect(say.call({ id: 'greeting', _name: 'Ada' })).toBe('Hello, Ada');
+    expect(Object.isFrozen(say.messages.greeting)).toBe(true);
+  });
+
+  it('finds no message on the prototype', () => {
+    expect(() => createView('en', {}).call({ id: 'constructor' })).toThrow(/No message/);
+  });
 });
 
 describe('View inspect', () => {

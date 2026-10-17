@@ -244,6 +244,21 @@ export interface View<Locale extends string = string> {
 }
 
 /**
+ * A frozen deep copy of some messages.
+ *
+ * Messages are only strings, arrays and plain objects, so this is all a copy
+ * has to handle. `Object.fromEntries` defines own properties, so a key named
+ * `__proto__` stays one.
+ */
+function snapshot(value: unknown): unknown {
+  if (typeof value !== 'object' || value === null) return value;
+  if (Array.isArray(value)) return Object.freeze(value.map(snapshot));
+  return Object.freeze(
+    Object.fromEntries(Object.entries(value).map(([key, node]) => [key, snapshot(node)])),
+  );
+}
+
+/**
  * Create a view over one locale and the messages it formats against.
  *
  * A catalogue memoises one per locale, which is how application code usually
@@ -263,9 +278,10 @@ export function createView<Locale extends string>(
   // Only what was set, so a view built with no options reports none
   const ownOptions: View.Options = Object.freeze(bidiIsolation ? { bidiIsolation } : {});
 
-  // Copied and frozen, so nothing can swap a message out from under the view
-  // that is already handing its result to callers
-  const own: View.Messages = Object.freeze({ ...messages });
+  // Copied and frozen all the way down, so nothing can change a message out
+  // from under the view: an edit to the source after this would otherwise
+  // reach a message not yet called and miss one already compiled
+  const own = snapshot(messages) as View.Messages;
 
   const say = (() => {
     throw new Error("'say' is a macro and must be used with the relevant saykit plugin");
@@ -285,7 +301,8 @@ export function createView<Locale extends string>(
     let format = compiled.get(id);
 
     if (!format) {
-      const message = own[id];
+      // Own keys only, so an id like `constructor` is not found on the prototype
+      const message = Object.hasOwn(own, id) ? own[id] : undefined;
       if (message === undefined) throw new Error(`No message for ${id} in locale '${locale}'`);
 
       compiled.set(id, (format = compileMessage(message, locale, ownOptions)));
