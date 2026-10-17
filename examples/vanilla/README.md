@@ -52,7 +52,7 @@ longer exist in the source.
 1. **transform** rewrites `` say`Due in ${n} days` `` into a `say.call({ id, … })` with a stable
    hashed id. The macro bodies in the runtime throw if this step is missing, so a misconfigured
    build fails loudly rather than silently shipping English.
-2. **load** turns `import en from './locales/en.po'` into a plain JS object. No PO parser reaches
+2. **load** turns `import en from './locales/en.js'` into a plain JS object. No PO parser reaches
    the browser bundle.
 
 Further reading: [core concepts](../../website/content/core-concepts) and the

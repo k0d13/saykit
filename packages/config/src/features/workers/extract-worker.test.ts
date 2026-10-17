@@ -96,7 +96,18 @@ describe('BucketExtractWorker.write', () => {
     await extract([msg({ message: 'Hello', id: 'greeting' })]);
 
     expect(readLocale('de')).toEqual([]);
-    expect(existsSync(join(dir, 'de', 'messages.d.json.ts'))).toBe(true);
+  });
+
+  it('compiles every locale into a module the app can import', async () => {
+    await extract([msg({ message: 'Hello', id: 'greeting' })]);
+
+    for (const locale of ['en', 'de']) {
+      const module = join(dir, locale, 'messages.js');
+      expect(existsSync(module)).toBe(true);
+      expect(existsSync(join(dir, locale, 'messages.d.ts'))).toBe(true);
+      // `de` has no translations, so it resolves to the source strings
+      expect(readFileSync(module, 'utf8')).toContain('"greeting": "Hello"');
+    }
   });
 
   it('leaves an existing non-source locale completely untouched', async () => {

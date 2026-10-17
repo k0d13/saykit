@@ -9,7 +9,7 @@ import { SayProvider, useSay } from '#/runtime/client.js';
 
 function Consumer() {
   const say = useSay();
-  return createElement('span', null, `${say.locale}:${say.messages.greeting}`);
+  return createElement('span', null, `${say.locale}:${say.call({ id: 'greeting' })}`);
 }
 
 const catalogue = () => createCatalogue({ en: { greeting: 'Hello' }, fr: { greeting: 'Bonjour' } });
@@ -30,7 +30,7 @@ describe('SayProvider / useSay', () => {
     function Mention() {
       return createElement('span', null, useSay().call({ id: 'mention', _channel: '<#1>' }));
     }
-    const messages = { mention: 'See {channel}' };
+    const messages: View.Messages = { mention: ['c', 'See ', ['v', '_channel']] };
 
     const isolated = renderToStaticMarkup(
       createElement(SayProvider, { locale: 'en', messages }, createElement(Mention)),

@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
@@ -26,13 +26,13 @@ const message = {
 };
 
 describe('writeCatalogueMessages / readCatalogueMessages', () => {
-  it('writes the catalogue and its .d.ts declaration', async () => {
+  it('writes the catalogue, and nothing beside it', async () => {
     const path = join(dir, 'fr.json');
-    const declaration = join(dir, 'fr.d.json.ts');
     await writeCatalogueMessages(bucket, 'fr', [message], path);
     expect(existsSync(path)).toBe(true);
-    expect(existsSync(declaration)).toBe(true);
-    expect(readFileSync(declaration, 'utf8')).toContain('export default messages');
+    // A catalogue is what a translator edits; the module the app imports and
+    // the declaration that types it are `emitCatalogueModule`'s business
+    expect(existsSync(join(dir, 'fr.d.json.ts'))).toBe(false);
   });
 
   it('round-trips through read', async () => {

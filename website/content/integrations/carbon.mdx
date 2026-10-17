@@ -65,8 +65,8 @@ import { createCatalogue } from 'saykit';
 
 export const catalogue = createCatalogue(
   {
-    en: await import('./locales/en.po').then((m) => m.default),
-    fr: await import('./locales/fr.po').then((m) => m.default),
+    en: await import('./locales/en.js').then((m) => m.default),
+    fr: await import('./locales/fr.js').then((m) => m.default),
   },
   { bidiIsolation: 'none' },
 );

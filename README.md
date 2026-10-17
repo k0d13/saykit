@@ -33,7 +33,7 @@ This is a pnpm monorepo. The published packages live in [`packages/*`](./package
 
 | Package                                             | Description                                                          |
 | --------------------------------------------------- | -------------------------------------------------------------------- |
-| [`saykit`](./packages/integration)                  | Core runtime: catalogues, views, macros, and ICU formatting          |
+| [`saykit`](./packages/integration)                  | Core runtime: catalogues, views, macros, and `Intl` helpers          |
 | [`@saykit/config`](./packages/config)               | Config schema (`defineConfig`) and the `saykit` CLI                  |
 | [`@saykit/react`](./packages/integration-react)     | React integration: `<Say>`, `SayProvider`, server helpers            |
 | [`@saykit/carbon`](./packages/integration-carbon)   | Carbon Discord-bot integration                                       |

@@ -121,10 +121,12 @@ SayKit walks your source, finds every macro, and writes the catalogue files:
 
 ```
 src/locales/
-  en.po         # source locale, generated from your source
-  en.d.po.ts    # auto-generated TS declaration
-  fr.po         # other locales, created empty (header only)
-  fr.d.po.ts
+  en.po       # source locale, generated from your source
+  en.js       # the compiled module your app imports
+  en.d.ts     # its declaration
+  fr.po       # other locales, created empty (header only)
+  fr.js
+  fr.d.ts
 ```
 
 Extraction only writes the **source** locale (`en`). Other locales are created empty the first time and then left untouched, translated content is owned by your translation management system, and untranslated keys fall back to the source string automatically. See [extraction](/core-concepts/extraction) for the full picture.
@@ -174,8 +176,8 @@ Create one catalogue for your app:
 
 ```tsx title="src/i18n.ts"
 import { createCatalogue } from 'saykit';
-import en from './locales/en.po';
-import fr from './locales/fr.po';
+import en from './locales/en.js';
+import fr from './locales/fr.js';
 
 export const catalogue = createCatalogue({ en, fr });
 ```

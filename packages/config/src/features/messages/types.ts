@@ -1,7 +1,7 @@
 import { convertMessageToIcu } from './convert.js';
-import type { ArgumentType } from './format.js';
 import { generateHash } from './hash.js';
 import { AUTO_INCREMENT_IDENTIFIER } from './identifier.js';
+import type { ArgumentType } from './styles.js';
 
 abstract class Base {
   toICUString(this: Message) {

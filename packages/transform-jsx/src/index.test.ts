@@ -274,7 +274,7 @@ describe('createJsxTransformer.transform', () => {
     const code = 'const x = <Say.Date _={{ scheduled_at: at }} style="::d" />;';
     expect(transformer.extract(code, 'file.tsx')).toEqual([]);
     const output = transformer.transform(code, 'file.tsx');
-    expect(output).toContain('message="{scheduled_at, date, ::d}"');
+    expect(output).toContain('message={["d", ["v", "_scheduled_at"]');
     expect(output).toContain('_scheduled_at={at}');
     expect(output).not.toContain('id=');
   });

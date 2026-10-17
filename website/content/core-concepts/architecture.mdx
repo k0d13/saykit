@@ -161,10 +161,12 @@ You can override this with a [descriptor](/core-concepts/messages#descriptors) i
 
 Aside from the transformer-emitted `say.call(...)` invocations, only two things end up in your bundle:
 
-- the `saykit` runtime (small, dependency-light apart from ICU MessageFormat)
+- the `saykit` runtime, which has no dependencies
 - whichever integration you're using (`@saykit/react`, `@saykit/carbon`, &hellip;)
 
-Translation catalogues are emitted as plain JS modules, tree-shakable, code-split-able, dynamically importable. Locales you never load never end up in your bundle.
+Catalogues are compiled to plain JS modules, one entry per message, with every number and date format already resolved to the options bag it stands for. So no message parser reaches your bundle, and the only formatting code that ships is a small evaluator over `Intl`. A message is data rather than a function, which is what lets a server hand a locale to a client tree as JSON.
+
+Those modules are ordinary modules: tree-shakable, code-split-able, dynamically importable. Locales you never load never end up in your bundle.
 
 ## Where to next?
 

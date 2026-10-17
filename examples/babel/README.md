@@ -3,10 +3,10 @@
 SayKit compiled by **Babel and nothing else**: no bundler, no dev server, no loader.
 `pnpm build`, then `node dist/main.js`.
 
-This exists to pin down the `catalogues: 'inline'` default: `babel-plugin-saykit` on its
-own has to rewrite the macros _and_ resolve the catalogue imports, with no other tool
-involved. Every other example runs the plugin alongside a bundler integration, so this is
-the only one that would notice if that stopped being true.
+This exists to pin down what `babel-plugin-saykit` does on its own: rewrite the macros,
+and nothing else. Catalogues are compiled to `.js` modules by `saykit compile`, which Node
+imports directly. Every other example runs the plugin alongside a bundler, so this is the
+only one that would notice if the plugin started needing one.
 
 ## Run
 
@@ -31,18 +31,15 @@ English source string, merged in at compile time rather than looked up at runtim
 
 ## What to look at
 
-| Thing                                                             | Where             |
-| ----------------------------------------------------------------- | ----------------- |
-| `plugins: ['saykit']`, no options: the inlining default           | `babel.config.js` |
-| `import en from './locales/en.po'`, gone by the time Node sees it | `src/main.ts`     |
-| The compiled record, one object literal per locale                | `dist/main.js`    |
+| Thing                                                  | Where               |
+| ------------------------------------------------------ | ------------------- |
+| `plugins: ['saykit']`, no options and nothing else     | `babel.config.js`   |
+| `import en from './locales/en.js'`, an ordinary import | `src/main.ts`       |
+| One readable function per message                      | `src/locales/fr.js` |
 
-Open `dist/main.js` after a build: there is no `.po` file, no PO parser and no SayKit
-extractor in the output, just `const en = { … }` and `say.call()` invocations.
+Open `dist/main.js` after a build: no `.po` file, no PO parser, no message parser and no
+SayKit extractor, just `say.call()` invocations against the imported locale modules.
 
-## Hot reload
-
-There is none, by design. The record lands inside `dist/main.js`, whose own bytes only
-change when you rebuild, which is exactly why a dev server wants `catalogues: 'module'`
-and a bundler integration instead. See the
+Open `src/locales/fr.js` to see what those modules hold: one plain function per message,
+with the locale and every number and date format already resolved. See the
 [Babel integration docs](../../website/content/integrations/babel.mdx).

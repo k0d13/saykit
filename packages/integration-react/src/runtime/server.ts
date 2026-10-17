@@ -31,7 +31,7 @@ const SECOND_VIEW = (established: string, next: string) =>
   "request. A view is per request rather than per subtree: React renders a server component's " +
   'children after it returns, so there is nowhere to put the previous view back, and everything ' +
   `rendered after this point reads '${next}' - including components outside the one that ` +
-  "established it, and the messages 'SayProvider' serialises to the client. Render the other " +
+  "established it, and the messages 'SayProvider' hands to the client. Render the other " +
   'locale in its own request, or resolve its view yourself and pass it to the components that ' +
   'need it.';
 
@@ -67,7 +67,7 @@ export function getSay(): View {
  * Per request is the limit. React renders a server component's children after
  * it returns, so a view does not end where a subtree does: a second view takes
  * over for everything rendered after it, including the messages
- * `<SayProvider>` serialises. Development warns when that happens.
+ * `<SayProvider>` hands to the client. Development warns when that happens.
  *
  * @param view The view to establish
  */
@@ -104,7 +104,8 @@ export function setSay(view: View): void {
  *
  * A `<SayProvider>` written inside a wrapped component takes no props of its
  * own: the server build of `@saykit/react/client` reads the established view
- * and serialises the locale and its messages across the boundary.
+ * and hands the locale and its messages across the boundary, which compiling
+ * messages to data rather than to functions is what allows.
  *
  * @example
  * ```tsx

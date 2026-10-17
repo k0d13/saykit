@@ -1,4 +1,4 @@
-import { compile } from './messageformat/index.js';
+import { compileMessage, type Message } from './message.js';
 import type {
   DateTimeOptions,
   Disallow,
@@ -8,36 +8,26 @@ import type {
   SelectOptions,
 } from './types.js';
 
-/**
- * Map a descriptor's keys back to the placeholders the message names. The
- * transform prefixes every value with one underscore, so stripping exactly one
- * is the inverse: `_0` is `0`, `__total` is `_total`. Keys without one pass
- * through, so a hand-written `call({ id, name })` still formats `{name}`.
- *
- * Built from own entries, so a value named `__proto__` stays a placeholder.
- */
-function resolveDescriptorValues(descriptor: View.Descriptor) {
-  return Object.fromEntries(
-    Object.entries(descriptor)
-      // The id or the message names the message, it is not one of its values
-      .filter(([key]) => key !== 'id' && key !== 'message')
-      .map(([key, value]) => [key.startsWith('_') ? key.slice(1) : key, value]),
-  );
-}
-
 function macro(name: string): never {
   throw new Error(`'say.${name}' is a macro and must be used with the relevant saykit plugin`);
 }
 
 export namespace View {
-  export type Messages = { [key: string]: string };
+  /**
+   * One locale's messages, compiled.
+   *
+   * Each is a {@link Message} the CLI compiled from the catalogue, with every
+   * style already resolved. Being data rather than code, a locale's messages
+   * serialise, which is what lets a server hand them to a client tree.
+   */
+  export type Messages = { [key: string]: Message };
 
   /**
    * What the transform compiles a message down to: the id it was extracted
-   * under, or the ICU message itself when there was nothing to extract, with
-   * its values behind one underscore each.
+   * under, or the compiled message itself when there was nothing to extract,
+   * with its values behind one underscore each.
    */
-  export type Descriptor = ({ id: string } | { message: string }) & {
+  export type Descriptor = ({ id: string } | { message: Message }) & {
     [match: string | number]: unknown;
   };
 
@@ -114,8 +104,8 @@ export interface View<Locale extends string = string> {
    * Format the message a descriptor names, or the message it carries.
    *
    * A message with nothing to translate, a lone `say.date(x)` with no text
-   * around it, is never extracted: the transform writes the ICU into the call
-   * instead of an id.
+   * around it, is never extracted: the transform writes the compiled message
+   * into the call instead of an id.
    *
    * @param descriptor Descriptor to format
    * @returns The formatted message
@@ -254,12 +244,25 @@ export interface View<Locale extends string = string> {
 }
 
 /**
+ * A frozen deep copy of some messages.
+ *
+ * Messages are only strings, arrays and plain objects, so this is all a copy
+ * has to handle. `Object.fromEntries` defines own properties, so a key named
+ * `__proto__` stays one.
+ */
+function snapshot(value: unknown): unknown {
+  if (typeof value !== 'object' || value === null) return value;
+  if (Array.isArray(value)) return Object.freeze(value.map(snapshot));
+  return Object.freeze(
+    Object.fromEntries(Object.entries(value).map(([key, node]) => [key, snapshot(node)])),
+  );
+}
+
+/**
  * Create a view over one locale and the messages it formats against.
  *
  * A catalogue memoises one per locale, which is how application code usually
- * reaches one; a single-locale app can build one directly. The format cache
- * belongs to the view, so a view built over one set of messages can never be
- * served a format compiled from another.
+ * reaches one; a single-locale app can build one directly.
  *
  * @param locale The locale to bind to
  * @param messages The messages this view formats against
@@ -275,27 +278,37 @@ export function createView<Locale extends string>(
   // Only what was set, so a view built with no options reports none
   const ownOptions: View.Options = Object.freeze(bidiIsolation ? { bidiIsolation } : {});
 
-  // Copied and frozen: formats are compiled once and kept, so a record that
-  // could change afterwards would leave `call` formatting from the old string
-  // while `view.messages` shows the new one
-  const own: View.Messages = Object.freeze({ ...messages });
-
-  const formats = new Map<string, ReturnType<typeof compile>>();
+  // Copied and frozen all the way down, so nothing can change a message out
+  // from under the view: an edit to the source after this would otherwise
+  // reach a message not yet called and miss one already compiled
+  const own = snapshot(messages) as View.Messages;
 
   const say = (() => {
     throw new Error("'say' is a macro and must be used with the relevant saykit plugin");
   }) as unknown as View<Locale>;
 
+  // One compile per message, on the first call that needs it. A message nobody
+  // renders is never walked, and one rendered a thousand times is walked once
+  const compiled = new Map<string, (values: Message.Values) => string>();
+
   function call(descriptor: View.Descriptor) {
-    // An inline message is its own cache key: two lone dates with the same
-    // style share one format
-    const { id, message = own[id] } = descriptor as { id: string; message?: string };
-    if (typeof message !== 'string') throw new Error(`Message for ${id} is not a string`);
+    // An inline message is one helper over one value, and the transform writes
+    // a fresh literal into every call, so it is walked rather than cached
+    // The index signature keeps `in` from narrowing, so the shape is asserted
+    const { id, message } = descriptor as { id: string; message?: Message };
+    if (message !== undefined) return compileMessage(message, locale, ownOptions)(descriptor);
 
-    let format = formats.get(message);
-    if (!format) formats.set(message, (format = compile(locale, message, { bidiIsolation })));
+    let format = compiled.get(id);
 
-    return String(format.format(resolveDescriptorValues(descriptor)));
+    if (!format) {
+      // Own keys only, so an id like `constructor` is not found on the prototype
+      const message = Object.hasOwn(own, id) ? own[id] : undefined;
+      if (message === undefined) throw new Error(`No message for ${id} in locale '${locale}'`);
+
+      compiled.set(id, (format = compileMessage(message, locale, ownOptions)));
+    }
+
+    return format(descriptor);
   }
 
   return Object.freeze(

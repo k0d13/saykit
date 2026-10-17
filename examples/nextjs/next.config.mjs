@@ -1,3 +1,2 @@
-import { withSayKit } from 'babel-plugin-saykit/next';
-
-export default withSayKit({});
+/** @type {import('next').NextConfig} */
+export default {};

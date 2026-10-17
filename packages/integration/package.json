@@ -40,11 +40,5 @@
     "check": "tsc --noEmit",
     "build": "tsdown",
     "prepack": "pnpm build"
-  },
-  "dependencies": {
-    "@messageformat/date-skeleton": "2.0.0-0",
-    "@messageformat/number-skeleton": "2.0.0-0",
-    "@messageformat/parser": "^5.2.0",
-    "messageformat": "^4.1.0"
   }
 }
