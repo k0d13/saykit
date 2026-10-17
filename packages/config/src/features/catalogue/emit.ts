@@ -51,9 +51,11 @@ export function generateCatalogueModule(record: Record<string, string>) {
     // message format turns up
     const message = compileMessage(icu);
 
-    // The message it came from, so the file can be read and reviewed
+    // The message it came from, so the file can be read and reviewed. Split on
+    // every line terminator JS has, not only `\n`: a translation holding a
+    // U+2028 would otherwise end the comment and run the rest as code
     const comment = icu
-      .split('\n')
+      .split(/\r\n|[\n\r\u2028\u2029]/)
       .map((line) => `  // ${line}`)
       .join('\n');
     return `${comment}\n  ${JSON.stringify(id)}: ${JSON.stringify(message)},`;
