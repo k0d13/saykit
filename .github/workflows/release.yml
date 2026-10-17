@@ -8,6 +8,7 @@ on:
   push:
     branches: [main]
     paths:
+      - 'mise.toml'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -46,8 +47,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Setup Node.js
-        uses: ./.github/actions/node
+      - name: Setup toolchain
+        uses: ./.github/actions/toolchain
 
       # Only maintains the version PR. Publishing is done below so that a
       # release produces one tag and one GitHub release for the whole
@@ -118,8 +119,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Setup Node.js
-        uses: ./.github/actions/node
+      - name: Setup toolchain
+        uses: ./.github/actions/toolchain
 
       - name: Publish snapshot version
         run: |

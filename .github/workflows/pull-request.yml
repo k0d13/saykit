@@ -11,6 +11,7 @@ on:
     # automatically, so `authorize` filters down to the label that matters.
     types: [opened, synchronize, reopened, labeled]
     paths:
+      - 'mise.toml'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -105,8 +106,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Setup Node.js
-        uses: ./.github/actions/node
+      - name: Setup toolchain
+        uses: ./.github/actions/toolchain
 
       - name: Download dist artifacts
         uses: actions/download-artifact@v8

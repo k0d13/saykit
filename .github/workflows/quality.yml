@@ -45,8 +45,8 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
 
-      - name: Setup Node.js
-        uses: ./.github/actions/node
+      - name: Setup toolchain
+        uses: ./.github/actions/toolchain
 
       - name: Build all packages
         run: pnpm build
@@ -69,8 +69,8 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
 
-      - name: Setup Node.js
-        uses: ./.github/actions/node
+      - name: Setup toolchain
+        uses: ./.github/actions/toolchain
 
       - name: Download dist artifacts
         uses: actions/download-artifact@v8
@@ -92,8 +92,8 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
 
-      - name: Setup Node.js
-        uses: ./.github/actions/node
+      - name: Setup toolchain
+        uses: ./.github/actions/toolchain
 
       - name: Download dist artifacts
         uses: actions/download-artifact@v8
@@ -116,8 +116,8 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
 
-      - name: Setup Node.js
-        uses: ./.github/actions/node
+      - name: Setup toolchain
+        uses: ./.github/actions/toolchain
 
       - name: Download dist artifacts
         uses: actions/download-artifact@v8
