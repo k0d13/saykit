@@ -220,7 +220,7 @@ describe('createJsTransformer.transform', () => {
     const code = 'const d = say.date(at, { style: "::yMMM" });';
     expect(transformer.extract(code, 'file.ts')).toEqual([]);
     const output = transformer.transform(code, 'file.ts');
-    expect(output).toContain('message: ["f", "datetime", ["v", "_at"]');
+    expect(output).toContain('message: ["d", ["v", "_at"]');
     expect(output).toContain('_at: at');
     expect(output).not.toMatch(/\bid:/);
   });

@@ -14,14 +14,18 @@ type Locale = 'en' | 'fr';
 const messages = {
   en: {
     greeting: 'Hello',
-    items: ['?', ['=', ['v', '_count'], 1], '1 item', ['c', ['v', '_count'], ' items']],
+    items: ['p', ['v', '_count'], { one: ['c', ['#'], ' item'], other: ['c', ['#'], ' items'] }],
     named: ['c', 'Hello, ', ['v', '_name']],
     identified: ['c', 'Order ', ['v', '_id']],
     underscored: ['c', 'Total ', ['v', '__total']],
   },
   fr: {
     greeting: 'Bonjour',
-    items: ['?', ['=', ['v', '_count'], 1], '1 article', ['c', ['v', '_count'], ' articles']],
+    items: [
+      'p',
+      ['v', '_count'],
+      { one: ['c', ['#'], ' article'], other: ['c', ['#'], ' articles'] },
+    ],
   },
 } satisfies Record<Locale, View.Messages>;
 
@@ -62,7 +66,7 @@ describe('View#call', () => {
   });
 
   it('formats a message carried in place of an id', () => {
-    expect(say.call({ message: ['f', 'number', ['v', '_n']], _n: 1234.5 })).toBe('1,234.5');
+    expect(say.call({ message: ['n', ['v', '_n']], _n: 1234.5 })).toBe('1,234.5');
   });
 
   it('hands the descriptor over whole, values still behind their underscore', () => {

@@ -1,4 +1,4 @@
-import { datetime, duration, number, plural } from './runtime.js';
+import { dateTimeFormat, numberFormat, pluralRules, toDate, toNumeric } from './runtime.js';
 
 /**
  * A compiled message.
@@ -13,58 +13,51 @@ import { datetime, duration, number, plural } from './runtime.js';
  * nothing at all.
  */
 export type Message =
-  // Literal text, or a literal number a branch compares against
+  // Literal text
   | string
-  | number
   // Concatenation: the parts of one message, in order
   | ['c', ...Message[]]
   // A value from the descriptor, by key
   | ['v', string]
-  // A runtime helper over one value, with the options it was compiled with
-  | ['f', Message.Helper, Message, unknown?]
-  // A conditional: test, then, else
-  | ['?', Message, Message, Message]
-  // Equality between two nodes
-  | ['=', Message, Message]
-  // Subtraction, for a plural offset
-  | ['-', Message, Message]
-  // Multiplication, for a number scale
-  | ['*', Message, Message]
-  // String coercion, for a select matching its cases as text
-  | ['s', Message];
+  // A number, with its `Intl` options and a multiplier `Intl` has no option for
+  | ['n', Message, Intl.NumberFormatOptions?, number?]
+  // A date or a time, with its `Intl` options
+  | ['d', Message, Intl.DateTimeFormatOptions?]
+  // A plural: the value, its cases, the offset, and `1` for an ordinal
+  | ['p', Message, Message.Cases, number?, 1?]
+  // A select: the value and its cases, matched as text
+  | ['s', Message, Message.Cases]
+  // The number the enclosing plural selected on, less its offset, formatted
+  | ['#'];
 
 export namespace Message {
-  /** The helpers a compiled message may call. */
-  export type Helper = 'number' | 'datetime' | 'duration' | 'plural';
+  /**
+   * A plural's or a select's branches, by key. A plural's keys are CLDR
+   * categories or an exact `=n`, and `other` is the fallback for both.
+   */
+  export type Cases = { [key: string]: Message };
 
   /** What a compiled message is called with: the descriptor the transform built. */
   export type Values = Record<string, unknown>;
 }
 
-/**
- * The helpers, by the name a message calls them under.
- *
- * Uniform on purpose: every one takes the locale, the value, and whatever
- * options it was compiled with, so `'f'` is one call shape rather than four.
- */
-const HELPERS: Record<Message.Helper, (locale: string, value: never, options: never) => unknown> = {
-  number: number as never,
-  datetime: datetime as never,
-  plural: plural as never,
-  // The one helper with nothing locale-dependent about it
-  duration: ((_locale: string, value: number) => duration(value)) as never,
-};
-
 type Formatter = (values: Message.Values) => unknown;
 
-/** Whether, and how, a written value is wrapped in bidi isolation marks. */
-type Isolate = (helper: Message.Helper | undefined, written: unknown) => unknown;
+/** What every node in one message is built against. */
+interface Context {
+  locale: string;
+  /** The locale's direction, or `undefined` when values are not isolated. */
+  dir: 'ltr' | 'rtl' | 'auto' | undefined;
+  /** The enclosing plural's offset number, for a `#` to write. */
+  hash: Formatter | undefined;
+}
 
-// First strong, left-to-right and right-to-left isolates, and the pop that ends each
-const FSI = '\u2068';
-const LRI = '\u2066';
-const RLI = '\u2067';
-const PDI = '\u2069';
+// First strong and right-to-left isolates, and the pop that ends each. Written
+// as code points, since the characters are invisible. A left-to-right isolate
+// is never needed: a localised value only ever runs in its locale's direction
+const FSI = String.fromCharCode(0x2068);
+const RLI = String.fromCharCode(0x2067);
+const PDI = String.fromCharCode(0x2069);
 
 // Scripts written right to left, from CLDR's script metadata
 const RTL = new Set(['Adlm', 'Arab', 'Hebr', 'Mand', 'Nkoo', 'Rohg', 'Syrc', 'Thaa']);
@@ -80,42 +73,101 @@ function localeDir(locale: string): 'ltr' | 'rtl' | 'auto' {
 }
 
 /**
- * The isolation MessageFormat 2 applies by default.
+ * Isolate a written value the way MessageFormat 2 does by default.
  *
  * A number or a date is written in the locale's own direction, so in a
  * left-to-right message it needs nothing and otherwise takes that direction's
  * isolate. Anything else could be in any script, so it is isolated by its
  * first strong character.
  */
-function isolation(locale: string): Isolate {
-  const dir = localeDir(locale);
-  const own = dir === 'ltr' ? LRI : dir === 'rtl' ? RLI : FSI;
-  return (helper, written) => {
-    // A plural category is only ever selected on, never shown
-    if (written === undefined || helper === 'plural') return written;
-    if (helper === 'number' || helper === 'datetime')
-      return dir === 'ltr' ? written : own + String(written) + PDI;
-    return FSI + String(written) + PDI;
+function isolate(ctx: Context, written: string, localised: boolean) {
+  if (!ctx.dir) return written;
+  if (!localised) return FSI + written + PDI;
+  if (ctx.dir === 'ltr') return written;
+  return (ctx.dir === 'rtl' ? RLI : FSI) + written + PDI;
+}
+
+/**
+ * Report a value a message could not format, which is then written as given.
+ *
+ * A message never throws over a value: a bad date in one placeholder should
+ * not take the rest of the page down with it.
+ */
+function unformattable(kind: string, value: unknown, error?: unknown) {
+  console.warn(`saykit: cannot format ${String(value)} as a ${kind}`, ...(error ? [error] : []));
+  return String(value);
+}
+
+/**
+ * Build an `Intl` object for a message, once, when the message is built.
+ *
+ * Construction can fail on options a skeleton allowed but this engine does
+ * not, such as an unknown currency; the message then writes its values as
+ * given rather than failing on every call.
+ */
+function prepare<T>(kind: string, make: () => T): T | undefined {
+  try {
+    return make();
+  } catch (error) {
+    console.warn(`saykit: cannot build a ${kind} formatter`, error);
+    return undefined;
+  }
+}
+
+/** The closure that formats a number, as a placeholder or as a `#`. */
+function formatNumber(
+  ctx: Context,
+  value: Formatter,
+  out: boolean,
+  options?: Intl.NumberFormatOptions,
+  scale?: number,
+): Formatter {
+  const format = prepare('number', () => numberFormat(ctx.locale, options));
+
+  return (values) => {
+    const raw = value(values);
+    if (raw === undefined) return undefined;
+
+    const number = toNumeric(raw);
+    if (number === undefined || !format) return unformattable('number', raw);
+
+    let scaled = number;
+    if (scale !== undefined)
+      // A bigint keeps its precision through a whole-number scale only
+      scaled =
+        typeof number === 'bigint' && Number.isInteger(scale)
+          ? number * BigInt(scale)
+          : Number(number) * scale;
+
+    return out ? isolate(ctx, format.format(scaled), true) : format.format(scaled);
   };
+}
+
+/** A plural's or a select's cases, built, with `other` split out as the fallback. */
+function arms(cases: Message.Cases, ctx: Context, out: boolean) {
+  const built = new Map<string, Formatter>();
+  for (const [key, node] of Object.entries(cases)) built.set(key, build(node, ctx, out));
+  const other = built.get('other');
+  return { built, other };
 }
 
 /**
  * Build the closure one node evaluates to.
  *
  * The walk happens once per message, and every branch of it resolves what it
- * can while it walks: a helper is looked up here rather than per call, and so
- * are a conditional's arms. What is left at call time is the work that depends
- * on the values.
+ * can while it walks: an `Intl` object is built here rather than per call, and
+ * so are a plural's or a select's cases. What is left at call time is the work
+ * that depends on the values.
  *
- * `isolate` is set only where a node's result is written into the message,
- * rather than compared, selected on or computed with.
+ * `out` is set where a node's result is written into the message, rather than
+ * selected on or formatted, which is the only place a value is isolated.
  */
-function build(node: Message, locale: string, isolate?: Isolate): Formatter {
+function build(node: Message, ctx: Context, out: boolean): Formatter {
   if (!Array.isArray(node)) return () => node;
 
   switch (node[0]) {
     case 'c': {
-      const parts = node.slice(1).map((part) => build(part as Message, locale, isolate));
+      const parts = node.slice(1).map((part) => build(part as Message, ctx, out));
       return (values) => {
         let written = '';
         for (const part of parts) written += part(values) ?? '';
@@ -125,49 +177,75 @@ function build(node: Message, locale: string, isolate?: Isolate): Formatter {
 
     case 'v': {
       const key = node[1];
-      if (isolate) return (values) => isolate(undefined, values[key]);
-      return (values) => values[key];
+      if (!out || !ctx.dir) return (values) => values[key];
+      return (values) => {
+        const value = values[key];
+        return value === undefined ? value : isolate(ctx, String(value), false);
+      };
     }
 
-    case 'f': {
-      const name = node[1];
-      const helper = HELPERS[name];
-      const value = build(node[2], locale);
-      const options = node[3];
-      if (isolate)
-        return (values) => isolate(name, helper(locale, value(values) as never, options as never));
-      return (values) => helper(locale, value(values) as never, options as never);
+    case 'n':
+      return formatNumber(ctx, build(node[1], ctx, false), out, node[2], node[3]);
+
+    case 'd': {
+      const value = build(node[1], ctx, false);
+      const format = prepare('date', () => dateTimeFormat(ctx.locale, node[2]));
+      return (values) => {
+        const raw = value(values);
+        if (raw === undefined) return undefined;
+        const date = toDate(raw);
+        if (!date || !format) return unformattable('date', raw);
+        return out ? isolate(ctx, format.format(date), true) : format.format(date);
+      };
     }
 
-    case '?': {
-      const test = build(node[1], locale);
-      const then = build(node[2], locale, isolate);
-      const otherwise = build(node[3], locale, isolate);
-      return (values) => (test(values) ? then(values) : otherwise(values));
+    case 'p': {
+      const value = build(node[1], ctx, false);
+      const offset = node[3] ?? 0;
+      const rules = pluralRules(ctx.locale, node[4] ? 'ordinal' : 'cardinal');
+
+      const shift = (number: number | bigint) =>
+        offset === 0
+          ? number
+          : typeof number === 'bigint'
+            ? number - BigInt(offset)
+            : number - offset;
+
+      // A `#` in any case writes this plural's number, less its offset
+      const hash: Formatter = (values) => {
+        const number = toNumeric(value(values));
+        return number === undefined ? undefined : shift(number);
+      };
+      const { built, other } = arms(node[2], { ...ctx, hash }, out);
+
+      return (values) => {
+        const number = toNumeric(value(values));
+        let arm: Formatter | undefined;
+        if (number !== undefined) {
+          // An exact case is matched against the number as given, before the
+          // offset, so `=1` still means one. The category is chosen after it
+          arm = built.get(`=${String(number)}`);
+          // `Intl.PluralRules` takes a number, never a bigint
+          arm ??= built.get(rules.select(Number(shift(number))));
+        }
+        return (arm ?? other)?.(values);
+      };
     }
 
-    case '=': {
-      const left = build(node[1], locale);
-      const right = build(node[2], locale);
-      return (values) => left(values) === right(values);
-    }
-
-    case '-': {
-      const left = build(node[1], locale);
-      const right = build(node[2], locale);
-      return (values) => (left(values) as number) - (right(values) as number);
-    }
-
-    case '*': {
-      const left = build(node[1], locale);
-      const right = build(node[2], locale);
-      return (values) => (left(values) as number) * (right(values) as number);
+    case 's': {
+      const value = build(node[1], ctx, false);
+      const { built, other } = arms(node[2], ctx, out);
+      return (values) => {
+        const raw = value(values);
+        const arm = raw === undefined ? undefined : built.get(String(raw));
+        return (arm ?? other)?.(values);
+      };
     }
 
     default: {
-      const value = build(node[1], locale);
-      if (isolate) return (values) => isolate(undefined, String(value(values)));
-      return (values) => String(value(values));
+      // Only a plural makes a `#` a node, so one outside it is text
+      if (!ctx.hash) return () => '#';
+      return formatNumber(ctx, ctx.hash, out);
     }
   }
 }
@@ -179,7 +257,7 @@ function build(node: Message, locale: string, isolate?: Isolate): Formatter {
  * message walked here is called from the closure afterwards.
  *
  * @param message The compiled message, as the CLI emitted it
- * @param locale The locale to bind its helpers to
+ * @param locale The locale to format in
  * @param options Whether written values are wrapped in bidi isolation marks
  * @returns A function from a descriptor to the formatted string
  */
@@ -191,7 +269,7 @@ export function compileMessage(
   // A message with no placeholders is already its own answer
   if (typeof message === 'string') return () => message;
 
-  const isolate = options.bidiIsolation === 'none' ? undefined : isolation(locale);
-  const formatter = build(message, locale, isolate);
+  const dir = options.bidiIsolation === 'none' ? undefined : localeDir(locale);
+  const formatter = build(message, { locale, dir, hash: undefined }, true);
   return (values) => String(formatter(values) ?? '');
 }

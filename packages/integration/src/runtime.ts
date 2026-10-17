@@ -1,18 +1,18 @@
 /**
- * What a compiled message calls.
+ * The `Intl` objects a compiled message formats with, and the coercions that
+ * read a value before it reaches one.
  *
- * An `'f'` node names one of these, and every style it uses was resolved when
- * it was compiled, so these are the last step and nothing else: hand an
- * already-built `Intl` object a value.
- *
- * Nothing here parses anything, which is the point of the whole arrangement.
+ * Every style was resolved when the message was compiled, so nothing here
+ * parses anything: a view asks for a formatter once, when it builds a message,
+ * and hands it values from then on.
  */
 
 /**
- * `Intl` objects, kept by locale and options.
+ * `Intl` objects, kept by kind, locale and options.
  *
- * Constructing one is the expensive half of formatting, and a message formats
- * the same way every time it is called, so the object outlives the call.
+ * Constructing one is the expensive half of formatting, and messages share
+ * them, so one built for a message outlives it. The key is worked out once per
+ * message, never per call.
  */
 const formatters = new Map<string, unknown>();
 
@@ -22,64 +22,51 @@ function memoise<T>(key: string, make: () => T) {
   return formatter;
 }
 
-/** Format a number the way `locale` writes one. */
-export function number(locale: string, value: number | bigint, options?: Intl.NumberFormatOptions) {
-  const key = `n${locale}${JSON.stringify(options ?? null)}`;
-  return memoise(key, () => new Intl.NumberFormat(locale, options)).format(value);
+/** The formatter that writes a number the way `locale` writes one. */
+export function numberFormat(locale: string, options?: Intl.NumberFormatOptions) {
+  return memoise(
+    `n${locale}${JSON.stringify(options ?? null)}`,
+    () => new Intl.NumberFormat(locale, options),
+  );
 }
 
-/** Format a date or a time the way `locale` writes one. */
-export function datetime(
-  locale: string,
-  value: Date | number,
-  options?: Intl.DateTimeFormatOptions,
-) {
-  const key = `d${locale}${JSON.stringify(options ?? null)}`;
-  return memoise(key, () => new Intl.DateTimeFormat(locale, options)).format(value);
+/** The formatter that writes a date or a time the way `locale` writes one. */
+export function dateTimeFormat(locale: string, options?: Intl.DateTimeFormatOptions) {
+  return memoise(
+    `d${locale}${JSON.stringify(options ?? null)}`,
+    () => new Intl.DateTimeFormat(locale, options),
+  );
 }
 
-/** The CLDR plural category `value` falls in, for `locale`. */
-export function plural(
-  locale: string,
-  value: number | bigint,
-  type: Intl.PluralRuleType = 'cardinal',
-) {
-  const key = `p${locale}${type}`;
-  // `Intl.PluralRules` takes a number, never a bigint
-  return memoise(key, () => new Intl.PluralRules(locale, { type })).select(Number(value));
+/** The rules that pick a CLDR plural category for `locale`. */
+export function pluralRules(locale: string, type: Intl.PluralRuleType) {
+  return memoise(`p${locale}${type}`, () => new Intl.PluralRules(locale, { type }));
 }
 
 /**
- * `hhhh:mm:ss`, MF1's `duration` argument type.
+ * Read a value as a number, keeping a bigint a bigint.
  *
- * `Intl` has no equivalent, since `DurationFormat` writes "1 hr, 2 min" rather
- * than a clock reading, so this is the one format written out by hand.
+ * A wrapper is unwrapped and a numeric string is read, so a count that arrives
+ * as `'3'` formats as the 3 it means.
+ *
+ * @returns The number, or `undefined` if the value is not one
  */
-export function duration(value: number) {
-  const seconds = Number(value);
-  if (!Number.isFinite(seconds)) return String(seconds);
+export function toNumeric(value: unknown): number | bigint | undefined {
+  const raw = typeof value === 'object' && value !== null ? value.valueOf() : value;
+  if (typeof raw === 'bigint') return raw;
+  if (raw === null || raw === '') return undefined;
+  const number = Number(raw);
+  return Number.isNaN(number) ? undefined : number;
+}
 
-  const sign = seconds < 0 ? '-' : '';
-
-  // Round to the millisecond *before* splitting the value up: a seconds field
-  // of 59.9999 rounds to `60`, which has to carry into the minutes
-  const total = Math.round(Math.abs(seconds) * 1000) / 1000;
-
-  const secs = total % 60;
-  const minutes = Math.floor(total / 60);
-  const hours = Math.floor(minutes / 60);
-
-  // A fractional second stays a string from here on, since `Number('1.500')`
-  // would undo the rounding
-  const written = Math.round(secs) === secs ? String(secs) : secs.toFixed(3);
-
-  // One `:` is always written, so a sub-minute duration still reads as one
-  const parts: (string | number)[] =
-    hours > 0 ? [hours, minutes % 60, written] : [minutes, written];
-
-  // Every part but the first is padded to two digits: `1:01:01`, never
-  // `01:01:01`. Judged from the value, so `1.500` pads like the 1 it is
-  const first = parts.shift()!;
-  const pad = (n: string | number) => (Number(n) < 10 ? `0${n}` : String(n));
-  return sign + [first, ...parts.map(pad)].join(':');
+/**
+ * Read a value as a date: a `Date`, an epoch offset, or anything `Date` parses.
+ *
+ * @returns The date, or `undefined` if the value is not a valid one
+ */
+export function toDate(value: unknown): Date | undefined {
+  let raw = value;
+  if (typeof raw === 'object' && raw !== null && !(raw instanceof Date)) raw = raw.valueOf();
+  if (typeof raw === 'number' || typeof raw === 'string') raw = new Date(raw);
+  return raw instanceof Date && !Number.isNaN(raw.getTime()) ? raw : undefined;
 }

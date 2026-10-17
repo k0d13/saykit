@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ARGUMENT_TYPES, isArgumentType, validateArgumentStyle } from './format.js';
+import { ARGUMENT_TYPES, isArgumentType, validateArgumentStyle } from './styles.js';
 
 describe('isArgumentType', () => {
   it.each(ARGUMENT_TYPES)('claims %s', (type) => {
