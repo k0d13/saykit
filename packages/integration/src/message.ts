@@ -177,7 +177,9 @@ function build(node: Message, ctx: Context, out: boolean): Formatter {
 
     case 'v': {
       const key = node[1];
-      if (!out || !ctx.dir) return (values) => values[key];
+      if (!out) return (values) => values[key];
+      // Written as text whether or not it is isolated, so turning isolation
+      // off changes the marks around a value and nothing else
       return (values) => {
         const value = values[key];
         return value === undefined ? value : isolate(ctx, String(value), false);

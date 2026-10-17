@@ -160,6 +160,12 @@ describe('bidi isolation', () => {
   const isolated = (message: Message, values: Record<string, unknown>, locale = 'en-US') =>
     compileMessage(message, locale)(values);
 
+  it('writes a value the same text with isolation on or off', () => {
+    const message: Message = ['c', 'Hi ', ['v', '_name']];
+    expect(format(message, { _name: null })).toBe('Hi null');
+    expect(isolated(message, { _name: null })).toBe(`Hi ${FSI}null${PDI}`);
+  });
+
   it('isolates a written value by its first strong character', () => {
     expect(isolated(['c', 'Hi ', ['v', '_name']], { _name: 'Ada' })).toBe(`Hi ${FSI}Ada${PDI}`);
   });
