@@ -59,6 +59,16 @@ describe('generateCatalogueModule', () => {
     // The message it came from, so the file can be read and reviewed
     expect(source).toContain('// Bonjour');
   });
+
+  it('keeps a message on any line terminator inside its comment', async () => {
+    for (const terminator of ['\n', '\r', '\u2028', '\u2029']) {
+      const source = generateCatalogueModule({
+        a: `Hi${terminator}globalThis.pwned = true; //`,
+      });
+      await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
+      expect((globalThis as { pwned?: boolean }).pwned).toBeUndefined();
+    }
+  });
 });
 
 describe('emitCatalogueModule', () => {

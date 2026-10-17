@@ -71,8 +71,8 @@ describe('bidi isolation', () => {
     compileMessage(message, locale)(values);
 
   it('isolates a written value by its first strong character', () => {
-    expect(isolated(['c', 'Hi ', ['v', '_name']], { _name: 'Ada' })).toBe('Hi ⁨Ada⁩');
-    expect(isolated(['f', 'duration', ['v', '_s']], { _s: 61 })).toBe('⁨1:01⁩');
+    expect(isolated(['c', 'Hi ', ['v', '_name']], { _name: 'Ada' })).toBe('Hi \u2068Ada\u2069');
+    expect(isolated(['f', 'duration', ['v', '_s']], { _s: 61 })).toBe('\u20681:01\u2069');
   });
 
   it('leaves a number or a date alone in a left-to-right locale', () => {
@@ -80,7 +80,7 @@ describe('bidi isolation', () => {
   });
 
   it('isolates a number right to left in a right-to-left locale', () => {
-    expect(isolated(['f', 'number', ['v', '_n']], { _n: 5 }, 'ar')).toMatch(/^⁧.+⁩$/u);
+    expect(isolated(['f', 'number', ['v', '_n']], { _n: 5 }, 'ar')).toMatch(/^\u2067.+\u2069$/u);
   });
 
   it('isolates only what is written, never what is compared or selected on', () => {
@@ -90,7 +90,7 @@ describe('bidi isolation', () => {
       ['c', ['v', '_who'], ' has one'],
       'many',
     ];
-    expect(isolated(message, { _n: 1, _who: 'Ada' })).toBe('⁨Ada⁩ has one');
+    expect(isolated(message, { _n: 1, _who: 'Ada' })).toBe('\u2068Ada\u2069 has one');
     expect(isolated(['?', ['=', ['s', ['v', '_k']], 'a'], 'A', 'B'], { _k: 'a' })).toBe('A');
   });
 });

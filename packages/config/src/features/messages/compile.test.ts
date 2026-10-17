@@ -123,10 +123,16 @@ describe('choices', () => {
   it('matches an exact case before a category, however the message writes them', () => {
     const icu = '{count, plural, one {# item} =0 {nothing} other {# items}}';
     expect(JSON.stringify(compileMessage(icu))).toMatchInlineSnapshot(
-      `"["?",["=",["v","_count"],0],"nothing",["?",["=",["f","plural",["v","_count"]],"one"],["c",["f","number",["v","_count"]]," item"],["c",["f","number",["v","_count"]]," items"]]]"`,
+      `"["?",["=",["s",["v","_count"]],"0"],"nothing",["?",["=",["f","plural",["v","_count"]],"one"],["c",["f","number",["v","_count"]]," item"],["c",["f","number",["v","_count"]]," items"]]]"`,
     );
     expect(format(icu, { _count: 0 })).toBe('nothing');
     expect(format(icu, { _count: 1 })).toBe('1 item');
+  });
+
+  it('matches an exact case whatever the count is written as', () => {
+    const icu = '{count, plural, =1 {just one} other {# items}}';
+    expect(format(icu, { _count: 1n })).toBe('just one');
+    expect(format(icu, { _count: '1' })).toBe('just one');
   });
 
   it('applies a plural offset', () => {

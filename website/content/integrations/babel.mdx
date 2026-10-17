@@ -84,8 +84,8 @@ Catalogues are not its business. [`saykit compile`](/reference/cli#saykit-compil
 The result: no message parser at runtime, no SayKit extractor in the bundle, just small `say.call()` calls and one plain module per locale.
 
 <Callout type="info">
-  Run `saykit compile` before anything that reads those modules. A `predev` and `prebuild` script
-  is the usual way; `saykit extract` also compiles as its last step, and `saykit extract --watch`
+  Run `saykit compile` before anything that reads those modules. A `predev` and `prebuild` script is
+  the usual way; `saykit extract` also compiles as its last step, and `saykit extract --watch`
   recompiles when a translation changes.
 </Callout>
 

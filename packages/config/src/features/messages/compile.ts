@@ -156,10 +156,11 @@ export function compileMessage(icu: string): Message {
 
       if (EXACT.test(branch.key)) {
         // Matched against the number as written, before the offset, so `=1`
-        // still means one
+        // still means one. Compared as text, so a bigint or a numeric string
+        // matches the same case a number does
         arms.push({
           exact: true,
-          test: ['=', value, Number(branch.key.slice(1))],
+          test: ['=', ['s', value], String(Number(branch.key.slice(1)))],
           value: written,
         });
         continue;

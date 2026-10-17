@@ -61,10 +61,10 @@ type Formatter = (values: Message.Values) => unknown;
 type Isolate = (helper: Message.Helper | undefined, written: unknown) => unknown;
 
 // First strong, left-to-right and right-to-left isolates, and the pop that ends each
-const FSI = '⁨';
-const LRI = '⁦';
-const RLI = '⁧';
-const PDI = '⁩';
+const FSI = '\u2068';
+const LRI = '\u2066';
+const RLI = '\u2067';
+const PDI = '\u2069';
 
 // Scripts written right to left, from CLDR's script metadata
 const RTL = new Set(['Adlm', 'Arab', 'Hebr', 'Mand', 'Nkoo', 'Rohg', 'Syrc', 'Thaa']);
