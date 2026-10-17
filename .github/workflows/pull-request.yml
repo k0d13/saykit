@@ -11,6 +11,7 @@ on:
     # automatically, so `authorize` filters down to the label that matters.
     types: [opened, synchronize, reopened, labeled]
     paths:
+      - 'mise.toml'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -70,10 +71,7 @@ jobs:
       - name: Check reviewer permissions
         id: permission
         if: ${{ github.event_name == 'pull_request_review' }}
-        # Pinned by digest, not by tag. This action decides whether a reviewer
-        # has write access, and it runs before the publish below — a moved tag
-        # would be someone else answering that question.
-        uses: actions-cool/check-user-permission@c21884f3dda18dafc2f8b402fe807ccc9ec1aa5e # v2
+        uses: actions-cool/check-user-permission@7b90a27f92f3961b368376107661682c441f6103 # v2.3.0
         with:
           require: write
           username: ${{ github.event.review.user.login }}
@@ -104,15 +102,15 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Setup Node.js
-        uses: ./.github/actions/node
+      - name: Setup toolchain
+        uses: ./.github/actions/toolchain
 
       - name: Download dist artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: dist
           path: packages

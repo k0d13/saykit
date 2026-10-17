@@ -19,6 +19,6 @@
     "@saykit/format-po": "workspace:^",
     "@saykit/transform-js": "workspace:^",
     "babel-plugin-saykit": "workspace:^",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   }
 }

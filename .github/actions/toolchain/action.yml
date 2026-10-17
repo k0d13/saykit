@@ -1,0 +1,40 @@
+name: Setup toolchain
+description: Setup the mise toolchain, install dependencies and restore caches
+
+runs:
+  using: composite
+  steps:
+    # Node and pnpm come from mise.toml, so CI runs the same versions as local
+    - name: Install the toolchain
+      uses: jdx/mise-action@9b200bcecbfd6303e69a4a261b2e09e3757440a7 # v5.2.0
+      with:
+        cache: true
+
+    - name: Get the pnpm store path
+      id: pnpm-store
+      run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+      shell: bash
+
+    - name: Cache the pnpm store
+      uses: actions/cache@v6
+      with:
+        path: ${{ steps.pnpm-store.outputs.path }}
+        key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: pnpm-${{ runner.os }}-
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+      shell: bash
+
+    # Turbo already declares `inputs` and `outputs` per task, so a warm cache
+    # turns most of a run into replayed output. The key is per job so the four
+    # that run in parallel never race to write the same entry, and the fallbacks
+    # widen to any earlier cache, since a partial hit still beats a cold build.
+    - name: Cache Turbo
+      uses: actions/cache@v6
+      with:
+        path: .turbo/cache
+        key: ${{ runner.os }}-turbo-${{ github.job }}-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-turbo-${{ github.job }}-
+          ${{ runner.os }}-turbo-

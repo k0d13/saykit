@@ -25,6 +25,9 @@
   ],
   "type": "module",
   "sideEffects": false,
+  "imports": {
+    "#/*": "./src/*"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.mts",
@@ -41,7 +44,7 @@
     "prepack": "pnpm build"
   },
   "devDependencies": {
-    "@buape/carbon": "0.16.0",
+    "@buape/carbon": "0.17.0",
     "saykit": "workspace:^"
   },
   "peerDependencies": {

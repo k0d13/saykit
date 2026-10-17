@@ -1,0 +1,8 @@
+[tools]
+# Matches the @types/node major
+node = "26.12.0"
+# Matches the "packageManager" field in package.json, so mise and pnpm agree
+pnpm = "12.14.0"
+
+[env]
+_.path = ["{{config_root}}/node_modules/.bin"]

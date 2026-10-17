@@ -8,6 +8,7 @@ on:
   push:
     branches: [main]
     paths:
+      - 'mise.toml'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -35,7 +36,7 @@ jobs:
     needs: [quality]
     runs-on: ubuntu-latest
     outputs:
-      hasChangesets: ${{ steps.changesets.outputs.hasChangesets }}
+      hasChangesets: ${{ steps.changesets.outputs.has-changesets }}
     if: ${{ github.event_name == 'push' }}
     permissions:
       contents: write
@@ -44,41 +45,41 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
-      - name: Setup Node.js
-        uses: ./.github/actions/node
+      - name: Setup toolchain
+        uses: ./.github/actions/toolchain
 
       # Only maintains the version PR. Publishing is done below so that a
       # release produces one tag and one GitHub release for the whole
       # workspace, rather than one of each per package.
       - name: Process changesets
         id: changesets
-        # Pinned by digest. `@v1` upstream is a branch rather than a tag, so it
+        # Pinned by digest. A major tag upstream is a branch rather than a tag, so it
         # moves on every commit — and this is the step that publishes to npm
         # under the workspace's OIDC identity.
-        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
+        uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
-          version: pnpm run release:version
-          title: 'Pending Releases'
-          commit: 'Update changelog and release'
+          version-script: pnpm run release:version
+          pr-title: 'Pending Releases'
+          commit-message: 'Update changelog and release'
 
       # `changeset publish` skips anything already on the registry, so this is
       # safe to re-run: a rerun after a partial failure publishes the remainder.
       - name: Publish packages
-        if: ${{ steps.changesets.outputs.hasChangesets == 'false' }}
+        if: ${{ steps.changesets.outputs.has-changesets == 'false' }}
         run: pnpm run release:publish
 
       - name: Build release notes
         id: notes
-        if: ${{ steps.changesets.outputs.hasChangesets == 'false' }}
+        if: ${{ steps.changesets.outputs.has-changesets == 'false' }}
         run: node scripts/release-notes.mjs
 
       # Driven by the version on disk rather than by whether this run happened
       # to publish, so a rerun can finish a release whose tag or GitHub release
       # was left behind by an earlier failure. Both are no-ops once they exist.
       - name: Tag and create release
-        if: ${{ steps.changesets.outputs.hasChangesets == 'false' }}
+        if: ${{ steps.changesets.outputs.has-changesets == 'false' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ steps.notes.outputs.version }}
@@ -116,10 +117,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
-      - name: Setup Node.js
-        uses: ./.github/actions/node
+      - name: Setup toolchain
+        uses: ./.github/actions/toolchain
 
       - name: Publish snapshot version
         run: |

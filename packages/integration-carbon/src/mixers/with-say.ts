@@ -1,6 +1,6 @@
 import { BaseCommand, BaseComponent, Modal } from '@buape/carbon';
 import type { Catalogue, View } from 'saykit';
-import { combineCommandOptions } from '~/utils/combine-command-options.js';
+import { combineCommandOptions } from '#/utils/combine-command-options.js';
 
 type Keys =
   | 'name'

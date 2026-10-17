@@ -1,8 +1,8 @@
 import { BaseInteraction, Guild } from '@buape/carbon';
 import { createCatalogue } from 'saykit';
 import { afterEach, describe, expect, it } from 'vitest';
-import { kSay } from '~/constants.js';
-import { SayPlugin } from '~/plugin.js';
+import { kSay } from '#/constants.js';
+import { SayPlugin } from '#/plugin.js';
 
 const makeCatalogue = () => createCatalogue({ en: {}, fr: {} });
 

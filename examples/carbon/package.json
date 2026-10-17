@@ -9,7 +9,7 @@
     "dev": "wrangler dev"
   },
   "dependencies": {
-    "@buape/carbon": "0.16.0",
+    "@buape/carbon": "0.17.0",
     "@sapphire/snowflake": "^3.5.5",
     "@saykit/carbon": "workspace:^",
     "saykit": "workspace:^"
@@ -18,8 +18,8 @@
     "@saykit/config": "workspace:^",
     "@saykit/format-json": "workspace:^",
     "@saykit/transform-js": "workspace:^",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "unplugin-saykit": "workspace:^",
-    "wrangler": "^4.114.0"
+    "wrangler": "^4.151.0"
   }
 }

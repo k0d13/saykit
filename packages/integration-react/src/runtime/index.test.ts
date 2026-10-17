@@ -1,7 +1,7 @@
 import { createElement, isValidElement, type ReactElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Renderer } from '~/components/renderer.js';
-import { Say } from '~/runtime/index.js';
+import { Renderer } from '#/components/renderer.js';
+import { Say } from '#/runtime/index.js';
 
 // `GET_SAY` is injected by the saykit plugin at build time. In tests we stand
 // in a fake global so the component's happy path can run

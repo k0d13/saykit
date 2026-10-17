@@ -2,6 +2,9 @@
   "name": "browser-extension-example",
   "private": true,
   "type": "module",
+  "imports": {
+    "#/*": "./src/*"
+  },
   "scripts": {
     "check": "tsc --noEmit",
     "extract": "saykit extract",
@@ -15,9 +18,9 @@
     "@saykit/config": "workspace:^",
     "@saykit/format-json": "workspace:^",
     "@saykit/transform-js": "workspace:^",
-    "@types/chrome": "^0.1.43",
-    "typescript": "^6.0.3",
+    "@types/chrome": "^0.3.5",
+    "typescript": "^7.0.2",
     "unplugin-saykit": "workspace:^",
-    "vite": "^8.1.5"
+    "vite": "^8.3.4"
   }
 }

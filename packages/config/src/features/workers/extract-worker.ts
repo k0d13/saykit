@@ -1,6 +1,6 @@
 import { access } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { Message } from '~/shapes';
+import type { Message } from '#/shapes.js';
 import { extractMessagesFromFile } from '../catalogue/extractor';
 import { mergeExtractedMessages } from '../catalogue/merge';
 import { expandBucketOutputPath } from '../catalogue/path';

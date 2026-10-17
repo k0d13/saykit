@@ -7,7 +7,8 @@ import {
 import { resolveConfig } from '@saykit/config/features/loader';
 import { createUnplugin, type UnpluginBuildContext } from 'unplugin';
 
-export default createUnplugin((_options?: never) => {
+// One plugin rather than a list, so each bundler entry is typed as a single plugin
+export default createUnplugin<undefined, false>((_options?: never) => {
   const config = resolveConfig();
 
   return {

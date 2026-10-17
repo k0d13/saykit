@@ -1,6 +1,6 @@
 import { Guild } from '@buape/carbon';
 import type { Catalogue, View } from 'saykit';
-import { kSay } from '~/constants.js';
+import { kSay } from '#/constants.js';
 
 declare module '@buape/carbon' {
   interface Guild {

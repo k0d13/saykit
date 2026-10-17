@@ -1,5 +1,5 @@
-import { generateHash } from '~/features/messages/hash.js';
-import type { Message } from '~/shapes.js';
+import { generateHash } from '#/features/messages/hash.js';
+import type { Message } from '#/shapes.js';
 
 function mergeUnique<T>(...items: T[]) {
   return Array.from(new Set(items.flat()));

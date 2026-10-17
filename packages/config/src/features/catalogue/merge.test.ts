@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Message } from '~/shapes.js';
+import type { Message } from '#/shapes.js';
 import { mergeExtractedMessages, pruneLocaleMessages } from './merge.js';
 
 const msg = (m: Partial<Message> & { message: string }): Message => ({

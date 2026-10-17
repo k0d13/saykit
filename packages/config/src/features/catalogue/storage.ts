@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import type { Bucket, Message } from '~/shapes.js';
+import type { Bucket, Message } from '#/shapes.js';
 import { declarationPathFor, expandBucketOutputPath } from './path.js';
 
 const DECLARATION_CONTENT = `

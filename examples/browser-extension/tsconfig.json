@@ -1,8 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
   "include": ["src/**/*", "vite.config.ts", "saykit.config.ts"],
-  "compilerOptions": {
-    "types": ["chrome"],
-    "paths": { "~/*": ["./src/*"] }
-  }
+  "compilerOptions": { "types": ["chrome"] }
 }

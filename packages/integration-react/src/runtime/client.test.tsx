@@ -5,7 +5,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createCatalogue, createStore, type Store, type View } from 'saykit';
 import { describe, expect, it } from 'vitest';
-import { SayProvider, useSay } from '~/runtime/client.js';
+import { SayProvider, useSay } from '#/runtime/client.js';
 
 function Consumer() {
   const say = useSay();

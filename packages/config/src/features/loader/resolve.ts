@@ -1,5 +1,5 @@
 import { extname } from 'node:path';
-import type { Config } from '~/shapes.js';
+import type { Config } from '#/shapes.js';
 import { findConfigFile } from './files.js';
 import { configLoaders } from './module.js';
 

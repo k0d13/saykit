@@ -6,7 +6,7 @@ import {
   type WatchOptionsWithStringEncoding,
   watch,
 } from 'node:fs/promises';
-import type { Bucket } from '~/shapes.js';
+import type { Bucket } from '#/shapes.js';
 
 /**
  * Expand a buckets include and exclude patterns into a flat list of file paths.

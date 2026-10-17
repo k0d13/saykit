@@ -1,6 +1,6 @@
 import { type APIInteraction, BaseInteraction } from '@buape/carbon';
 import type { Catalogue, View } from 'saykit';
-import { kSay } from '~/constants.js';
+import { kSay } from '#/constants.js';
 
 declare module '@buape/carbon' {
   // oxlint-disable-next-line no-unused-vars

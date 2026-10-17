@@ -13,12 +13,12 @@ import type {
   NumeralOptions,
   SelectOptions,
 } from 'saykit';
-import { Renderer } from '~/components/renderer.js';
+import { Renderer } from '#/components/renderer.js';
 import {
   type PropsWithJSXSafeKeys,
   type PropsWithSayChildren,
   resolveValuePropKeys,
-} from '~/types.js';
+} from '#/types.js';
 
 declare function GET_SAY(): import('saykit').View;
 
