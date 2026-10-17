@@ -26,6 +26,27 @@ describe('SayProvider / useSay', () => {
     expect(html).toBe('<span>fr:Bonjour</span>');
   });
 
+  it('builds the view with the serialised options', () => {
+    function Mention() {
+      return createElement('span', null, useSay().call({ id: 'mention', _channel: '<#1>' }));
+    }
+    const messages = { mention: 'See {channel}' };
+
+    const isolated = renderToStaticMarkup(
+      createElement(SayProvider, { locale: 'en', messages }, createElement(Mention)),
+    );
+    expect(isolated).toBe('<span>See ⁨&lt;#1&gt;⁩</span>');
+
+    const raw = renderToStaticMarkup(
+      createElement(
+        SayProvider,
+        { locale: 'en', messages, options: { bidiIsolation: 'none' } },
+        createElement(Mention),
+      ),
+    );
+    expect(raw).toBe('<span>See &lt;#1&gt;</span>');
+  });
+
   it('rebuilds when the serialised locale changes', () => {
     const { rerender } = render(
       <SayProvider locale="fr" messages={{ greeting: 'Bonjour' }}>

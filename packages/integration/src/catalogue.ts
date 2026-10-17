@@ -24,6 +24,9 @@ export namespace Catalogue {
    * resolves to, which holds them as its default export.
    */
   export type Produced = View.Messages | { default: View.Messages };
+
+  /** How every view the catalogue hands back formats its messages. */
+  export type Options = View.Options;
 }
 
 /**
@@ -115,11 +118,17 @@ export interface Catalogue<Locale extends string = string> {
  * @param messages Where each locale's messages come from, keyed by locale. The
  *   keys are the catalogue's locales, in the order they are written, and the
  *   first of them is the default locale
+ * @param options How every view the catalogue hands back formats its
+ *   messages, such as `{ bidiIsolation: 'none' }`
  * @returns The catalogue
  */
 export function createCatalogue<const Locale extends string = string>(
   messages: Record<Locale, Catalogue.Source>,
+  options: Catalogue.Options = {},
 ): Catalogue<Locale> {
+  // Copied, so the caller cannot later change how views not yet built format
+  const { bidiIsolation } = options;
+
   // Null prototype, so a locale named after something on `Object.prototype`,
   // such as `constructor`, reads as unconfigured rather than as a source
   const sources = Object.assign(
@@ -175,7 +184,7 @@ export function createCatalogue<const Locale extends string = string>(
         );
 
       let view = views.get(locale);
-      if (!view) views.set(locale, (view = createView(locale, messages)));
+      if (!view) views.set(locale, (view = createView(locale, messages, { bidiIsolation })));
       return view;
     },
 

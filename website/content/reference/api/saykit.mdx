@@ -16,10 +16,13 @@ messages come from, whether that is inline or on demand; it never formats anythi
 locale bound to a set of messages: callable, immutable, and the only thing application code holds. A
 **store** holds one view at a time and says when it changed, which is what switching locale is.
 
-## `createCatalogue(messages)`
+## `createCatalogue(messages, options?)`
 
 ```ts
-createCatalogue<Locale>(messages: Record<Locale, Catalogue.Source>): Catalogue<Locale>;
+createCatalogue<Locale>(
+  messages: Record<Locale, Catalogue.Source>,
+  options?: Catalogue.Options,
+): Catalogue<Locale>;
 ```
 
 ```ts
@@ -32,11 +35,13 @@ const catalogue = createCatalogue({
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 
-The argument is the record of messages itself, so there is no options object and no separate list of
-locales. Its keys are the catalogue's locales, in the order you write them, and the first of them is
+The first argument is the record of messages itself, so there is no separate list of locales. Its keys are the catalogue's locales, in the order you write them, and the first of them is
 the fallback `match` resolves to. Each value is a [`Catalogue.Source`](#cataloguesource): the
 messages themselves, or a thunk producing them, called the first time that locale is asked for.
 Throws if the record is empty.
+
+The second argument, `options`, is passed to every view the catalogue hands back. See
+[view options](#view-options).
 
 The returned catalogue is frozen. That fixes its methods; its lazy locales still fill in over time
 through `load`.
@@ -136,10 +141,10 @@ for (const [locale, say] of catalogue) {
 Each `say` is that locale's view, the same value `catalogue.locale(locale)` returns. Throws if any
 configured locale has no messages loaded.
 
-## `createView(locale, messages)`
+## `createView(locale, messages, options?)`
 
 ```ts
-createView<Locale>(locale: Locale, messages: View.Messages): View<Locale>;
+createView<Locale>(locale: Locale, messages: View.Messages, options?: View.Options): View<Locale>;
 ```
 
 Builds a view directly, with no catalogue behind it. A view needs nothing from a catalogue beyond a
@@ -152,6 +157,27 @@ say`Hello!`;
 
 Views built this way are not memoised or shared. When you have a catalogue, prefer
 `catalogue.locale(code)`.
+
+### View options
+
+<TypeTable
+  type={{
+    bidiIsolation: {
+      description:
+        "Whether a substituted value is wrapped in the Unicode bidi isolation marks U+2068 and U+2069, so right-to-left text cannot reorder the sentence around it. `'none'` leaves every value byte-for-byte as given.",
+      type: "'default' | 'none'",
+      default: "'default'",
+    },
+  }}
+/>
+
+Isolation is right for text a person reads, and wrong for text something parses after it is
+formatted. A Discord mention such as `<#123>` is only a mention while it is written exactly that way,
+so a bot whose messages carry mentions turns isolation off:
+
+```ts
+const catalogue = createCatalogue({ en, fr }, { bidiIsolation: 'none' });
+```
 
 ## `View`
 
@@ -170,6 +196,11 @@ different view.
     messages: {
       description: 'The messages this view formats against.',
       type: 'View.Messages',
+    },
+    options: {
+      description:
+        'The options this view was built with, frozen. Only the ones that were set, so plain data that can be sent with `locale` and `messages`.',
+      type: 'View.Options',
     },
   }}
 />

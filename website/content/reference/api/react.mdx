@@ -203,6 +203,11 @@ Props:
       description: 'The message catalogue for the locale. Use with `locale`, instead of `store`.',
       type: 'View.Messages',
     },
+    options: {
+      description:
+        "The view's formatting options, such as `{ bidiIsolation: 'none' }`. Use with `locale`, instead of `store`.",
+      type: 'View.Options',
+    },
     children: {
       description: 'The tree to provide a view to.',
       type: 'ReactNode',
@@ -210,7 +215,7 @@ Props:
   }}
 />
 
-Throws if given neither a store nor a locale and its messages. In a server component the props are filled in from the view established for the request, so it is written `<SayProvider>` with none.
+Throws if given neither a store nor a locale and its messages. In a server component the props are filled in from the view established for the request, options included, so it is written `<SayProvider>` with none.
 
 ### `useSay()`
 
