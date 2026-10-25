@@ -4,3 +4,4 @@ node_modules/
 .coverage/
 dist/
 RELEASE_NOTES.md
+packages/integration/skills/

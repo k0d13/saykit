@@ -22,7 +22,8 @@
   },
   "files": [
     "dist",
-    "!dist/**/*.map"
+    "!dist/**/*.map",
+    "skills"
   ],
   "type": "module",
   "sideEffects": false,
@@ -39,7 +40,7 @@
   "scripts": {
     "check": "tsc --noEmit",
     "build": "tsdown",
-    "prepack": "pnpm build"
+    "prepack": "pnpm build && node -e \"require('fs').cpSync('../../skills', 'skills', { recursive: true })\""
   },
   "dependencies": {
     "@messageformat/date-skeleton": "2.0.0-0",
