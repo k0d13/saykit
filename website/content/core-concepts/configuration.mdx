@@ -3,7 +3,7 @@ title: Configuration
 description: The saykit.config.ts file, locales, buckets, formatters, transformers
 ---
 
-Every SayKit project has a `saykit.config.ts` (or `.js`) in its root. It's a single source of truth for locales, which files to extract from, where translations live, and how they're parsed and serialised.
+Every SayKit project has a `saykit.config.ts` (or `.js`) at its root: the locales, which files to extract from, and where translations live.
 
 ```ts title="saykit.config.ts"
 import { defineConfig } from '@saykit/config';
@@ -24,31 +24,17 @@ export default defineConfig({
 });
 ```
 
-The first locale in `locales` is treated as the **source locale**: the language your code is written in, and the only one extraction writes to. Other locale files are left to your translation management system; untranslated keys resolve through a [fallback chain](#fallback-locales) at load time. The config is validated by Zod at load time, mistakes get caught with a clear error.
-
-<Callout type="info">
-  `defineConfig()` doesn't just type the config, it also runs it through the Zod schema and returns
-  the normalised result. Use it for both the type hints and the validation.
-</Callout>
+`defineConfig()` types the config and validates it, so a mistake fails with a clear error.
 
 ## Loading
 
-The CLI and the build-tool plugins both load your config via `resolveConfig()` from
-`@saykit/config/features/loader`. It searches up from the current working directory for
-`saykit.config.{ts,mts,cts,js,mjs,cjs}` and loads the first match.
-
-The file is handed to the runtime as it sits on disk, with nothing copied, transpiled or cached, so
-relative imports, `import.meta.dirname` and `__dirname` all resolve against the config's own
-directory. A config is free to import a formatter or transformer from alongside it:
+The CLI and plugins search up from the working directory for `saykit.config.{ts,mts,cts,js,mjs,cjs}`. The file runs as it is on disk, so relative imports resolve against it:
 
 ```ts title="saykit.config.ts"
 import { yaml } from './yaml-formatter.ts';
 ```
 
-Reading TypeScript requires Node 22.18+, or a runtime that loads it itself (Bun, Deno, tsx). Note
-that relative specifiers need the real extension (`./yaml-formatter.ts`, not `.js`), and that
-enums, namespaces and parameter properties are not erasable syntax, so no runtime will accept
-them.
+TypeScript needs Node 22.18+, or Bun, Deno or tsx. Use real extensions in relative imports (`.ts`, not `.js`), and only erasable syntax: no enums, namespaces or parameter properties.
 
 ## Top-level schema
 
@@ -57,19 +43,17 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 <TypeTable
   type={{
     locales: {
-      description:
-        'Every locale your app supports. The first entry is the source locale (the language your code is written in).',
+      description: 'Every locale your app supports. The first is the source locale.',
       type: '[string, ...string[]]',
       required: true,
     },
     fallbackLocales: {
       description:
-        'Per-locale fallback chains, most specific first. The source locale is always appended as the final fallback.',
+        'Per-locale fallback chains, most specific first. The source locale is always the last fallback.',
       type: 'Record<string, string | string[]>',
     },
     buckets: {
-      description:
-        'One or more extraction buckets. Each bucket scans a set of files and writes the source-locale translation file.',
+      description: 'Which files to extract from, and where their catalogues go.',
       type: 'Bucket[]',
       required: true,
     },
@@ -78,47 +62,35 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 ## Locales
 
-Locales are arbitrary strings. SayKit doesn't care whether you use BCP 47 (`en-GB`), ISO 639 (`en`), or your own naming, whatever you pick is the key it uses everywhere.
+Locales are plain strings, BCP 47 or otherwise; whatever you write is the key everywhere.
 
-```ts
-locales: ['en', 'fr-CA', 'es-419'];
-```
-
-The **source locale** is whichever entry you list first. It's the locale your code is written in, and it's the one SayKit will rewrite into when it generates translation files from scratch. The runtime [`Say`](/core-concepts/runtime) class uses the same convention.
+The first is the **source locale**: the language your code is written in, and the only catalogue [extraction](/core-concepts/extraction) writes. Other locales are left to your translators or TMS.
 
 <Callout type="warn">
-  Reordering `locales` so that a different entry sits first means SayKit will treat your existing
-  source messages as if they were in the new source locale. Plan this early.
+  Reordering `locales` so another entry is first makes SayKit treat your source messages as that
+  locale. Decide early.
 </Callout>
 
 ## Fallback locales
 
-Because [extraction](/core-concepts/extraction) only writes the source locale, non-source catalogues carry just their real translations. A key that hasn't been translated in a locale is resolved through a **fallback chain** when the build plugin loads the catalogue.
-
-By default every locale falls back straight to the source. `fallbackLocales` lets you insert intermediate locales first, most specific first:
+Non-source catalogues hold only their real translations. When [`saykit compile`](/reference/cli#saykit-compile) builds a locale's module, an untranslated key is filled from a **fallback chain**, which ends at the source locale. `fallbackLocales` adds steps before it:
 
 ```ts title="saykit.config.ts"
 export default defineConfig({
   locales: ['en', 'en-GB', 'en-NZ', 'es-MX', 'es'],
   fallbackLocales: {
-    'en-NZ': ['en-GB'], // en-NZ → en-GB → en (source)
-    'es-MX': 'es', // es-MX → es → en (source)
+    'en-NZ': ['en-GB'], // en-NZ → en-GB → en
+    'es-MX': 'es', // es-MX → es → en
   },
   buckets: [/* … */],
 });
 ```
 
-A single fallback can be a bare string; multiple fallbacks are an array. SayKit always appends the source locale as the final entry, so an untranslated key ultimately renders the source string, no locale ever resolves to a missing message.
-
-<Callout type="info">
-  The chain is resolved and baked into the emitted JS at build time, so the runtime still loads a
-  single locale. Nothing about fallbacks reaches `Say`. See [Extraction → fallback at load
-  time](/core-concepts/extraction#fallback-at-load-time).
-</Callout>
+The chain is merged at compile time, so the runtime still loads one module per locale and never sees a missing message.
 
 ## Buckets
 
-A bucket is a unit of "files in &rarr; translation file out". Most projects have one bucket. Use more when different parts of your app need their own translation files (UI vs emails, client vs server, &hellip;).
+A bucket is "these files in, this catalogue out". Most projects have one; add more when parts of the app want their own files, such as transactional emails beside a UI.
 
 <TypeTable
   type={{
@@ -127,66 +99,55 @@ A bucket is a unit of "files in &rarr; translation file out". Most projects have
       type: 'string[]',
       required: true,
     },
-    exclude: {
-      description: 'Glob patterns to skip.',
-      type: 'string[]',
-    },
+    exclude: { description: 'Glob patterns to skip.', type: 'string[]' },
     output: {
       description: (
         <>
-          Output path template. Must contain <code>{'{locale}'}</code> and{' '}
-          <code>{'{extension}'}</code>.
+          Where catalogues go. Must contain <code>{'{locale}'}</code> and end in{' '}
+          <code>{'.{extension}'}</code>.
         </>
       ),
       type: '`${string}{locale}${string}{extension}`',
       required: true,
     },
     messages: {
-      description:
-        'Messages declared here rather than extracted from source, keyed by id. Values are the source string, or an object with `message`, `context`, and `comments`.',
+      description: 'Messages with no call site, keyed by id. See below.',
       type: 'Record<string, string | { message: string; context?: string; comments?: string[] }>',
     },
     formatter: {
-      description: 'A Formatter that reads and writes the chosen translation file format.',
+      description: 'Reads and writes the catalogue format.',
       type: 'Formatter',
       required: true,
     },
     transformer: {
-      description:
-        'A Transformer, or array of Transformers, that handle extraction and macro rewriting.',
+      description: 'Extracts and rewrites macros, one per source language.',
       type: 'Transformer | Transformer[]',
       required: true,
     },
   }}
 />
 
-### Output template
+### Output
 
-The `output` template names where translation files go. Two placeholders are required:
-
-- `{locale}`, replaced with each locale string
-- `{extension}`, replaced with the formatter's extension (no leading dot)
+`{locale}` is each locale and `{extension}` the formatter's extension:
 
 ```ts
 output: 'src/locales/{locale}.{extension}';
-// → src/locales/en.po, src/locales/fr.po
+// → src/locales/en.po, compiled to src/locales/en.js
+
+output: 'translations/{locale}/messages.{extension}';
+// → translations/en/messages.po, compiled to translations/en/messages.js
 ```
 
-```ts
-output: 'translations/{locale}/messages.{extension}';
-// → translations/en/messages.po, translations/fr/messages.po
-```
+The compiled module is written beside the catalogue as `.js`, so a formatter whose extension is `.js` is refused.
 
 ### Declared messages
 
-Extraction only sees messages that appear as macros in source files. When a string belongs in the catalogue but has no call site, such as a browser extension manifest, an app store listing, an email subject or database seed data, declare it on the bucket instead of writing a dummy module for the extractor to find.
+A string with no call site, such as a browser extension manifest, a store listing or an email subject, can be declared on the bucket:
 
 ```ts
 messages: {
-  // Shorthand: the value is the source string.
   extensionName: 'Reading Time',
-
-  // Long form, for the metadata a descriptor would otherwise carry.
   extensionDescription: {
     message: 'Estimate how long a page will take to read.',
     context: 'store',
@@ -195,79 +156,16 @@ messages: {
 },
 ```
 
-Each key is the message id, so declared strings always have stable, hand-written keys rather than content hashes, which is exactly what a manifest needs when it names one. They are merged into the catalogue on every `saykit extract`, alongside everything the transformers find. If a source file happens to use the same id, the declaration wins on text and comments, and the call site still contributes its source reference.
+The key is the id. Declared messages are merged in on every `saykit extract`; if a call site uses the same id, the declaration wins on text and comments. They have no source reference, so use `comments` to say where they appear.
 
-<Callout type="info">
-  Declared messages have no call site, so they are written without source references. Use `comments`
-  to tell translators where the string actually shows up.
-</Callout>
+## Formatters and transformers
 
-### Multiple transformers
+A **formatter** reads and writes one catalogue format: [`@saykit/format-po`](/core-concepts/formats#po) (the default), [`@saykit/format-json`](/core-concepts/formats#json), or [your own](/guides/custom-formatter).
 
-Pass an array when you want different languages in the same bucket:
-
-```ts
-transformer: [js(), jsx()];
-```
-
-Each transformer decides which files it handles via its `match()` function. The bucket dispatches files to the matching transformer transparently.
-
-## Formatters
-
-A `Formatter` knows how to parse and stringify a particular translation file format.
-
-```ts
-import po from '@saykit/format-po';
-
-formatter: po();
-formatter: po({ includeReferences: false });
-```
-
-PO is the default and what every SayKit example uses. You can also [write your own](/guides/custom-formatter), for example, JSON or YAML.
-
-## Transformers
-
-A `Transformer` knows how to parse a source language. It declares which files it handles, how to extract messages from them, and how to rewrite macros to runtime calls.
-
-```ts
-import js from '@saykit/transform-js';
-import jsx from '@saykit/transform-jsx';
-
-transformer: [js(), jsx()];
-```
-
-Most projects use the two built-in transformers. You can also [write your own](/guides/custom-transformer) for new file types or DSLs.
-
-## Full example: multiple buckets
-
-```ts title="saykit.config.ts"
-import { defineConfig } from '@saykit/config';
-import po from '@saykit/format-po';
-import js from '@saykit/transform-js';
-import jsx from '@saykit/transform-jsx';
-
-export default defineConfig({
-  locales: ['en', 'fr', 'ja'],
-  buckets: [
-    {
-      include: ['src/app/**/*.{ts,tsx}'],
-      exclude: ['**/*.test.*', '**/*.stories.*'],
-      output: 'src/locales/{locale}.{extension}',
-      formatter: po(),
-      transformer: [js(), jsx()],
-    },
-    {
-      include: ['src/emails/**/*.ts'],
-      output: 'src/emails/locales/{locale}.{extension}',
-      formatter: po(),
-      transformer: js(),
-    },
-  ],
-});
-```
+A **transformer** extracts and rewrites macros for one source language. `@saykit/transform-js` covers `.js`/`.ts` and `@saykit/transform-jsx` covers `.jsx`/`.tsx`; pass both as an array, and each takes the files its `match()` accepts. You can [write your own](/guides/custom-transformer).
 
 ## Next
 
-- [Messages](/core-concepts/messages), what you can author
-- [Extraction](/core-concepts/extraction), running the CLI, watch mode, source-only writes
-- [Formats](/core-concepts/formats), PO and writing your own
+- [Messages](/core-concepts/messages): what you can author
+- [Extraction](/core-concepts/extraction): the CLI and the files it writes
+- [Formats](/core-concepts/formats): PO, JSON, and writing your own

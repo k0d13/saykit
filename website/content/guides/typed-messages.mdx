@@ -1,26 +1,9 @@
 ---
 title: Typed messages
-description: How translation file imports are typed, and how to push typing further
+description: How translation file imports are typed, and why the type is generic
 ---
 
-SayKit writes a declaration beside every compiled locale module, so importing one from your source compiles without complaint:
-
-```text
-src/locales/
-  en.po
-  en.js
-  en.d.ts
-  fr.po
-  fr.js
-  fr.d.ts
-```
-
-```ts
-import en from './locales/en.js';
-// en is typed as: Record<string, Message>
-```
-
-The declaration is intentionally simple:
+`saykit compile` writes a declaration beside every locale module, so `import en from './locales/en.js'` type-checks:
 
 ```ts title="src/locales/en.d.ts"
 import type { Message } from 'saykit';
@@ -29,69 +12,19 @@ declare const messages: Record<string, Message>;
 export default messages;
 ```
 
-`Message` is the compiled form of one message: data, not a function. A view compiles each one the first time it is called.
-
-That's enough to make the import type-check before anything has been compiled, and it's the only declaration shape your tooling needs to handle. Since the module is a `.js` file, no compiler flag is needed for it: `allowArbitraryExtensions` and `resolveJsonModule` are not involved.
+`Message` is the compiled form of one message: data, not a function. The declaration is the same for every locale and never changes, so commit it and `tsc` passes on a fresh clone before anything is compiled. The module is a `.js` file, so no compiler flag such as `allowArbitraryExtensions` is needed.
 
 ## Why generic?
 
-You'll notice the declaration is a plain `Record` rather than something narrow like `{ "abc123": Message }` per id. That's deliberate:
+The declaration is a plain `Record` rather than one key per id, on purpose:
 
-- Identifiers are content hashes by default. They're stable, but not meant to be consumed by hand.
-- The macros (`` say`...` ``, `<Say>`) are what your application code writes. The transform inserts the right id at build time, so your code never needs to know about hashes.
-- Narrowing the type to specific keys would force the type to stay in lock-step with extraction, saving and re-running would constantly create diffs.
+- Ids are content hashes, stable but not meant to be written by hand.
+- Your code writes macros, and the transform inserts the id. **Application code never references an id**, so there is nothing to type.
+- A per-id type would change on every extraction, and every one of those changes would show up in a diff.
 
-In short: **you never reference an id from application code**. The build does that for you.
-
-## Committing translation files
-
-SayKit doesn't manage a `.gitignore` for you: it's up to you which generated files to commit or ignore. A common setup:
-
-- **Commit** the `.po` files. They're the canonical translations.
-- **Ignore** the `.js` modules. They're build output, regenerated from the `.po` by `saykit compile`.
-- **Commit** the `.d.ts` files. Each is a few lines and never changes, so they add no diff noise, and they keep `tsc` passing on a fresh clone before anything has been compiled.
-
-A `.gitignore` line like `src/locales/*.js` covers the middle one.
-
-## Importing in different bundlers
-
-The module is produced by [`saykit compile`](/reference/cli#saykit-compile) and is an ordinary ES module, so every bundler handles it with no SayKit involvement. All of these work:
-
-```ts
-// Bundled at build time, synchronous, in the initial chunk
-import en from './locales/en.js';
-```
-
-```ts
-// Code-split, dynamic import per locale
-const en = await import('./locales/en.js').then((m) => m.default);
-```
-
-```ts
-// A thunk per locale (recommended for many locales)
-createCatalogue({
-  en: () => import('./locales/en.js'),
-  fr: () => import('./locales/fr.js'),
-});
-```
-
-See [dynamic loading](/guides/dynamic-loading) for the lazy patterns.
-
-## Custom-id messages
-
-When you assign a custom id via a descriptor, that id ends up as the key in the catalogue:
-
-```ts
-say({ id: 'greeting.hello' })`Hello!`;
-```
-
-```text
-greeting.hello → "Hello!"
-```
-
-The runtime `say.call({ id: 'greeting.hello' })` works exactly the same way as for hashed ids; nothing in your app code touches it directly. The id only matters to translators, who'll see it in the catalogue.
+A [custom id](/core-concepts/messages#custom-ids) is just a readable key in the catalogue, and is looked up the same way.
 
 ## Next
 
-- [Extraction](/core-concepts/extraction): how files are generated
-- [CLI](/reference/cli#saykit-compile): what compilation writes
+- [Extraction](/core-concepts/extraction): the files SayKit generates, and which to commit
+- [Dynamic loading](/guides/dynamic-loading): importing locales lazily

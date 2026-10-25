@@ -3,18 +3,12 @@ title: Babel
 description: Use SayKit with Babel for Next.js, React Native, Metro, Expo, or any Babel-driven pipeline
 ---
 
-`babel-plugin-saykit` is the Babel counterpart to [`unplugin-saykit`](/integrations/vite). Use it when your build runs Babel directly: Next.js (via `.babelrc`), React Native, Expo, Metro, or your own Babel setup.
+`babel-plugin-saykit` is for builds that run Babel: Next.js, React Native, Expo, or your own setup. Not pinned to Babel? Use [`unplugin-saykit`](/integrations/vite).
 
 ## Install
 
 ```sh
-pnpm add -D babel-plugin-saykit
-```
-
-And the supporting packages:
-
-```sh
-pnpm add -D @saykit/config @saykit/format-po @saykit/transform-js @saykit/transform-jsx
+pnpm add -D babel-plugin-saykit @saykit/config @saykit/format-po @saykit/transform-js @saykit/transform-jsx
 ```
 
 ## Use
@@ -28,40 +22,9 @@ pnpm add -D @saykit/config @saykit/format-po @saykit/transform-js @saykit/transf
 }
 ```
 
-Adding a `.babelrc` switches Next.js from SWC to Babel for compilation. SayKit doesn't have a SWC plugin, so this is the supported way to use SayKit with Next.js today.
-
-Nothing else to register: `next.config.mjs` needs no SayKit wrapper.
-
-### Generic Babel
-
-```js title="babel.config.js"
-export default {
-  plugins: ['saykit'],
-};
-```
-
-Or with an explicit import:
-
-```js
-export default {
-  plugins: ['babel-plugin-saykit'],
-};
-```
-
-### React Native / Metro
-
-React Native uses Babel via Metro. Add the plugin to your Babel config:
-
-```js title="babel.config.js"
-module.exports = {
-  presets: ['module:metro-react-native-babel-preset'],
-  plugins: ['saykit'],
-};
-```
+Adding a `.babelrc` switches Next.js from SWC to Babel. There is no SWC plugin, so this is how SayKit runs in Next.js. `next.config.mjs` needs no SayKit wrapper.
 
 ### Expo
-
-Expo uses `babel-preset-expo`. Add the plugin alongside:
 
 ```js title="babel.config.js"
 module.exports = function (api) {
@@ -73,41 +36,27 @@ module.exports = function (api) {
 };
 ```
 
-`metro.config.js` needs no SayKit wrapper either.
+Bare React Native is the same with `module:metro-react-native-babel-preset`. `metro.config.js` needs no SayKit wrapper.
+
+### Plain Babel
+
+```js title="babel.config.js"
+export default {
+  plugins: ['saykit'],
+};
+```
 
 ## What it does
 
-The Babel plugin runs the matching SayKit transformer over every non-`node_modules` source file, rewriting macros to `say.call(...)` invocations. That is the whole of its job.
-
-Catalogues are not its business. [`saykit compile`](/reference/cli#saykit-compile) turns each one into an ordinary `{locale}.js` module, walking the locale's [fallback chain](/core-concepts/configuration#fallback-locales) so untranslated keys fall back to the source string. Your app imports that module, and every bundler already knows how to load, watch and hot-update a module.
-
-The result: no message parser at runtime, no SayKit extractor in the bundle, just small `say.call()` calls and one plain module per locale.
+The plugin rewrites macros to `say.call(...)` in every source file outside `node_modules`. That is all. Catalogues are compiled by [`saykit compile`](/reference/cli#saykit-compile) into ordinary `{locale}.js` modules, which Next.js and Metro load and hot-reload like any other module.
 
 <Callout type="info">
-  Run `saykit compile` before anything that reads those modules. A `predev` and `prebuild` script is
-  the usual way; `saykit extract` also compiles as its last step, and `saykit extract --watch`
-  recompiles when a translation changes.
+  Run `saykit compile` before anything that imports those modules, usually as `predev` and
+  `prebuild` scripts. Keep `saykit extract --watch` running in development to recompile when a
+  translation changes.
 </Callout>
-
-## `unplugin` vs Babel: which one?
-
-import { Hammer, Zap } from 'lucide-react';
-
-<Cards>
-  <Card icon={<Zap />} title="Use unplugin-saykit when…" description="Your bundler is Vite, Rollup, Rolldown, Webpack, Rspack, esbuild, Farm, or Bun, and you're not pinned to Babel.">
-
-[Go to Vite (unplugin)](/integrations/vite)
-
-  </Card>
-
-  <Card icon={<Hammer />} title="Use babel-plugin-saykit when…" description="Your build pipeline runs Babel directly: Next.js, React Native, Expo, Metro, or your own Babel config.">
-
-[Go to React (with Babel)](/integrations/react)
-
-  </Card>
-</Cards>
 
 ## Next
 
-- [React integration](/integrations/react): hooks, components, server runtime
-- [Configuration](/core-concepts/configuration): what to put in `saykit.config.ts`
+- [React integration](/integrations/react): components, hooks, server runtime
+- [Configuration](/core-concepts/configuration): what goes in `saykit.config.ts`

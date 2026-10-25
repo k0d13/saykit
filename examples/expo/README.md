@@ -41,8 +41,8 @@ would otherwise produce loose strings between elements.
 ## Why Babel
 
 Metro is not a Vite/Rollup-family bundler, so `unplugin-saykit` does not apply. Metro compiles every
-module through Babel, and `babel-plugin-saykit` hooks in there instead, doing the same two jobs:
-rewriting the macros, and inlining `import en from './locales/en.js'` as a plain object.
+module through Babel, and `babel-plugin-saykit` hooks in there instead to rewrite the macros.
+`import en from './locales/en.js'` is an ordinary import of the module `saykit compile` writes.
 
 ```js
 module.exports = function babelConfig(api) {

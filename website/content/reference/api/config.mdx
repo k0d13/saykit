@@ -52,7 +52,7 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
     },
     fallbackLocales: {
       description:
-        'Per-locale fallback chains, most specific first. The source locale is always appended as the final fallback, resolved at load time. See the configuration guide.',
+        'Per-locale fallback chains, most specific first. The source locale is always the final fallback, merged in at compile time. See the configuration guide.',
       type: 'Record<string, string | string[]>',
     },
     buckets: {
@@ -213,6 +213,7 @@ The config is loaded from where it sits, so its relative imports and `import.met
 
 ```ts
 import {
+  compileMessage,
   generateHash,
   assignSequenceIdentifiers,
   CompositeMessage,
@@ -225,6 +226,7 @@ import {
 
 The internal `Message` types used by transformers (different from the public catalogue `Message` shape), plus helpers:
 
+- `compileMessage(icu)`, compiles one ICU message to the runtime's [`Message`](/reference/api/saykit#message)
 - `generateHash(text, context?)`, produces the same 6-character id SayKit uses elsewhere
 - `assignSequenceIdentifiers(message, { current: 0 })`, numbers positional placeholders depth-first
 
@@ -234,21 +236,21 @@ These exist so that custom transformers can produce the same id and placeholder 
 
 ```ts
 import {
+  emitCatalogueModule,
   expandBucketOutputPath,
   resolveFallbackChain,
-  resolveCatalogueSources,
   assembleCatalogueRecord,
   pruneLocaleMessages,
 } from '@saykit/config/features/catalogue';
 ```
 
-Catalogue path and fallback helpers shared by the build plugins. Most apps never import these directly, they're what `unplugin-saykit` and `babel-plugin-saykit` use to resolve a locale's [fallback chain](/core-concepts/configuration#fallback-locales) and inline the merged record at build time.
+The helpers the CLI compiles catalogues with. Most apps never import them.
 
-- `expandBucketOutputPath(bucket, locale)`, the concrete output path for a locale.
-- `resolveFallbackChain(config, locale)`, the ordered list of locales to try, ending at the source.
-- `resolveCatalogueSources(config, bucket, id)`, resolves an imported catalogue path to its `{ locale, sources }` (fallback files, most specific first).
-- `assembleCatalogueRecord(bucket, contents)`, merges parsed catalogue contents into a single `id → string` record, most specific winning.
-- `pruneLocaleMessages(existing, source)`, the filter used by `saykit clean`, drops orphaned and untranslated entries and adds nothing.
+- `emitCatalogueModule(config, bucket, locale)`, compiles a locale and its [fallback chain](/core-concepts/configuration#fallback-locales) into `{locale}.js` and `{locale}.d.ts`, as `saykit compile` does.
+- `expandBucketOutputPath(bucket, locale)`, the catalogue path for a locale.
+- `resolveFallbackChain(config, locale)`, the locales to try, ending at the source.
+- `assembleCatalogueRecord(bucket, contents)`, merges parsed catalogues into one `id → ICU` record, most specific winning.
+- `pruneLocaleMessages(existing, source)`, the filter `saykit clean` uses.
 
 ## Next
 

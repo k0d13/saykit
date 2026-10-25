@@ -35,11 +35,11 @@ English source string, merged in at compile time rather than looked up at runtim
 | ------------------------------------------------------ | ------------------- |
 | `plugins: ['saykit']`, no options and nothing else     | `babel.config.js`   |
 | `import en from './locales/en.js'`, an ordinary import | `src/main.ts`       |
-| One readable function per message                      | `src/locales/fr.js` |
+| Each message compiled to data, with its ICU above it   | `src/locales/fr.js` |
 
 Open `dist/main.js` after a build: no `.po` file, no PO parser, no message parser and no
 SayKit extractor, just `say.call()` invocations against the imported locale modules.
 
-Open `src/locales/fr.js` to see what those modules hold: one plain function per message,
-with the locale and every number and date format already resolved. See the
+Open `src/locales/fr.js` to see what those modules hold: each message as plain data, with
+every number and date format already resolved to its `Intl` options. See the
 [Babel integration docs](../../website/content/integrations/babel.mdx).

@@ -57,9 +57,8 @@ Next.js compiles with its own toolchain, so the macros are rewritten by `babel-p
 { "presets": ["next/babel"], "plugins": ["saykit"] }
 ```
 
-The plugin also rewrites `import en from './locales/en.js'` into an inline object. It requires a
-**default** import for catalogue files and throws on a named one, which is the intended failure
-mode, not a bug.
+The plugin only rewrites macros. `import en from './locales/en.js'` is an ordinary import of the
+module `saykit compile` writes, which the `pre` scripts in `package.json` run before dev and build.
 
 > Adding `.babelrc` opts the whole app out of Next.js's default SWC pipeline, which is slower to
 > compile. Projects on a Vite-based framework should prefer `unplugin-saykit`; see the

@@ -3,20 +3,12 @@ title: Vite (unplugin)
 description: Use SayKit with Vite, Rollup, Rolldown, Webpack, Rspack, esbuild, Farm, or Bun
 ---
 
-`unplugin-saykit` is the universal SayKit build-tool plugin. Powered by [unplugin](https://github.com/unjs/unplugin), it ships ready-made entry points for almost every JS bundler.
-
-This page focuses on Vite, but the configuration is the same shape for any bundler, only the import path changes.
+`unplugin-saykit` is the SayKit plugin for every bundler [unplugin](https://github.com/unjs/unplugin) supports. Only the import path changes between them.
 
 ## Install
 
 ```sh
-pnpm add -D unplugin-saykit
-```
-
-And the supporting packages SayKit needs:
-
-```sh
-pnpm add -D @saykit/config @saykit/format-po @saykit/transform-js @saykit/transform-jsx
+pnpm add -D unplugin-saykit @saykit/config @saykit/format-po @saykit/transform-js @saykit/transform-jsx
 ```
 
 ## Use
@@ -26,6 +18,7 @@ import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 <Tabs items={['Vite', 'Rollup', 'Rolldown / tsdown', 'Webpack', 'Rspack', 'esbuild', 'Farm', 'Bun']}>
 
 <Tab value="Vite">
+
 ```ts title="vite.config.ts"
 import saykit from 'unplugin-saykit/vite';
 import { defineConfig } from 'vite';
@@ -34,9 +27,11 @@ export default defineConfig({
   plugins: [saykit()],
 });
 ```
+
 </Tab>
 
 <Tab value="Rollup">
+
 ```ts title="rollup.config.js"
 import saykit from 'unplugin-saykit/rollup';
 
@@ -44,9 +39,11 @@ export default {
   plugins: [saykit()],
 };
 ```
+
 </Tab>
 
 <Tab value="Rolldown / tsdown">
+
 ```ts title="tsdown.config.ts"
 import { defineConfig } from 'tsdown';
 import saykit from 'unplugin-saykit/rolldown';
@@ -56,106 +53,91 @@ export default defineConfig({
   plugins: [saykit()],
 });
 ```
+
 </Tab>
 
 <Tab value="Webpack">
+
 ```js title="webpack.config.js"
 const saykit = require('unplugin-saykit/webpack').default;
 
 module.exports = {
-plugins: [saykit()],
+  plugins: [saykit()],
 };
+```
 
-````
 </Tab>
 
 <Tab value="Rspack">
+
 ```js title="rspack.config.js"
 const saykit = require('unplugin-saykit/rspack').default;
 
 module.exports = {
   plugins: [saykit()],
 };
-````
+```
 
 </Tab>
 
 <Tab value="esbuild">
+
 ```js
 import saykit from 'unplugin-saykit/esbuild';
 import { build } from 'esbuild';
 
 await build({
-plugins: [saykit()],
+  plugins: [saykit()],
 });
+```
 
-````
 </Tab>
 
 <Tab value="Farm">
+
 ```js title="farm.config.ts"
 import saykit from 'unplugin-saykit/farm';
 
 export default {
   plugins: [saykit()],
 };
-````
+```
 
 </Tab>
 
 <Tab value="Bun">
+
 ```js
 import saykit from 'unplugin-saykit/bun';
 
 await Bun.build({
-plugins: [saykit()],
+  plugins: [saykit()],
 });
-
 ```
+
 </Tab>
 
 </Tabs>
 
-The plugin takes no options, everything it needs lives in your `saykit.config.ts`.
+The plugin takes no options; it reads `saykit.config.ts`.
 
 ## What it does
 
-For every file in your bucket's `include` globs, the plugin asks the configured transformers to rewrite the source. Macros like `` say`Hello, ${name}!` `` become small `say.call({ id: '...', _name: name })` runtime invocations.
-
-That is all it does. Catalogues are not its business: [`saykit compile`](/reference/cli#saykit-compile) turns each one into an ordinary `{locale}.js` module next to it, and the bundler loads, watches and hot-updates that module like any other. There is no `.po` file at runtime, and still only one locale per module.
+It rewrites the macros in every file a bucket includes, so `` say`Hello, ${name}!` `` becomes `say.call({ id: '…', _name: name })`. That is all. Catalogues are compiled by [`saykit compile`](/reference/cli#saykit-compile) into ordinary `{locale}.js` modules, which the bundler loads, splits and hot-reloads like any other.
 
 <Callout type="info">
-  Run `saykit compile` before anything that reads those modules. A `predev` and `prebuild` script is
-  the usual way; `saykit extract` also compiles as its last step, and `saykit extract --watch`
-  recompiles when a translation changes.
+  Run `saykit compile` before anything that imports those modules, usually as `predev` and
+  `prebuild` scripts. Keep `saykit extract --watch` running in development to recompile when a
+  translation changes.
 </Callout>
 
-## Plugin ordering
+## Notes
 
-The plugin uses `enforce: 'pre'` so it runs before most other transforms. That matters because macros need to be visible, if a previous transform mangles or wraps them, extraction may miss messages.
-
-If you have a custom plugin that lowers tagged templates (e.g. to function calls), make sure SayKit's plugin runs first.
-
-## Bundler-specific notes
-
-### Vite
-
-`saykit()` plugs in cleanly alongside `@vitejs/plugin-react` and other Vite plugins, including **TanStack Start**. Drop it into the `plugins` array and you're done.
-
-### Rolldown / tsdown
-
-Used by the Carbon example to bundle for Cloudflare Workers. See the [Carbon integration](/integrations/carbon).
-
-### Webpack / Rspack
-
-Should work out of the box, though watch mode varies by bundler. For **Next.js**, prefer [`babel-plugin-saykit`](/integrations/babel) instead.
-
-### esbuild
-
-Sufficient for libraries but limited: esbuild's plugin API can't always produce the same dev-server experience as Vite. Combine with Vite/Rolldown when possible.
+- **Ordering.** The plugin runs with `enforce: 'pre'`, so it sees macros before other transforms. A plugin that lowers tagged templates must run after it.
+- **Vite** works beside `@vitejs/plugin-react` and **TanStack Start**. Vitest picks the plugin up from `vite.config.ts`, which the macros need.
+- **Next.js** should use [`babel-plugin-saykit`](/integrations/babel) instead.
 
 ## Next
 
-- [Configuration](/core-concepts/configuration): tell the plugin what to look at
+- [Configuration](/core-concepts/configuration): what the plugin reads
 - [Babel plugin](/integrations/babel): when you need Babel instead
-```

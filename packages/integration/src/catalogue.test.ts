@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { type Catalogue, createCatalogue, type View } from './index.js';
+import { type Catalogue, createCatalogue, type Message, type View } from './index.js';
 
 type Locale = 'en' | 'fr' | 'de';
 
@@ -131,6 +131,15 @@ describe('Catalogue#load', () => {
 
     const view = await catalogue.load('de');
     expect(view.call({ id: 'greeting' })).toBe('Hallo');
+  });
+
+  it('keeps a message named default as a message', async () => {
+    const catalogue = createCatalogue({
+      de: async () => ({ default: ['c', 'Hallo ', ['v', '_name']] as Message }),
+    });
+
+    const view = await catalogue.load('de');
+    expect(view.call({ id: 'default', _name: 'Ada' })).toBe('Hallo ⁨Ada⁩');
   });
 
   it('shares one call between loads that overlap', async () => {

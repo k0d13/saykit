@@ -3,147 +3,72 @@ title: Extraction
 description: How the saykit CLI scans your source and produces translation files
 ---
 
-The `saykit` CLI scans your source files for macros, normalises them to ICU MessageFormat, and writes the source-locale translation file for each bucket. It's the only SayKit tool that touches your disk, the runtime never does.
+`saykit extract` scans your source for macros, writes them to the source locale's catalogue as ICU MessageFormat, and compiles every locale into the module your app imports.
 
 ```sh
 pnpm saykit extract
 ```
 
-## What it does
-
-For each bucket in your config the CLI:
-
-1. **Globs** all files matching `include` (and not `exclude`).
-2. **Asks each transformer** to parse each file and extract messages.
-3. **Merges and de-duplicates** messages across files. Identical text + context get one entry with all source references combined.
-4. **Hashes** each message into a 6-character id (unless you provided a custom one in a descriptor).
-5. **Writes** the **source** locale catalogue via the bucket's formatter, and creates an empty placeholder file for any locale that doesn't have one yet.
-
-The end result is a set of files like:
+For each bucket it globs `include` (minus `exclude`), has each transformer extract the messages, merges identical text and context into one entry with every source reference, and hashes an id for each message without a custom one. The result:
 
 ```
 src/locales/
-  en.po       # source locale, freshly generated from your source
+  en.po       # source locale, regenerated from your code
   en.js       # the compiled module your app imports
   en.d.ts     # its declaration
-  fr.po       # other locales, left untouched (or created empty if missing)
+  fr.po       # other locales: left alone, or created empty
   fr.js
   fr.d.ts
 ```
 
-<Callout type="info">
-  The `.po` is what a translator edits; the `.js` beside it is what your app imports, compiled by
-  [`saykit compile`](/reference/cli#saykit-compile), which extraction runs as its last step.
-</Callout>
+The `.po` is what translators edit. The `.js` is build output from [`saykit compile`](/reference/cli#saykit-compile), which extraction runs as its last step.
 
 ## Source-only writes
 
-Extraction writes **only** the source locale (the first entry in `locales`). It never edits your other locale files.
+Extraction writes **only** the source locale, the first in `locales`:
 
-- The source catalogue is regenerated from your code on every run.
-- A locale that has **no file yet** is bootstrapped with an empty, header-only catalogue so a TMS like Weblate can register it.
-- Locales that **already have a file** are left completely untouched, no keys added, none removed.
+- The source catalogue is regenerated on every run.
+- A locale with **no file** gets an empty, header-only one, so a TMS like Weblate can register it.
+- A locale that **has a file** is never touched: no keys added, none removed.
 
-This keeps diffs small (changing one string touches one file) and treats translated content as owned by your translation management system, not by extraction. You can run `saykit extract` as often as you like; your translators' work is never touched.
+So changing a string touches one file, and translators' work is never overwritten.
 
 ### Fallback at compile time
 
-Because non-source files no longer carry the source strings, an untranslated (or missing) key is resolved through a **fallback chain** when the catalogue is compiled, not at runtime. By default the chain ends at the source locale, so an untranslated key renders the source string. You can insert intermediate locales with [`fallbackLocales`](/core-concepts/configuration#fallback-locales):
+Since other locales hold only what was translated, compiling fills each missing key from a **fallback chain** that ends at the source locale. [`fallbackLocales`](/core-concepts/configuration#fallback-locales) inserts steps before it:
 
 ```ts title="saykit.config.ts"
 fallbackLocales: {
-  'en-NZ': ['en-GB'], // en-NZ → en-GB → en (source)
-  'es-MX': 'es',      // es-MX → es → en (source)
+  'en-NZ': ['en-GB'], // en-NZ → en-GB → en
 },
 ```
 
-The chain is resolved into the compiled module, so your app still imports a single module per locale.
+The chain is merged into the compiled module, so the app still imports one module per locale.
 
-### Pruning other locales yourself
+### Pruning other locales
 
-If your TMS does not tidy up after itself, run [`saykit clean`](/reference/cli#saykit-clean). It removes entries from every non-source locale that no longer exist in the source catalogue, along with entries that were never translated. It only ever subtracts, missing keys are never added back.
+If your TMS does not tidy up, [`saykit clean`](/reference/cli#saykit-clean) removes entries that are no longer in the source, and entries that were never translated. It never adds anything.
 
 ## Watch mode
-
-For iterative development, use `--watch`:
 
 ```sh
 pnpm saykit extract --watch
 ```
 
-The CLI does an initial scan, then watches the working directory for changes. When a file inside any bucket changes, it re-extracts from that file and re-writes the catalogue. Removed files are also detected and their entries dropped.
+After the first run it re-extracts when a source file in a bucket changes, drops the entries of a deleted file, and recompiles when a catalogue changes, such as a translator's edit. Run it beside your dev server and edits show up through ordinary hot reload.
 
-Watch mode is debounced and bucket-aware, files outside any bucket's globs are ignored.
+## Committing
 
-## Logging
+| File            | Commit?                                                         |
+| --------------- | --------------------------------------------------------------- |
+| `{locale}.po`   | Yes: the catalogues are the source of truth                     |
+| `{locale}.js`   | No: build output, made by `saykit compile` before dev and build |
+| `{locale}.d.ts` | Yes: it never changes, and lets `tsc` pass on a fresh clone     |
 
-```sh
-pnpm saykit extract             # default, concise output
-pnpm saykit extract --verbose   # include per-file step logging
-pnpm saykit extract --quiet     # suppress all logs
-```
-
-A normal run looks like:
-
-```text
-🛠 Extracting Messages
-  Scanning bucket: src/**/*.{ts,tsx}
-    Found 42 file(s)
-  Total extracted messages: 137
-  Writing 137 messages to en
-    Writing locale file for en to disk
-    Skipping existing locale file for fr
-  ✓ Extraction complete for bucket: src/**/*.{ts,tsx}
-```
-
-## Buckets and multi-bucket projects
-
-When you have multiple buckets, each is processed independently, in parallel for the initial scan, and independently for watch. Different buckets can use different formatters and transformers, and produce entirely separate translation files.
-
-```ts title="saykit.config.ts"
-buckets: [
-  {
-    include: ['src/app/**/*.{ts,tsx}'],
-    output: 'src/locales/{locale}.{extension}',
-    formatter: po(),
-    transformer: [js(), jsx()],
-  },
-  {
-    include: ['src/emails/**/*.ts'],
-    output: 'src/emails/locales/{locale}.{extension}',
-    formatter: po(),
-    transformer: js(),
-  },
-];
-```
-
-A message authored in both buckets ends up in both catalogues. That's usually what you want for shared strings, but if you'd rather keep them separate, narrow your `include` globs.
-
-## CI
-
-For continuous integration, extract once and verify the result is clean:
-
-```yaml
-- run: pnpm saykit extract
-- run: git diff --exit-code
-```
-
-This fails the build if anyone forgot to run extraction, useful for keeping translation files in sync with code.
-
-## What gets generated
-
-For each bucket output:
-
-| File            | Purpose                                                           |
-| --------------- | ----------------------------------------------------------------- |
-| `{locale}.po`   | The catalogue, in whatever format the bucket's formatter produces |
-| `{locale}.js`   | The compiled module your app imports, one entry per message       |
-| `{locale}.d.ts` | Its declaration, so `import en from './locales/en.js'` types      |
-
-SayKit doesn't write a `.gitignore`: it's up to you which generated files to commit or ignore. The `.po` catalogues are canonical and should be committed. The `.js` is build output, so most projects ignore it and run `saykit compile` before anything that reads it. The `.d.ts` is a few lines and never changes, so committing that keeps `tsc` passing on a fresh clone before anything has been generated.
+For the scripts and CI check, see the [CLI reference](/reference/cli#scripts).
 
 ## Next
 
-- [Formats](/core-concepts/formats), PO and writing your own
-- [Configuration](/core-concepts/configuration), bucket fields and the output template
-- [CLI reference](/reference/cli), every command and flag
+- [Formats](/core-concepts/formats): PO, JSON, and writing your own
+- [Configuration](/core-concepts/configuration): bucket fields and the output template
+- [CLI reference](/reference/cli): every command and flag

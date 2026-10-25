@@ -5,7 +5,7 @@ description: Use when adding, changing, or debugging internationalisation with S
 
 # SayKit
 
-Compile-time i18n. Messages are written inline, `` say`Hello, ${name}!` `` or `<Say>Hello, {name}!</Say>`. A build plugin extracts them to translation files and rewrites each macro to `say.call({ id, ... })`. Translation files are imported like modules and the bundler turns them into plain objects. The runtime is ICU MessageFormat and nothing else.
+Compile-time i18n. Messages are written inline, `` say`Hello, ${name}!` `` or `<Say>Hello, {name}!</Say>`. The CLI extracts them to translation files and compiles each locale into a `.js` module of data; a build plugin rewrites each macro to `say.call({ id, ... })`. Nothing parses ICU at runtime, a small evaluator formats the compiled data with `Intl`.
 
 Docs: https://saykit.js.org. Source and end-to-end examples (`examples/*`): https://github.com/k0d13/saykit.
 
@@ -13,18 +13,18 @@ All SayKit packages are released together and must share one version. Pre-1.0, s
 
 ## Packages
 
-| Package                 | Purpose                                                                     | When                                                         |
-| ----------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `saykit`                | Runtime: `createCatalogue`, `createStore`, the `say` macros, ICU formatting | Always, a runtime dependency                                 |
-| `@saykit/config`        | `defineConfig` and the `saykit` CLI (`extract`, `clean`)                    | Always, dev dependency                                       |
-| `@saykit/transform-js`  | Extracts and rewrites `say` macros in `.js`/`.ts`                           | Always                                                       |
-| `@saykit/transform-jsx` | Same for `<Say>` in `.jsx`/`.tsx`                                           | Any JSX                                                      |
-| `@saykit/format-po`     | Gettext PO catalogues                                                       | Default choice, translators and TMSes know it                |
-| `@saykit/format-json`   | JSON catalogues; `arb` and `webextension` dialects                          | Flutter-style ARB, browser extension `_locales/`, plain JSON |
-| `unplugin-saykit`       | Bundler plugin                                                              | Vite, Rollup, Rolldown, Webpack, Rspack, esbuild, Farm, Bun  |
-| `babel-plugin-saykit`   | Babel plugin, plus Next.js and Metro catalogue loaders                      | Next.js, Expo, React Native, any Babel pipeline              |
-| `@saykit/react`         | `<Say>`, `SayProvider`, `useSay`, `withSay`, `getSay`                       | React                                                        |
-| `@saykit/carbon`        | `SayPlugin`, `withSay`, `interaction.say`, `guild.say`                      | Carbon Discord bots                                          |
+| Package                 | Purpose                                                                 | When                                                         |
+| ----------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `saykit`                | Runtime: `createCatalogue`, `createStore`, the `say` macros, formatting | Always, a runtime dependency                                 |
+| `@saykit/config`        | `defineConfig` and the `saykit` CLI (`extract`, `compile`, `clean`)     | Always, dev dependency                                       |
+| `@saykit/transform-js`  | Extracts and rewrites `say` macros in `.js`/`.ts`                       | Always                                                       |
+| `@saykit/transform-jsx` | Same for `<Say>` in `.jsx`/`.tsx`                                       | Any JSX                                                      |
+| `@saykit/format-po`     | Gettext PO catalogues                                                   | Default choice, translators and TMSes know it                |
+| `@saykit/format-json`   | JSON catalogues; `arb` and `webextension` dialects                      | Flutter-style ARB, browser extension `_locales/`, plain JSON |
+| `unplugin-saykit`       | Bundler plugin                                                          | Vite, Rollup, Rolldown, Webpack, Rspack, esbuild, Farm, Bun  |
+| `babel-plugin-saykit`   | Babel plugin                                                            | Next.js, Expo, React Native, any Babel pipeline              |
+| `@saykit/react`         | `<Say>`, `SayProvider`, `useSay`, `withSay`, `getSay`                   | React                                                        |
+| `@saykit/carbon`        | `SayPlugin`, `withSay`, `interaction.say`, `guild.say`                  | Carbon Discord bots                                          |
 
 A project needs the runtime, config, one formatter, the transformers for its file types, and one plugin. Use the project's own package manager.
 
@@ -78,63 +78,42 @@ export default defineConfig({
 });
 ```
 
-Next.js. Adding a `.babelrc` switches Next from SWC to Babel; there is no SWC plugin:
+Next.js, Expo, React Native and plain Babel. Adding a `.babelrc` switches Next from SWC to Babel; there is no SWC plugin:
 
 ```json title=".babelrc"
 {
   "presets": ["next/babel"],
-  "plugins": [["saykit", { "catalogues": "module" }]]
+  "plugins": ["saykit"]
 }
 ```
-
-```js title="next.config.mjs"
-import { withSayKit } from 'babel-plugin-saykit/next';
-
-export default withSayKit({
-  // your config
-});
-```
-
-Expo and React Native:
 
 ```js title="babel.config.js"
 module.exports = function (api) {
   api.cache(true);
   return {
     presets: ['babel-preset-expo'],
-    plugins: [['saykit', { catalogues: 'module' }]],
+    plugins: ['saykit'],
   };
 };
 ```
 
-```js title="metro.config.js"
-const { getDefaultConfig } = require('expo/metro-config');
-const { withSayKit } = require('babel-plugin-saykit/metro');
+A plugin only rewrites macros. Catalogues are never loaded through it: no `next.config` or `metro.config` wrapper, no loader options.
 
-module.exports = withSayKit(getDefaultConfig(__dirname));
-```
+### Compiled locale modules
 
-Plain Babel, no bundler integration:
+`saykit compile` writes a `{locale}.js` beside each catalogue (`src/locales/fr.po` → `src/locales/fr.js`), with the `fallbackLocales` chain already merged in, plus a `{locale}.d.ts` declaring `Record<string, Message>`. `saykit extract` compiles too, and `extract --watch` recompiles when a catalogue changes. Gitignore the `.js` modules and commit the `.d.ts`, which never changes, so `tsc` passes on a fresh clone. Since the modules are not committed, run compile before anything that imports a locale:
 
-```js title="babel.config.js"
-export default {
-  plugins: ['saykit'],
-};
-```
-
-The Babel plugin's `catalogues` option decides where a catalogue import is assembled. The default `'inline'` bakes the catalogue into the importing module, so Babel alone is enough with no bundler configuration, which is right for a plain Babel build or a library. Its cost is hot reload: an edited `.po` does not change the importer's bytes, so new strings appear only after a cache clear (`expo start --clear`, deleting `.next`). `'module'` leaves the import alone and lets the Next.js or Metro `withSayKit` serve the catalogue as a real, hot-reloadable module; set it whenever one of those is wired up. Only static imports are handled by the Babel plugin; `import('./locales/fr.po')` goes through the bundler.
-
-### TypeScript
-
-```json title="tsconfig.json"
+```json title="package.json"
 {
-  "compilerOptions": {
-    "allowArbitraryExtensions": true
+  "scripts": {
+    "predev": "saykit compile",
+    "prebuild": "saykit compile",
+    "pretest": "saykit compile"
   }
 }
 ```
 
-Needed for `.po` imports. JSON needs `resolveJsonModule`, which `moduleResolution: "bundler"` implies. Extraction writes a `{locale}.d.po.ts` beside each catalogue declaring `Record<string, string>`; never edit those, and never rely on them at runtime, the plugin produces the real module.
+A formatter whose extension is `.js` cannot be used: its module would overwrite the catalogue.
 
 ## Writing messages
 
@@ -216,18 +195,18 @@ Three objects. A **catalogue** holds locales and where their messages come from.
 
 ```ts title="src/i18n.ts"
 import { createCatalogue, createStore } from 'saykit';
-import en from './locales/en.po';
+import en from './locales/en.js';
 
 export const catalogue = createCatalogue({
   en, // inline
-  fr: () => import('./locales/fr.po'), // lazy: one chunk, fetched on first load
+  fr: () => import('./locales/fr.js'), // lazy: one chunk, fetched on first load
 });
 
 // No Locale type is exported; derive it
 export type Locale = (typeof catalogue.locales)[number];
 ```
 
-`createCatalogue` takes a record whose keys are the locales; the first is the fallback `match` resolves to. Never write the messages by hand: keys are content hashes the transform chose, so a hand-written `{ greeting: 'Hello' }` matches nothing. Import the extracted file.
+`createCatalogue` takes a record whose keys are the locales; the first is the fallback `match` resolves to. Never write the messages by hand: keys are content hashes the transform chose, and values are compiled trees, so a hand-written `{ greeting: 'Hello' }` matches nothing. Import the compiled module. A second argument sets view options: `{ bidiIsolation: 'none' }` turns off the FSI/PDI marks written around interpolated values (on by default, as in MessageFormat 2).
 
 ```ts
 catalogue.locales; // ['en', 'fr']
@@ -300,8 +279,8 @@ There is no store hook; the store is a module value, import it. `<SayProvider lo
 ```ts title="src/i18n.ts"
 import { createWithSay } from '@saykit/react/server';
 import { createCatalogue } from 'saykit';
-import en from './locales/en.po';
-import fr from './locales/fr.po';
+import en from './locales/en.js';
+import fr from './locales/fr.js';
 
 export const catalogue = createCatalogue({ en, fr });
 export const withSay = createWithSay(catalogue);
@@ -325,7 +304,7 @@ function Layout({ children }: LayoutProps<'/[locale]'>) {
 export default withSay(Layout, (p) => p.params.then((p) => p.locale));
 ```
 
-`withSay(Component, getLocale)` runs `getLocale` (returns a string, array, or nullish, sync or async), passes it through `catalogue.match`, loads the view and establishes it in React's per-request `cache()` before rendering. Wrap **every** layout and page that renders messages, not only the root: Next renders a page before its layout, so an unwrapped page's `getSay()` throws `'getSay' must be called below a 'withSay'`. `<SayProvider>` written in a server component takes no props; the `react-server` build serialises the established locale and messages to the client. `getSay()` is the server `useSay()`, for the locale as data or a string in a handler. `setSay(view)` establishes a view you resolved yourself. One view per request: a second locale replaces the first for everything rendered after it.
+`withSay(Component, getLocale)` runs `getLocale` (returns a string, array, or nullish, sync or async), passes it through `catalogue.match`, loads the view and establishes it in React's per-request `cache()` before rendering. Wrap **every** layout and page that renders messages, not only the root: Next renders a page before its layout, so an unwrapped page's `getSay()` throws `'getSay' must be called below a 'withSay'`. `<SayProvider>` written in a server component takes no props; the `react-server` build hands the established locale and messages, plain data, to the client. `getSay()` is the server `useSay()`, for the locale as data or a string in a handler. `setSay(view)` establishes a view you resolved yourself. One view per request: a second locale replaces the first for everything rendered after it.
 
 ## Carbon
 
@@ -353,31 +332,32 @@ new Client(options, { commands: [new Ping()] }, [new SayPlugin(catalogue)]);
 ## Workflow
 
 1. Write or change a message.
-2. `saykit extract` (or `saykit extract --watch`). Only the source locale file is written; other locales are created header-only and never touched afterwards.
-3. Translate the other locales by hand or through a TMS. A locale file needs only the entries actually translated; the rest fall back through `fallbackLocales` to the source string at build time.
+2. `saykit extract` (or `saykit extract --watch`). Only the source locale file is written; other locales are created header-only and never touched afterwards. Every locale is then compiled.
+3. Translate the other locales by hand or through a TMS. A locale file needs only the entries actually translated; the rest fall back through `fallbackLocales` to the source string at compile time. After pulling translations, `saykit compile`.
 4. `saykit clean` when source strings were removed or reworded: it drops orphaned and empty entries from non-source locales and never adds anything.
 
-Commit the catalogues. The `.d.*.ts` declarations are regenerated, commit or ignore them. CI check that extraction was run:
+Commit the catalogues and `.d.ts` files, not the compiled `.js`. CI check that extraction was run:
 
 ```yaml
 - run: pnpm saykit extract
-- run: git diff --exit-code -- 'src/locales/*'
+- run: git diff --exit-code -- 'src/locales/*.po'
 ```
 
 Macros throw without the plugin, so a test runner needs it too; Vitest picks it up from `vite.config.ts`.
 
-Custom formats: a `Formatter` is `{ extension: '.yaml', parse(content) => Message[], stringify(messages, meta) => string }` and a `Transformer` is `{ match(id) => boolean, extract(code, id) => Message[], transform(code, id) => string }`, where `Message` is `{ message, translation?, id?, context?, comments, references }`. See `examples/custom-formatter`.
+Custom formats: a `Formatter` is `{ extension: '.yaml', parse(content) => Message[], stringify(messages, meta) => string }` and a `Transformer` is `{ match(id) => boolean, extract(code, id) => Message[], transform(code, id) => string }`, where `Message` (from `@saykit/config`, not the runtime type) is `{ message, translation?, id?, context?, comments, references }`. See `examples/custom-formatter`.
 
 ## Errors
 
 | Symptom                                                             | Cause and fix                                                                                                       |
 | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `'say' is a macro and must be used with the relevant saykit plugin` | The file was not transformed. Check the bucket `include` glob and that the plugin is in the bundler and test config |
-| `Message for <id> is not a string`                                  | Stale or hand-written catalogue. Run `saykit extract`; import the file, never declare messages                      |
+| `No message for <id> in locale 'x'`                                 | Stale or hand-written module. Run `saykit extract`; import the compiled file, never declare messages                |
+| `Cannot find module './locales/en.js'`                              | Not compiled yet. `saykit compile`, and add it as a `pre` script                                                    |
 | `Messages for locale 'x' have not been loaded yet`                  | `catalogue.locale('x')` on a lazy locale. `await catalogue.load('x')` or `store.set('x')` first                     |
 | `No messages for locale 'x'`                                        | `x` is not a key of the catalogue. Run guesses through `match` first                                                |
 | `'getSay' must be called below a 'withSay'`                         | This segment is not wrapped. Wrap every layout and page, not only the root                                          |
-| Edited a `.po`, dev server shows old strings                        | Babel `catalogues: 'inline'`. Use `'module'` with the Next or Metro `withSayKit`, or clear the cache                |
+| Edited a `.po`, dev server shows old strings                        | The module was not recompiled. Run `saykit extract --watch` alongside the dev server, or `saykit compile`           |
 | Translator sees `{0}`                                               | Placeholder is not an identifier. Name it: `${{ name: value }}`                                                     |
 | Build fails on a branch key such as `sold-out`                      | ICU keys are identifiers. Rename the discriminant at its source                                                     |
 | `Text strings must be rendered within a <Text> component`           | React Native. `<Say whitespace={false}>`                                                                            |

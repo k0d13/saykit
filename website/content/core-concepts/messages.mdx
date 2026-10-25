@@ -3,18 +3,18 @@ title: Messages
 description: Authoring translatable text, templates, plurals, ordinals, select, and descriptors
 ---
 
-SayKit's authoring API is small. Almost everything you write is one of:
+Almost everything you write is one of:
 
 - a `` say`...` `` tagged template
 - a `say.plural(...)`, `say.ordinal(...)`, or `say.select(...)` call
 - a `say.number(...)`, `say.date(...)`, or `say.time(...)` fragment inside one of those
 - a `<Say>...</Say>` JSX element (with `<Say.Plural>`, `<Say.Ordinal>`, `<Say.Select>`, `<Say.Number>`, `<Say.Date>`, `<Say.Time>`)
 
-These are all **macros**. A SayKit build-tool plugin rewrites them into runtime calls during the build. They look like normal expressions at the call site, but everything you put in them is extracted and translated.
+These are **macros**: a SayKit plugin rewrites them during the build, and everything in them is extracted for translation.
 
 <Callout type="info">
-  Macros work only when paired with a SayKit plugin (`unplugin-saykit` or `babel-plugin-saykit`).
-  Without one, runtime calls like `say.plural(...)` will throw at runtime.
+  Macros need a SayKit plugin (`unplugin-saykit` or `babel-plugin-saykit`). Without one they throw
+  at runtime.
 </Callout>
 
 ## Basic messages
@@ -33,24 +33,13 @@ Hello, {name}!
 Your order of {quantity} {item} is ready!
 ```
 
-The transform does five things:
+Each message gets a 6-character id hashed from its text and context, and its file and line are recorded for translators. The call site becomes `say.call({ id, _name: name })`: each value sits behind an underscore so it cannot collide with the descriptor's own keys.
 
-1. Reads the literal text and placeholders out of the template.
-2. Converts them to ICU MessageFormat.
-3. Generates a stable 6-character hash id from the message text + context.
-4. Records the file and line as a translator reference.
-5. Replaces the source expression with a `say.call({ id, ...values })` call, each value behind an
-   underscore (`_name`) so a value can be named anything without colliding with the descriptor's own
-   keys. The runtime strips it back off.
-
-<Callout type="info">
-  SayKit looks for the identifier `say` when transforming messages. Anything named `say` works ,
-  `say`, `interaction.say`, `useSay()`, as long as the local binding is called `say`.
-</Callout>
+SayKit transforms anything called `say`: the one from `useSay()`, `interaction.say`, `store.say`.
 
 ## Placeholder names
 
-Placeholder names come from the identifier SayKit sees at the call site. Plain identifiers become named placeholders; complex expressions fall back to positional placeholders.
+A bare identifier names its placeholder. Anything else is numbered:
 
 ```ts
 const name = user.profile.name ?? 'Anonymous';
@@ -59,31 +48,13 @@ say`Signed in as ${name}`; // → "Signed in as {name}"
 say`Signed in as ${user.profile.name ?? 'Anonymous'}`; // → "Signed in as {0}"
 ```
 
-Pull values into local variables before interpolating them, translators get readable placeholders, and the message stays stable across refactors.
-
-The same value written twice is one placeholder, so it is numbered once, the rule a name you write
-yourself already follows, where a repeat is allowed precisely when nothing distinguishes it. Identical
-elements share a tag the same way, while two that differ in any prop stay apart.
-
-```ts
-say`${guesses.length} x ${guesses.length}`; // → "{0} x {0}"
-say`${guesses.length} x ${answers.length}`; // → "{0} x {1}"
-```
-
-When you cannot, name the placeholder by interpolating a single-key object, the key is the name:
+A number tells a translator nothing, so lift the value into a local, or name it with a single-key object:
 
 ```ts
 say`Your total is ${{ cartTotal: getCartTotal() }}`; // → "Your total is {cartTotal}"
 ```
 
-Nothing to import, and nothing survives the build, the transform reads the key and compiles only the
-value. Name the placeholder after what the value is to the sentence, `cartTotal`, `dueDate`, not
-after the expression that produced it, a translator sees only the name and the words around it.
-
-The name must be a valid identifier: a letter or underscore followed by letters, digits, or
-underscores. An invalid name fails the build. Naming is opt-in and per placeholder, so anything you
-leave alone keeps its number. It works in `say.plural`, `say.ordinal` and `say.select` selectors
-too, and in `<Say>` interpolations:
+Only the value survives the build. Name it after what it is to the sentence (`cartTotal`, `dueDate`), since that and the words around it are all a translator sees. The name must be a valid identifier. Naming works in selectors and in `<Say>` too:
 
 ```tsx
 say.plural({ items: cart.length }, { one: 'one item', other: 'several items' });
@@ -91,34 +62,19 @@ say.plural({ items: cart.length }, { one: 'one item', other: 'several items' });
 <Say>Signed in as {{ who: user.profile.name }}</Say>;
 ```
 
-<Callout type="info">
-  Only an object written inline with exactly one key is read as a name, and that is the one shape
-  whose meaning changes: it used to format as its own value, `[object Object]`, and now names the
-  value inside it. A variable holding an object (`` say`${data}` ``) is untouched, and so is an
-  object with two keys, a spread, or a computed key, they all stay values like any other.
-</Callout>
+Only an inline object with exactly one plain key is read as a name. A variable holding an object, or an object with two keys, a spread or a computed key, stays a value.
 
-### Reusing a name
-
-A name belongs to a value, not to a position, so interpolating the same value twice is one
-placeholder, and a translator can move it around the sentence or drop it entirely:
+The same value written twice is one placeholder, evaluated once:
 
 ```ts
-say`${name} invited ${name} to the team`; // → "{name} invited {name} to the team"
-say`${{ total: cart.total }} of ${{ total: cart.total }}`; // → "{total} of {total}"
+say`${name} invited ${name}`; // → "{name} invited {name}"
+say`${guesses.length} x ${guesses.length}`; // → "{0} x {0}"
 ```
 
 <Callout type="warn">
-  Two different values under one name are a build error, whether they got there by naming (`` say`$
-  {{ n: items.length }} ${{ n: users.length }}` ``) or by one name colliding with a variable (``
-  say`${name} ${{ name: author.name }}` ``). Only one of them could survive into the compiled call,
-  and a translator has no way to tell them apart. Give them their own names, `itemCount` and
-  `userCount` rather than `n` twice.
+  Two different values under one name fail the build, such as `${{ n: items.length }}` beside `$
+  {{ n: users.length }}`. Give each its own name.
 </Callout>
-
-Note that a repeat is evaluated once. Two identical placeholders compile to a single value, so if the
-expression does work, or has a side effect, it happens once no matter how many times the message
-mentions it.
 
 ## Plurals
 
@@ -131,8 +87,6 @@ say.plural(quantity, {
 });
 ```
 
-Extracted:
-
 ```text
 {quantity, plural,
   one {You have 1 item}
@@ -140,20 +94,9 @@ Extracted:
 }
 ```
 
-Interpolating the selector into a branch is how a branch shows the number. It extracts as ICU's `#`,
-which the runtime replaces with the value the message branched on, and it is the same placeholder and
-the same value as the selector rather than a second one. Interpolating anything else in a branch
-works too, and stays a named placeholder. A `#` you type yourself is text, and is escaped so it
-reaches the reader as a `#`.
+Interpolating the selector in a branch extracts as ICU's `#`, the number the message branched on. Anything else interpolated stays a named placeholder, and a `#` you type yourself is escaped as text.
 
-<Callout type="info">
-  In JSX a branch attribute is a plain string, which has nowhere to put a value, so write the branch
-  as a fragment instead: `one={<>{count} item</>}`. In a template branch the `say` tag is redundant,
-  the branch is already part of the message around it.
-</Callout>
-
-All six CLDR categories work (`zero`, `one`, `two`, `few`, `many`, `other`), and you can branch on
-exact numbers alongside them:
+All six categories work (`zero`, `one`, `two`, `few`, `many`, `other`), alongside exact numbers:
 
 ```ts
 say.plural(count, {
@@ -163,16 +106,11 @@ say.plural(count, {
 });
 ```
 
-<Callout type="info">
-  Which categories a locale actually uses varies, English needs only **one** and **other** while
-  Arabic uses all six. Write the ones your source language needs; translators add the rest, and the
-  runtime picks the right branch for the active locale.
-</Callout>
+Write the categories your source language needs (English uses `one` and `other`); translators add the ones theirs needs.
 
 ### Offset
 
-`offset` is subtracted from the value before `#` is formatted, which is how "You and 2 others" is
-written: the sentence branches on a total of three but shows two.
+`offset` is subtracted before `#` is written, which is how "You and 2 others" branches on three but shows two:
 
 ```ts
 say.plural(likes, {
@@ -183,8 +121,6 @@ say.plural(likes, {
 });
 ```
 
-Extracted:
-
 ```text
 {likes, plural, offset:1
   =0 {Nobody has liked this yet}
@@ -193,13 +129,11 @@ Extracted:
 }
 ```
 
-`offset` is reserved and never names a branch. Write it as a whole number literal, since it is baked
-into the message at build time. It works on `say.ordinal` too, while `say.select` has no number to
-offset, so an `offset` key there is just a branch.
+It must be a whole number literal. It works on `say.ordinal` too; on `say.select` it is just a branch named `offset`.
 
 ## Ordinals
 
-Numbers like "1st", "2nd", "3rd". Reach for CLDR categories rather than exact numbers:
+"1st", "2nd", "3rd". Use categories rather than exact numbers: `1:` matches only 1 and leaves "21th", while `one` covers 1, 21 and 31.
 
 ```ts
 say.ordinal(position, {
@@ -210,12 +144,9 @@ say.ordinal(position, {
 });
 ```
 
-Exact numbers work here too, but they match only themselves, so `1:` gets 1st right and leaves
-21st and 31st as "21th". The `one` category covers all three, which is the point of the categories.
-
 ## Select
 
-Branch on an arbitrary string:
+Branch on a string:
 
 ```ts
 say.select(gender, {
@@ -225,8 +156,6 @@ say.select(gender, {
 });
 ```
 
-Extracted:
-
 ```text
 {gender, select,
   male {He is online}
@@ -235,26 +164,16 @@ Extracted:
 }
 ```
 
-A branch key is an ICU key, so it carries no punctuation and no whitespace. A hyphenated string union
-is ordinary TypeScript but not an ICU key, so `'sold-out'` fails the build, naming the camel case
-form to use instead.
+A branch key is an ICU key, with no punctuation or whitespace, so `'sold-out'` fails the build. Numeric keys match as strings.
 
 <Callout type="warn">
-  Rename the **discriminant**, not just the branch. `select` compares cases as literal strings, so a
-  `soldOut` branch never matches a value that is still `'sold-out'` at runtime, the message quietly
-  falls through to `other`. Either spell the union ICU-safe at the source (`'soldOut'`) or normalise
-  the value before passing it in.
+  Rename the **discriminant**, not just the branch: a `soldOut` branch never matches a value that is
+  still `'sold-out'`, and the message falls through to `other`.
 </Callout>
-
-Numeric keys are fine here and match as strings, unlike in `say.plural` and `say.ordinal` where they
-select an exact value.
 
 ## Reserved characters
 
-A catalogue entry is an ICU message, and ICU keeps a few characters for itself: `{` and `}` open and
-close a placeholder, `#` stands for the number inside a plural or an ordinal, and `'` is how ICU
-escapes all of them. Text you write is text, so SayKit escapes those on the way into the catalogue
-and the reader sees exactly what you typed:
+ICU reserves `{`, `}`, `'`, and `#` inside a plural. SayKit escapes them on the way into the catalogue, so the reader sees what you typed:
 
 ```ts
 say`Wrap it in {braces}`; // → "Wrap it in '{'braces'}'"
@@ -262,14 +181,9 @@ say`It's here`; // → "It''s here"
 say.plural(n, { other: `Issue #1, ${n} times` }); // → "Issue '#'1, # times"
 ```
 
-Nothing is escaped in a placeholder name or an element tag, which are SayKit's own rather than
-yours. The quoting only reaches the catalogue, so a translator working in the file sees ICU and
-writes ICU, while you never have to think about it in source.
-
 ## Numbers, dates, and times
 
-`say.number`, `say.date`, and `say.time` format a value the way the active locale writes it. Unlike
-the macros above, these are **fragments** rather than whole messages, so they usually go inside one:
+`say.number`, `say.date` and `say.time` format a value for the active locale. Inside a message, the format lands **in the catalogue**, so a locale can move or restyle the value:
 
 ```ts
 say`You have ${say.number(items.length)} items`;
@@ -285,30 +199,21 @@ Published {0, date, long}
 Total: {cartTotal, number, ::currency/EUR}
 ```
 
-Naming works as it does anywhere else. The reason to write these rather than call `Intl` yourself is
-that the formatting lands **in the catalogue**, so a locale that words the sentence differently can
-put the number somewhere else entirely.
-
-They also work on their own, as a locale-aware `Intl` with the view's locale already applied:
+On their own they format for the view's locale and are not extracted, since there is nothing to translate:
 
 ```ts
 say.number(1234.5); // → "1,234.5" in en, "1 234,5" in fr
-say.number(total, { style: '::currency/EUR' }); // → "€1,234.50"
 say.date(post.publishedAt, { style: 'long' }); // → "13 September 2026"
 say.time(opensAt, { style: 'short' }); // → "19:30"
 ```
 
 ```tsx
-<td><Say.Number _={row.total} style="::currency/EUR" /></td>
-<time dateTime={post.publishedAt.toISOString()}><Say.Date _={post.publishedAt} style="medium" /></time>
+<td>
+  <Say.Number _={row.total} style="::currency/EUR" />
+</td>
 ```
 
-Written on its own, with no text around it, a fragment is still formatted for the locale but is not
-extracted: it has nothing a translator could change, so it never reaches the catalogue. The
-transform writes the compiled message into the call instead of an id.
-
-`style` is optional, and omitting it still gives locale-aware output, `{n, number}` applies the right
-grouping separators and decimal mark. An unrecognised style fails the build.
+`style` is optional. An unrecognised one fails the build.
 
 | Macro        | Styles                                                                 |
 | ------------ | ---------------------------------------------------------------------- |
@@ -318,9 +223,7 @@ grouping separators and decimal mark. An unrecognised style fails the build.
 
 ### Skeletons
 
-A named style asks for a whole format. A **skeleton**, written with a `::` prefix, asks for the
-parts instead, and leaves their arrangement to the locale. It is how you reach the formats the four
-names have no word for:
+A **skeleton**, prefixed `::`, names the parts of a format and leaves their arrangement to the locale:
 
 ```ts
 say`Total ${say.number(total, { style: '::currency/EUR' })}`; // → "Total €1,234.50"
@@ -329,66 +232,42 @@ say`Since ${say.date(joined, { style: '::yMMMM' })}`; // → "Since January 2020
 say`Doors at ${say.time(opensAt, { style: '::Hm' })}`; // → "Doors at 19:30"
 ```
 
-A skeleton is checked at build time by being resolved, not by being matched against a list, so it
-fails with a file and a line rather than reaching a reader. That covers more than typos: `::qqqq` is
-perfectly good ICU, a stand-alone quarter, but `Intl` has no way to show one, so it is rejected
-too. A skeleton is rejected whole, so `::yMMMdqqqq` fails rather than quietly dropping the quarter
-and formatting the rest.
+A skeleton is resolved to `Intl` options at build time, so one `Intl` cannot show, such as `::qqqq` (a quarter), fails the build with a file and line.
 
-<Callout>
-  There is no `currency` **style**, because ICU MessageFormat 1 has nowhere to write the code. A
-  currency skeleton names it, `::currency/EUR`, which is the way to ask for one.
-</Callout>
-
-A skeleton's `::percent` writes the sign but does not scale, so `0.25` formats as `0.25%`. The named
-`percent` style scales as well, which is `::percent scale/100` spelled out.
-
-`spellout` and ICU's rule-based `ordinal` are still unsupported, having no `Intl` equivalent, as is
-`choice`, deprecated in ICU itself in favour of `plural`.
+- There is no `currency` style; use the skeleton `::currency/EUR`.
+- `::percent` does not scale (`0.25` → `0.25%`); the `percent` style does.
+- `spellout`, rule-based `ordinal` and `choice` are unsupported. A hand-written one writes the bare value.
 
 ## Descriptors
 
-A descriptor is an object passed to `say` before the template. It carries metadata that affects extraction.
+An object passed to `say` before the template carries metadata for extraction.
 
 ### Custom ids
 
-By default ids are content-hashed. Provide your own to get a stable, semantic id:
+Ids are content hashes by default. Give your own when translators work from readable keys, or an id must survive its text changing:
 
 ```ts
 say({ id: 'greeting.hello' })`Hello!`;
 say({ id: 'button.submit' })`Submit`;
 ```
 
-Custom ids are useful when:
-
-- you want stable ids across major refactors
-- translators rely on human-readable ids
-- you share messages between projects
-
 ### Context
 
-Identical source strings can mean different things. Context disambiguates them so translators can pick the right wording:
+Identical strings can mean different things. A context gives each its own id and catalogue entry, and shows translators which is which:
 
 ```ts
 say({ context: 'direction' })`Right`;
 say({ context: 'correctness' })`Right`;
 ```
 
-Both extract as `"Right"`, but they get distinct ids and live as separate entries in the catalogue, with the context visible to translators.
-
 ## Translator comments
 
-Comments on a `// TRANSLATORS:` line above a message get attached to the entry in the catalogue:
+A `// TRANSLATORS:` comment above a message is attached to its catalogue entry:
 
 ```ts
 // TRANSLATORS: This appears on the login button
 say`Sign in`;
-
-// TRANSLATORS: Username field label in the registration form
-say`Username`;
 ```
-
-In a PO file:
 
 ```po
 #. This appears on the login button
@@ -396,16 +275,7 @@ msgid "Sign in"
 msgstr "Sign in"
 ```
 
-The comment belongs to the statement the message is written in, so it can sit above a declaration, a `return`, an object property, or the message itself:
-
-```ts
-// TRANSLATORS: Shown while the report is generating
-const label = say`One moment…`;
-```
-
-It doesn't reach any further than that statement: a comment above a function describes the function, not every message inside it.
-
-Inside JSX there is nothing in front of an element for a comment to attach to, so write one as a child instead:
+The comment belongs to the statement the message is in, so it can sit above a declaration, a `return` or an object property. One above a function does not reach the messages inside it. In JSX, write it as a child:
 
 ```tsx
 <div>
@@ -414,16 +284,9 @@ Inside JSX there is nothing in front of an element for a comment to attach to, s
 </div>
 ```
 
-Use them when:
-
-- the meaning of a message isn't obvious from the text
-- placeholders need explanation ("`#` is the user's score")
-- tone or length constraints matter ("Keep under 20 characters")
-- the message references a specific UI element
+Use them for anything a translator cannot infer: tone, length limits, what a placeholder holds.
 
 ## JSX
-
-In React, write messages as JSX with the `<Say>` component:
 
 ```tsx
 <Say>Hello, {name}!</Say>
@@ -433,17 +296,15 @@ In React, write messages as JSX with the `<Say>` component:
 </Say>
 ```
 
-JSX elements inside `<Say>` are preserved across translations as numbered tags:
+Elements become numbered tags:
 
 ```text
 {items} items · total <0>{total}</0>
 ```
 
-Translators can move `<0>...</0>` around to fit the target language's grammar, and SayKit re-renders it with the original element at runtime. A number tells a translator nothing about what the element does, so you can name one with `say-tag`, and an element with no children extracts as `<1/>` rather than a pair, see [naming tags](/integrations/react#naming-tags).
+Translators can move `<0>...</0>`, and SayKit puts the original element back at runtime. Name a tag with `say-tag`, see [naming tags](/integrations/react#naming-tags).
 
-Every macro above has a JSX counterpart. The selector is the `_` prop, branches are props, and
-`offset` and `style` are props too. A branch that shows the number is written as a fragment, since a
-string attribute has nowhere to put a value:
+Every macro has a JSX counterpart. The selector is the `_` prop, and branches, `offset` and `style` are props. A branch that shows the number must be a fragment:
 
 ```tsx
 <Say.Plural _={count} one={<>{count} item</>} other={<>{count} items</>} />
@@ -452,36 +313,13 @@ string attribute has nowhere to put a value:
 
 <Say.Select _={gender} male="He liked it" female="She liked it" other="They liked it" />
 
-<Say.Plural
-  _={likes}
-  offset={1}
-  one={<>You and {likes} other liked this</>}
-  other={<>You and {likes} others liked this</>}
-/>
-```
-
-`<Say.Number>`, `<Say.Date>`, and `<Say.Time>` are fragments here as well, so they nest inside a
-`<Say>` like any other child:
-
-```tsx
 <Say>
   You have <Say.Number _={items.length} /> items, last updated on{' '}
   <Say.Date _={{ updatedAt }} style="long" />
 </Say>
 ```
 
-<Callout type="info">
-  A message extracts as the text JSX renders, so a line break and the indentation around it are
-  layout and never reach a catalogue. Whitespace that has to survive a break is written as{' '}
-  <code>{"{' '}"}</code>, the same escape Prettier inserts when it wraps a line ending in a space,
-  and it extracts as the space it renders as, not as a placeholder. A literal expression child such
-  as `{'—'}` or `{10}` is read the same way, as the text it renders as.
-</Callout>
-
-<Callout type="info">
-  Branch keys that start with a digit get a leading underscore in JSX (`_1`, `_2`) because JSX prop
-  names can't start with a number. SayKit strips the underscore at extract time.
-</Callout>
+Exact-number branches are `_1`, `_2`, since a prop cannot start with a digit. A message extracts as the text JSX renders: line breaks and indentation are dropped, and <code>{"{' '}"}</code> or `{'—'}` extract as the text they render.
 
 See [React integration](/integrations/react) for the full setup.
 
@@ -537,6 +375,6 @@ say`Hello, ` + name; // ✗
 
 ## Next
 
-- [Runtime](/core-concepts/runtime), catalogues, views, and formatting at runtime
-- [Extraction](/core-concepts/extraction), running the CLI, watch mode, source-only writes
-- [React](/integrations/react), `<Say>` in detail
+- [Runtime](/core-concepts/runtime): catalogues, views, and formatting
+- [Extraction](/core-concepts/extraction): the CLI, watch mode, source-only writes
+- [React](/integrations/react): `<Say>` in detail
