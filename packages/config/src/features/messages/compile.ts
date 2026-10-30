@@ -6,7 +6,7 @@ import {
   type PlainArg,
   type Select,
 } from '@messageformat/parser';
-import type { Message } from 'saykit';
+import type { Kind as Kinds, Message } from 'saykit';
 import { dateTimeStyle, type NumberOptions, numberStyle, StyleError } from './styles.js';
 
 /**
@@ -25,6 +25,23 @@ import { dateTimeStyle, type NumberOptions, numberStyle, StyleError } from './st
  * holds it compiles it.
  */
 
+/**
+ * The node kinds, as `saykit` numbers them.
+ *
+ * `saykit` is only a dev dependency here, so its table cannot be imported at
+ * runtime. This copy is checked against it instead: a number out of step with
+ * the runtime fails to type-check rather than compiling to the wrong node.
+ */
+const Kind = {
+  Value: 0,
+  Number: 1,
+  DateTime: 2,
+  Plural: 3,
+  Ordinal: 4,
+  Select: 5,
+  Hash: 6,
+} as const satisfies typeof Kinds;
+
 type Token = Content | PlainArg | FunctionArg | Select | Octothorpe;
 
 /** `=3` names the number three; anything else names a CLDR category. */
@@ -37,8 +54,8 @@ const EXACT = /^=\d+$/;
  * `_name` and a message argument really called `_total` is `__total`. The
  * mapping is known here, so it is written in rather than applied per call.
  */
-function reference(argument: string): Message {
-  return ['v', `_${argument}`];
+function key(argument: string) {
+  return `_${argument}`;
 }
 
 /**
@@ -51,7 +68,7 @@ function reference(argument: string): Message {
 function concat(nodes: Message[]): Message {
   if (nodes.length === 0) return '';
   if (nodes.length === 1) return nodes[0]!;
-  return ['c', ...nodes];
+  return nodes;
 }
 
 /**
@@ -70,7 +87,7 @@ export function compileMessage(icu: string): Message {
    * A slightly wrong shape beats rendering nothing.
    */
   function argument(token: FunctionArg): Message {
-    const value = reference(token.arg);
+    const value = key(token.arg);
 
     let style = '';
     for (const part of token.param ?? []) {
@@ -99,27 +116,29 @@ export function compileMessage(icu: string): Message {
           (s) => dateTimeStyle(kind, s),
           () => dateTimeStyle(kind, ''),
         );
-        return ['d', value, options];
+        return [Kind.DateTime, value, options];
       }
 
       case 'number': {
         const { scale, ...options } = resolve<NumberOptions>(numberStyle, () => ({}));
         // `Intl` has no option for a scale, so it rides along as a multiplier
-        if (scale !== undefined) return ['n', value, options, scale];
-        return Object.keys(options).length === 0 ? ['n', value] : ['n', value, options];
+        if (scale !== undefined) return [Kind.Number, value, options, scale];
+        return Object.keys(options).length === 0
+          ? [Kind.Number, value]
+          : [Kind.Number, value, options];
       }
 
       // An argument type we have no formatter for still writes its value.
       // `duration`, `spellout` and RBNF `ordinal` land here: no macro authors
       // them, and `Intl` has nothing to write them with
       default:
-        return value;
+        return [Kind.Value, value];
     }
   }
 
   /** Build the switch for a `plural`, `selectordinal` or `select`. */
   function choice(token: Select): Message {
-    const value = reference(token.arg);
+    const value = key(token.arg);
     // No prototype, so a branch named `__proto__` is a key like any other
     // rather than a prototype assigned to `{}`
     const cases: Message.Cases = Object.create(null);
@@ -132,11 +151,11 @@ export function compileMessage(icu: string): Message {
       if (!Object.hasOwn(cases, key)) cases[key] = pattern(branch.tokens);
     }
 
-    if (token.type === 'select') return ['s', value, cases];
+    if (token.type === 'select') return [Kind.Select, value, cases];
 
+    const kind = token.type === 'selectordinal' ? Kind.Ordinal : Kind.Plural;
     const offset = token.pluralOffset ?? 0;
-    if (token.type === 'selectordinal') return ['p', value, cases, offset, 1];
-    return offset === 0 ? ['p', value, cases] : ['p', value, cases, offset];
+    return offset === 0 ? [kind, value, cases] : [kind, value, cases, offset];
   }
 
   /** One token, as the node it contributes. */
@@ -145,13 +164,13 @@ export function compileMessage(icu: string): Message {
       case 'content':
         return token.value;
       case 'argument':
-        return reference(token.arg);
+        return [Kind.Value, key(token.arg)];
       case 'function':
         return argument(token);
       case 'octothorpe':
         // The parser only makes a `#` a token when a plural encloses it, and a
         // `#` in a select inside that plural still writes the plural's number
-        return ['#'];
+        return [Kind.Hash];
       default:
         return choice(token);
     }

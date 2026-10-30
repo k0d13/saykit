@@ -1,6 +1,6 @@
 import { inspect } from 'node:util';
 import { describe, expect, it } from 'vitest';
-import { createCatalogue, createView, type Message, type View } from './index.js';
+import { createCatalogue, createView, Kind, type Message, type View } from './index.js';
 
 type Locale = 'en' | 'fr';
 
@@ -14,17 +14,17 @@ type Locale = 'en' | 'fr';
 const messages = {
   en: {
     greeting: 'Hello',
-    items: ['p', ['v', '_count'], { one: ['c', ['#'], ' item'], other: ['c', ['#'], ' items'] }],
-    named: ['c', 'Hello, ', ['v', '_name']],
-    identified: ['c', 'Order ', ['v', '_id']],
-    underscored: ['c', 'Total ', ['v', '__total']],
+    items: [Kind.Plural, '_count', { one: [[Kind.Hash], ' item'], other: [[Kind.Hash], ' items'] }],
+    named: ['Hello, ', [Kind.Value, '_name']],
+    identified: ['Order ', [Kind.Value, '_id']],
+    underscored: ['Total ', [Kind.Value, '__total']],
   },
   fr: {
     greeting: 'Bonjour',
     items: [
-      'p',
-      ['v', '_count'],
-      { one: ['c', ['#'], ' article'], other: ['c', ['#'], ' articles'] },
+      Kind.Plural,
+      '_count',
+      { one: [[Kind.Hash], ' article'], other: [[Kind.Hash], ' articles'] },
     ],
   },
 } satisfies Record<Locale, View.Messages>;
@@ -66,7 +66,7 @@ describe('View#call', () => {
   });
 
   it('formats a message carried in place of an id', () => {
-    expect(say.call({ message: ['n', ['v', '_n']], _n: 1234.5 })).toBe('1,234.5');
+    expect(say.call({ message: [Kind.Number, '_n'], _n: 1234.5 })).toBe('1,234.5');
   });
 
   it('hands the descriptor over whole, values still behind their underscore', () => {
@@ -85,7 +85,12 @@ describe('View#call', () => {
 });
 
 describe('bidi isolation', () => {
-  const mention: Message = ['c', ['v', '_channel'], ' has a ', ['v', '_multiplier'], ' multiplier'];
+  const mention: Message = [
+    [Kind.Value, '_channel'],
+    ' has a ',
+    [Kind.Value, '_multiplier'],
+    ' multiplier',
+  ];
   const channel = { id: 'mention', message: mention };
 
   it('isolates substituted values by default', () => {
@@ -112,7 +117,7 @@ describe('bidi isolation', () => {
     const catalogue = createCatalogue(
       {
         en: { mention },
-        fr: () => ({ mention: ['c', ['v', '_channel'], ' a ', ['v', '_multiplier']] }),
+        fr: () => ({ mention: [[Kind.Value, '_channel'], ' a ', [Kind.Value, '_multiplier']] }),
       },
       { bidiIsolation: 'none' },
     );
@@ -141,7 +146,7 @@ describe('View immutability', () => {
   });
 
   it('copies the trees inside its messages too', () => {
-    const source: View.Messages = { greeting: ['c', 'Hello, ', ['v', '_name']] };
+    const source: View.Messages = { greeting: ['Hello, ', [Kind.Value, '_name']] };
     const say = createView('en', source, { bidiIsolation: 'none' });
     (source.greeting as unknown[])[1] = 'Goodbye, ';
     expect(say.call({ id: 'greeting', _name: 'Ada' })).toBe('Hello, Ada');

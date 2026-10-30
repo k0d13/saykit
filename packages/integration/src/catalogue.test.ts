@@ -1,22 +1,22 @@
 import { describe, expect, it, vi } from 'vitest';
-import { type Catalogue, createCatalogue, type Message, type View } from './index.js';
+import { type Catalogue, createCatalogue, Kind, type Message, type View } from './index.js';
 
 type Locale = 'en' | 'fr' | 'de';
 
 const messages = {
   en: {
     greeting: 'Hello',
-    items: ['p', ['v', '_count'], { one: ['c', ['#'], ' item'], other: ['c', ['#'], ' items'] }],
-    named: ['c', 'Hello, ', ['v', '_name']],
-    identified: ['c', 'Order ', ['v', '_id']],
-    underscored: ['c', 'Total ', ['v', '__total']],
+    items: [Kind.Plural, '_count', { one: [[Kind.Hash], ' item'], other: [[Kind.Hash], ' items'] }],
+    named: ['Hello, ', [Kind.Value, '_name']],
+    identified: ['Order ', [Kind.Value, '_id']],
+    underscored: ['Total ', [Kind.Value, '__total']],
   },
   fr: {
     greeting: 'Bonjour',
     items: [
-      'p',
-      ['v', '_count'],
-      { one: ['c', ['#'], ' article'], other: ['c', ['#'], ' articles'] },
+      Kind.Plural,
+      '_count',
+      { one: [[Kind.Hash], ' article'], other: [[Kind.Hash], ' articles'] },
     ],
   },
 } satisfies Partial<Record<Locale, View.Messages>>;
@@ -135,7 +135,7 @@ describe('Catalogue#load', () => {
 
   it('keeps a message named default as a message', async () => {
     const catalogue = createCatalogue({
-      de: async () => ({ default: ['c', 'Hallo ', ['v', '_name']] as Message }),
+      de: async () => ({ default: ['Hallo ', [Kind.Value, '_name']] as Message }),
     });
 
     const view = await catalogue.load('de');

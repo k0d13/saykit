@@ -1,4 +1,4 @@
-import { compileMessage as bind } from 'saykit';
+import { compileMessage as bind, Kind } from 'saykit';
 import { describe, expect, it } from 'vitest';
 import { compileMessage } from './compile.js';
 
@@ -26,10 +26,9 @@ describe('compileMessage', () => {
   it('reads a placeholder from behind its underscore', () => {
     expect(compileMessage('Hello, {name}')).toMatchInlineSnapshot(`
       [
-        "c",
         "Hello, ",
         [
-          "v",
+          0,
           "_name",
         ],
       ]
@@ -77,23 +76,18 @@ describe('choices', () => {
     const icu = '{count, plural, one {# item} other {# items}}';
     expect(compileMessage(icu)).toMatchInlineSnapshot(`
       [
-        "p",
-        [
-          "v",
-          "_count",
-        ],
+        3,
+        "_count",
         {
           "one": [
-            "c",
             [
-              "#",
+              6,
             ],
             " item",
           ],
           "other": [
-            "c",
             [
-              "#",
+              6,
             ],
             " items",
           ],
@@ -107,7 +101,7 @@ describe('choices', () => {
   it('matches an exact case before a category, however the message writes them', () => {
     const icu = '{count, plural, one {# item} =0 {nothing} other {# items}}';
     expect(JSON.stringify(compileMessage(icu))).toMatchInlineSnapshot(
-      `"["p",["v","_count"],{"one":["c",["#"]," item"],"=0":"nothing","other":["c",["#"]," items"]}]"`,
+      `"[3,"_count",{"one":[[6]," item"],"=0":"nothing","other":[[6]," items"]}]"`,
     );
     expect(format(icu, { _count: 0 })).toBe('nothing');
     expect(format(icu, { _count: 1 })).toBe('1 item');
@@ -142,7 +136,7 @@ describe('choices', () => {
 
   it('compiles an ordinal', () => {
     const icu = '{n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}';
-    expect(compileMessage(icu)).toMatchObject(['p', ['v', '_n'], {}, 0, 1]);
+    expect(compileMessage(icu)).toMatchObject([Kind.Ordinal, '_n', {}]);
     expect(format(icu, { _n: 1 })).toBe('1st');
     expect(format(icu, { _n: 2 })).toBe('2nd');
     expect(format(icu, { _n: 3 })).toBe('3rd');
@@ -152,7 +146,7 @@ describe('choices', () => {
   it('compiles a select', () => {
     const icu = '{g, select, male {He} female {She} other {They}}';
     expect(JSON.stringify(compileMessage(icu))).toMatchInlineSnapshot(
-      `"["s",["v","_g"],{"male":"He","female":"She","other":"They"}]"`,
+      `"[5,"_g",{"male":"He","female":"She","other":"They"}]"`,
     );
     expect(format(icu, { _g: 'female' })).toBe('She');
     expect(format(icu, { _g: 'other' })).toBe('They');
@@ -182,8 +176,8 @@ describe('choices', () => {
 
   it('writes an exact key the one way the runtime looks it up', () => {
     expect(compileMessage('{n, plural, =01 {one} other {#}}')).toMatchObject([
-      'p',
-      ['v', '_n'],
+      Kind.Plural,
+      '_n',
       { '=1': 'one' },
     ]);
   });
@@ -233,13 +227,13 @@ describe('numbers', () => {
 
   it('applies a scale as a multiplier, since Intl has no option for one', () => {
     expect(JSON.stringify(compileMessage('{v, number, ::scale/100}'))).toMatchInlineSnapshot(
-      `"["n",["v","_v"],{},100]"`,
+      `"[1,"_v",{},100]"`,
     );
   });
 
   it('falls back to a plain number for an unreadable number style', () => {
     expect(JSON.stringify(compileMessage('{n, number, ::bogus}'))).toMatchInlineSnapshot(
-      `"["n",["v","_n"]]"`,
+      `"[1,"_n"]"`,
     );
     expect(format('{n, number, ::bogus}', { _n: 1234.5 })).toBe('1,234.5');
   });
@@ -292,7 +286,7 @@ describe('other argument types', () => {
   // taking the rest of the message down with it. No macro authors either of
   // these, so they only ever arrive from a catalogue written by hand
   it('falls back to the plain value for an unknown argument type', () => {
-    expect(JSON.stringify(compileMessage('{n, spellout}'))).toMatchInlineSnapshot(`"["v","_n"]"`);
+    expect(JSON.stringify(compileMessage('{n, spellout}'))).toMatchInlineSnapshot(`"[0,"_n"]"`);
     expect(format('{n, spellout}', { _n: 42 })).toBe('42');
     expect(format('{s, duration}', { _s: 3661 })).toBe('3661');
   });

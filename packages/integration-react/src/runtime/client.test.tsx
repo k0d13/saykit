@@ -3,7 +3,7 @@
 import { act, render, screen } from '@testing-library/react';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { createCatalogue, createStore, type Store, type View } from 'saykit';
+import { createCatalogue, createStore, Kind, type Store, type View } from 'saykit';
 import { describe, expect, it } from 'vitest';
 import { SayProvider, useSay } from '#/runtime/client.js';
 
@@ -30,7 +30,7 @@ describe('SayProvider / useSay', () => {
     function Mention() {
       return createElement('span', null, useSay().call({ id: 'mention', _channel: '<#1>' }));
     }
-    const messages: View.Messages = { mention: ['c', 'See ', ['v', '_channel']] };
+    const messages: View.Messages = { mention: ['See ', [Kind.Value, '_channel']] };
 
     const isolated = renderToStaticMarkup(
       createElement(SayProvider, { locale: 'en', messages }, createElement(Mention)),

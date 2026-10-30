@@ -225,19 +225,34 @@ say`Your total is ${{ cartTotal: getCartTotal() }}`; // a named placeholder
 
 ### `Message`
 
-A compiled message: what `saykit compile` writes and a view formats. Plain strings and arrays, so it serialises as JSON.
+A compiled message: what `saykit compile` writes and a view formats. Plain strings, numbers and arrays, so it serialises as JSON.
+
+A node is an array that starts with its `Kind`, and any other array is a concatenation. Operands are descriptor keys, never nested nodes.
 
 ```ts
+const Kind = {
+  Value: 0,
+  Number: 1,
+  DateTime: 2,
+  Plural: 3,
+  Ordinal: 4,
+  Select: 5,
+  Hash: 6,
+} as const;
+
 type Message =
   | string // literal text
-  | ['c', ...Message[]] // concatenation
-  | ['v', string] // a value, by descriptor key
-  | ['n', Message, Intl.NumberFormatOptions?, number?] // a number, with a scale
-  | ['d', Message, Intl.DateTimeFormatOptions?] // a date or time
-  | ['p', Message, Message.Cases, number?, 1?] // a plural: cases, offset, 1 for ordinal
-  | ['s', Message, Message.Cases] // a select
-  | ['#']; // the enclosing plural's number
+  | Message[] // concatenation
+  | [Kind.Value, string] // a value, by descriptor key
+  | [Kind.Number, string, Intl.NumberFormatOptions?, number?] // a number, with a scale
+  | [Kind.DateTime, string, Intl.DateTimeFormatOptions?] // a date or time
+  | [Kind.Plural, string, Message.Cases, number?] // a cardinal plural, with its offset
+  | [Kind.Ordinal, string, Message.Cases, number?] // an ordinal plural, with its offset
+  | [Kind.Select, string, Message.Cases] // a select
+  | [Kind.Hash]; // the enclosing plural's number
 ```
+
+The numbers are the format, so a kind is only ever added, never renumbered.
 
 ### `View.Messages`
 
