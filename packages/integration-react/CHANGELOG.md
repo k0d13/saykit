@@ -1,5 +1,11 @@
 # @saykit/react
 
+## 0.12.0
+
+### Minor Changes
+
+- 26ac4d5: Compile catalogues to data modules with `saykit compile`, and drop the runtime message parser
+
 ## 0.11.1
 
 ### Patch Changes
