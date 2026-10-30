@@ -49,9 +49,8 @@ export function Say(props: {
   const values = resolveValuePropKeys(rest);
 
   return createElement(Renderer, {
-    // The props go through still prefixed, since a compiled message reads each
-    // value from behind its underscore. The id is merged in last, so a message
-    // free to name a value `id` cannot displace the message being looked up
+    // Props stay underscore-prefixed, as compiled messages read them. `id` is last so a value named
+    // `id` cannot displace it
     html: say.call(message === undefined ? { ...rest, id: id! } : { ...rest, message }),
     whitespace,
     components(tag?: string) {

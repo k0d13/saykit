@@ -3,8 +3,7 @@ import { dateTimeFormat, numberFormat, pluralRules, toDate, toNumeric } from './
 /**
  * What each node in a compiled message is, by the number it starts with.
  *
- * The numbers are the format: a catalogue compiled by one version is read by
- * another, so a kind is only ever appended, and none is renumbered or reused.
+ * The numbers are the format, so a kind is only ever appended, never renumbered or reused.
  */
 export const Kind = {
   Value: 0,
@@ -21,18 +20,12 @@ export type Kind = (typeof Kind)[keyof typeof Kind];
 /**
  * A compiled message.
  *
- * The CLI compiles a catalogue's messages down to this: arrays and strings,
- * with every style already resolved to the options bag it stands for. Nothing
- * here is parsed at runtime, and nothing here is a function, so a locale's
- * messages are data - they cross a server/client boundary the way any other
- * JSON does, which a compiled function cannot.
+ * The CLI compiles a catalogue to this: strings and arrays, with styles already resolved to
+ * `Intl` options. It is plain JSON, so it can cross a server/client boundary.
  *
- * A node is an array that starts with its {@link Kind}, and an array that
- * starts with anything else is a concatenation. Each operand is the descriptor
- * key it reads from, never a node, since a placeholder only ever reads a value.
- *
- * A message with no placeholders is its own string, so the common case costs
- * nothing at all.
+ * A node is an array starting with its {@link Kind}; an array starting with anything else is a
+ * concatenation. Operands are descriptor keys, never nodes. A message with no placeholders is its
+ * own string.
  */
 export type Message =
   // Literal text
@@ -76,9 +69,8 @@ interface Context {
   hash: Formatter | undefined;
 }
 
-// First strong and right-to-left isolates, and the pop that ends each. Written
-// as code points, since the characters are invisible. A left-to-right isolate
-// is never needed: a localised value only ever runs in its locale's direction
+// First strong and right-to-left isolates, and the pop that ends each. No left-to-right
+// isolate: a localised value always runs in its locale's direction
 const FSI = String.fromCharCode(0x2068);
 const RLI = String.fromCharCode(0x2067);
 const PDI = String.fromCharCode(0x2069);
@@ -99,10 +91,8 @@ function localeDir(locale: string): 'ltr' | 'rtl' | 'auto' {
 /**
  * Isolate a written value the way MessageFormat 2 does by default.
  *
- * A number or a date is written in the locale's own direction, so in a
- * left-to-right message it needs nothing and otherwise takes that direction's
- * isolate. Anything else could be in any script, so it is isolated by its
- * first strong character.
+ * A number or date runs in the locale's direction, so it needs an isolate only in a right-to-left
+ * message. Anything else could be in any script, so its first strong character decides.
  */
 function isolate(ctx: Context, written: string, localised: boolean) {
   if (!ctx.dir) return written;
@@ -114,8 +104,7 @@ function isolate(ctx: Context, written: string, localised: boolean) {
 /**
  * Report a value a message could not format, which is then written as given.
  *
- * A message never throws over a value: a bad date in one placeholder should
- * not take the rest of the page down with it.
+ * A message never throws over a value, so one bad date cannot take down the page.
  */
 function unformattable(kind: string, value: unknown, error?: unknown) {
   console.warn(`saykit: cannot format ${String(value)} as a ${kind}`, ...(error ? [error] : []));
@@ -123,11 +112,10 @@ function unformattable(kind: string, value: unknown, error?: unknown) {
 }
 
 /**
- * Build an `Intl` object for a message, once, when the message is built.
+ * Build an `Intl` object once, when the message is built.
  *
- * Construction can fail on options a skeleton allowed but this engine does
- * not, such as an unknown currency; the message then writes its values as
- * given rather than failing on every call.
+ * It can fail on options this engine rejects, such as an unknown currency; the message then writes
+ * values as given.
  */
 function prepare<T>(kind: string, make: () => T): T | undefined {
   try {
@@ -178,13 +166,11 @@ function arms(cases: Message.Cases, ctx: Context, out: boolean) {
 /**
  * Build the closure one node evaluates to.
  *
- * The walk happens once per message, and every branch of it resolves what it
- * can while it walks: an `Intl` object is built here rather than per call, and
- * so are a plural's or a select's cases. What is left at call time is the work
- * that depends on the values.
+ * The walk runs once per message and builds `Intl` objects and cases up front, leaving only
+ * value-dependent work for call time.
  *
- * `out` is set where a node's result is written into the message, rather than
- * selected on or formatted, which is the only place a value is isolated.
+ * `out` is set where a node's result is written into the message, the only place a value is
+ * isolated.
  */
 function build(node: Message, ctx: Context, out: boolean): Formatter {
   if (typeof node === 'string') return () => node;
@@ -208,8 +194,7 @@ function build(node: Message, ctx: Context, out: boolean): Formatter {
     case Kind.Value: {
       const key = node[1];
       if (!out) return read(key);
-      // Written as text whether or not it is isolated, so turning isolation
-      // off changes the marks around a value and nothing else
+      // Always written as text, so turning isolation off only removes the marks
       return (values) => {
         const value = values[key];
         return value === undefined ? value : isolate(ctx, String(value), false);
@@ -255,8 +240,7 @@ function build(node: Message, ctx: Context, out: boolean): Formatter {
         const number = toNumeric(value(values));
         let arm: Formatter | undefined;
         if (number !== undefined) {
-          // An exact case is matched against the number as given, before the
-          // offset, so `=1` still means one. The category is chosen after it
+          // An exact case matches before the offset, so `=1` still means one
           arm = built.get(`=${String(number)}`);
           // `Intl.PluralRules` takes a number, never a bigint
           arm ??= built.get(rules.select(Number(shift(number))));
@@ -286,8 +270,7 @@ function build(node: Message, ctx: Context, out: boolean): Formatter {
 /**
  * Compile one message into the function that formats it.
  *
- * Called once per message per locale: a view memoises what this returns, so a
- * message walked here is called from the closure afterwards.
+ * Called once per message per locale; a view memoises the result.
  *
  * @param message The compiled message, as the CLI emitted it
  * @param locale The locale to format in

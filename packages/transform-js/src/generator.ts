@@ -21,9 +21,8 @@ export function isLoneArgument(message: CompositeMessage) {
 }
 
 /**
- * The property a call looks its message up by: an id into the catalogue, or
- * the message itself when nothing was extracted, compiled the way the CLI
- * compiles a catalogue's, so the runtime formats both from the same data.
+ * The property a call looks its message up by: an id into the catalogue, or the
+ * message itself, compiled as the CLI compiles a catalogue's, when nothing was extracted.
  */
 export function generateDescriptorProperty(message: CompositeMessage) {
   if (isLoneArgument(message))

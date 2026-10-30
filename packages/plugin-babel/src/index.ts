@@ -11,9 +11,7 @@ declare module '@babel/core' {
 /**
  * Rewrite `say` call sites into the descriptors the runtime formats.
  *
- * Catalogues are not this plugin's business: the CLI compiles each locale into
- * an ordinary `.js` module, so Next, Metro and everything else load it the way
- * they load any other module.
+ * Catalogues load as the plain `.js` modules the CLI compiles, so nothing is intercepted.
  */
 export default (_api: ConfigAPI): PluginObj => {
   const config = resolveConfig();

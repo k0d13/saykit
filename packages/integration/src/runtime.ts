@@ -1,19 +1,6 @@
-/**
- * The `Intl` objects a compiled message formats with, and the coercions that
- * read a value before it reaches one.
- *
- * Every style was resolved when the message was compiled, so nothing here
- * parses anything: a view asks for a formatter once, when it builds a message,
- * and hands it values from then on.
- */
+/** The `Intl` objects a compiled message formats with, and the coercions that read a value before it reaches one. */
 
-/**
- * `Intl` objects, kept by kind, locale and options.
- *
- * Constructing one is the expensive half of formatting, and messages share
- * them, so one built for a message outlives it. The key is worked out once per
- * message, never per call.
- */
+/** `Intl` objects, kept by kind, locale and options, since constructing one is the expensive part. */
 const formatters = new Map<string, unknown>();
 
 function memoise<T>(key: string, make: () => T) {
@@ -46,8 +33,7 @@ export function pluralRules(locale: string, type: Intl.PluralRuleType) {
 /**
  * Read a value as a number, keeping a bigint a bigint.
  *
- * A wrapper is unwrapped and a numeric string is read, so a count that arrives
- * as `'3'` formats as the 3 it means.
+ * A wrapper is unwrapped and a numeric string is read, so `'3'` formats as 3.
  *
  * @returns The number, or `undefined` if the value is not one
  */

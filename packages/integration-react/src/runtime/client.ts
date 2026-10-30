@@ -16,21 +16,13 @@ SayContext.displayName = 'SayContext';
 /**
  * Where a provider takes its view from.
  *
- * A store is the reactive form: it owns a catalogue, so it can switch locale,
- * and every consumer re-renders when it does. Being a live object, it cannot
- * cross the server/client boundary.
- *
- * A locale and its messages are the serialisable form a server can hand across
- * that boundary, which compiling messages to data rather than to functions is
- * what makes possible. Only that one locale comes over, so the provider built
- * from it has nothing to switch to: switching is the server's to do, normally
- * through navigation.
+ * A store is reactive and can switch locale, but cannot cross the server/client boundary.
+ * A locale and its messages can, though the provider built from them has nothing to switch to.
  */
 export type SayProviderProps =
   | { store: Store; locale?: never; messages?: never; options?: never }
   | { store?: never; locale: string; messages: View.Messages; options?: View.Options }
-  // Nothing at all, which is what `<SayProvider>` on the server is: the server
-  // build of this module reads the established view and fills the props in
+  // No props: the server build fills them in from the established view
   | { store?: never; locale?: never; messages?: never; options?: never };
 
 /**

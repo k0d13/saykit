@@ -6,21 +6,9 @@ import { expandBucketOutputPath } from './path.js';
 import { assembleCatalogueRecord, resolveFallbackChain } from './record.js';
 
 /**
- * The generated module a locale is actually imported as.
- *
- * The catalogue file on disk is what a translator edits; this is what a bundler
- * sees. It is a real file, so an ordinary module graph, an ordinary watch and
- * an ordinary hot update all apply to it, and no bundler needs teaching how to
- * read a catalogue format.
- */
-
-/**
  * The declaration beside the generated module.
  *
- * Every call site is written by the transform, never by hand, so there is
- * nothing per-id worth typing. It is the same two lines for every locale and
- * never changes, which is why it is committed while the module it types is
- * not: `tsc` passes on a fresh clone without anything having been generated.
+ * It never changes, so it can be committed while the module is not: `tsc` passes on a fresh clone.
  */
 const DECLARATION_CONTENT = `
 import type { Message } from 'saykit';
@@ -32,9 +20,7 @@ export default messages;
 /**
  * Where a locale's generated module goes: beside its catalogue, as `.js`.
  *
- * @throws If that is the catalogue itself, as it is for a formatter whose
- *   extension is `.js`: compiling would overwrite the file a translator edits
- *   with generated output
+ * @throws If that is the catalogue itself, as for a formatter with a `.js` extension
  */
 export function modulePathFor(bucket: Bucket, locale: string) {
   const catalogue = resolve(expandBucketOutputPath(bucket, locale));
@@ -51,11 +37,7 @@ export function modulePathFor(bucket: Bucket, locale: string) {
 /**
  * A value as JS source.
  *
- * JSON is nearly that, except for a `__proto__` key: in an object literal it
- * sets the prototype rather than adding a property, so a select branch by that
- * name would vanish on import. Written as a computed key it is an own property
- * like any other. Only a key is a quoted string followed by a colon, since one
- * inside a string has its quotes escaped
+ * A `__proto__` key in an object literal sets the prototype, so it is written as a computed key.
  */
 function toSource(value: unknown) {
   return JSON.stringify(value).replace(/([{,])"__proto__":/g, '$1["__proto__"]:');
@@ -64,22 +46,17 @@ function toSource(value: unknown) {
 /**
  * Build the source of a locale's generated module from its assembled record.
  *
- * The module is data and nothing else: no imports, no functions, no locale
- * bound into it. A view compiles what it reads from here, so the same messages
- * can be handed across a server/client boundary as the JSON they already are.
+ * The module is plain data, so it can cross a server/client boundary as JSON.
  *
  * @param record The locale's messages, keyed by id, as ICU
  */
 export function generateCatalogueModule(record: Record<string, string>) {
   const entries = Object.entries(record).map(([id, icu]) => {
-    // ponytail: the one call site that decides how a message is compiled. A
-    // `compiler` slot on the bucket config replaces this line when a second
-    // message format turns up
+    // ponytail: becomes a `compiler` slot on the bucket config once a second message format exists
     const message = compileMessage(icu);
 
-    // The message it came from, so the file can be read and reviewed. Split on
-    // every line terminator JS has, not only `\n`: a translation holding a
-    // U+2028 would otherwise end the comment and run the rest as code
+    // Split on every JS line terminator: a U+2028 would otherwise end the comment and run the rest
+    // as code
     const comment = icu
       .split(/\r\n|[\n\r\u2028\u2029]/)
       .map((line) => `  // ${line}`)
@@ -96,8 +73,7 @@ export function generateCatalogueModule(record: Record<string, string>) {
 /**
  * Compile one locale's catalogue, and its fallbacks, into a module on disk.
  *
- * The fallback chain is merged here, so an untranslated key resolves to a
- * fallback string while the app still imports a single module per locale.
+ * The fallback chain is merged here, so the app still imports one module per locale.
  */
 export async function emitCatalogueModule(config: Config, bucket: Bucket, locale: string) {
   const sources = resolveFallbackChain(config, locale).map((l) =>

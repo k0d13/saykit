@@ -115,9 +115,8 @@ export class BucketExtractWorker extends BucketWorker {
         continue;
       }
 
-      // A translation changed rather than a call site, which is a recompile and
-      // nothing else: extraction only ever writes the source locale, and this
-      // is how an edit in a `.po` reaches the running app
+      // A translation changed, not a call site: recompile only, since extraction writes just the
+      // source locale
       if (this.bucket.output.match(event.filename)) await this.compile();
     }
   }

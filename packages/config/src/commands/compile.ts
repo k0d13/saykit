@@ -4,14 +4,7 @@ import { resolveConfig } from '#/features/loader/index.js';
 import Logger from '#/features/logger.js';
 import { normalisePathForLogs } from '#/features/workers/shared.js';
 
-/**
- * Compile every catalogue into the modules the app imports.
- *
- * `extract` does this too, at the end of a run. This is the same step on its
- * own, for the two cases that have no extraction to do: a CI build from a fresh
- * clone, where the generated modules are not committed, and a pull from a TMS,
- * which changes translations without touching any source.
- */
+/** The compile step of `extract` on its own, for CI builds and TMS pulls with nothing to extract. */
 export default new Command('compile')
   .description('Compile catalogues into locale modules')
   .option('-v, --verbose', 'enable verbose logging', false)

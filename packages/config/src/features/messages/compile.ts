@@ -12,25 +12,15 @@ import { dateTimeStyle, type NumberOptions, numberStyle, StyleError } from './st
 /**
  * ICU MessageFormat 1, compiled to a {@link Message}.
  *
- * Everything a message needs is known here: a style resolves to an `Intl`
- * options bag and is written into the tree as a literal, so what ships is data
- * over the `Intl` objects it names, and nothing parses anything at runtime.
- *
- * Data rather than source is what makes a locale serialisable, which is what a
- * server handing its messages to a client tree needs. It is also what keeps ICU
- * at arm's length: another message format compiles to the same nodes, and the
- * runtime never learns which one it came from.
- *
- * The locale is not here either. A message is bound to one when the view that
- * holds it compiles it.
+ * Styles are resolved to `Intl` options here, so nothing is parsed at runtime and the
+ * result is serialisable data. The locale is bound later, when a view compiles the message.
  */
 
 /**
  * The node kinds, as `saykit` numbers them.
  *
- * `saykit` is only a dev dependency here, so its table cannot be imported at
- * runtime. This copy is checked against it instead: a number out of step with
- * the runtime fails to type-check rather than compiling to the wrong node.
+ * `saykit` is only a dev dependency here, so this copy is type-checked against it instead of
+ * imported.
  */
 const Kind = {
   Value: 0,
@@ -50,21 +40,13 @@ const EXACT = /^=\d+$/;
 /**
  * The descriptor key an ICU argument reads from.
  *
- * The transform prefixes every value with one underscore, so `{name}` is
- * `_name` and a message argument really called `_total` is `__total`. The
- * mapping is known here, so it is written in rather than applied per call.
+ * The transform prefixes every value with one underscore, so `{name}` reads `_name`.
  */
 function key(argument: string) {
   return `_${argument}`;
 }
 
-/**
- * A run of nodes, as one node.
- *
- * A single node stands on its own rather than being wrapped in a concatenation
- * that would only stringify what is already a string, and an empty run is the
- * empty string.
- */
+/** A run of nodes, as one node: a single node stands alone and an empty run is `''`. */
 function concat(nodes: Message[]): Message {
   if (nodes.length === 0) return '';
   if (nodes.length === 1) return nodes[0]!;
@@ -82,17 +64,15 @@ export function compileMessage(icu: string): Message {
   /**
    * Build the node for a `{arg, type, style}` placeholder.
    *
-   * A style that cannot be read does not fail the message: the argument falls
-   * back to its bare formatter, so `{n, number, bogus}` still writes a number.
-   * A slightly wrong shape beats rendering nothing.
+   * A style that cannot be read falls back to the bare formatter, so `{n, number, bogus}` still
+   * writes a number.
    */
   function argument(token: FunctionArg): Message {
     const value = key(token.arg);
 
     let style = '';
     for (const part of token.param ?? []) {
-      // Only literal text can be read here: a placeholder nested in a style has
-      // no value until the message is called
+      // A placeholder nested in a style has no value until the message is called
       if (part.type !== 'content') throw new Error(`Unsupported style part: ${part.type}`);
       style += part.value;
     }
@@ -128,9 +108,7 @@ export function compileMessage(icu: string): Message {
           : [Kind.Number, value, options];
       }
 
-      // An argument type we have no formatter for still writes its value.
-      // `duration`, `spellout` and RBNF `ordinal` land here: no macro authors
-      // them, and `Intl` has nothing to write them with
+      // `duration`, `spellout` and RBNF `ordinal` land here and write the bare value
       default:
         return [Kind.Value, value];
     }
@@ -139,15 +117,13 @@ export function compileMessage(icu: string): Message {
   /** Build the switch for a `plural`, `selectordinal` or `select`. */
   function choice(token: Select): Message {
     const value = key(token.arg);
-    // No prototype, so a branch named `__proto__` is a key like any other
-    // rather than a prototype assigned to `{}`
+    // No prototype, so a branch named `__proto__` is an ordinary key
     const cases: Message.Cases = Object.create(null);
 
     for (const branch of token.cases) {
-      // `=01` and `=1` name the same number, and the runtime matches the
-      // number as text, so the key is written the one way it is looked up
+      // `=01` and `=1` are the same number, and the runtime matches it as text
       const key = EXACT.test(branch.key) ? `=${Number(branch.key.slice(1))}` : branch.key;
-      // The first case written for a key wins, as it would in a chain of tests
+      // The first case written for a key wins
       if (!Object.hasOwn(cases, key)) cases[key] = pattern(branch.tokens);
     }
 
@@ -168,8 +144,7 @@ export function compileMessage(icu: string): Message {
       case 'function':
         return argument(token);
       case 'octothorpe':
-        // The parser only makes a `#` a token when a plural encloses it, and a
-        // `#` in a select inside that plural still writes the plural's number
+        // A `#` in a select inside a plural still writes the plural's number
         return [Kind.Hash];
       default:
         return choice(token);

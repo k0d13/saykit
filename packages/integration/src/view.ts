@@ -16,16 +16,14 @@ export namespace View {
   /**
    * One locale's messages, compiled.
    *
-   * Each is a {@link Message} the CLI compiled from the catalogue, with every
-   * style already resolved. Being data rather than code, a locale's messages
-   * serialise, which is what lets a server hand them to a client tree.
+   * Each is a {@link Message} the CLI compiled from the catalogue. They are plain data, so a
+   * server can hand them to a client tree.
    */
   export type Messages = { [key: string]: Message };
 
   /**
-   * What the transform compiles a message down to: the id it was extracted
-   * under, or the compiled message itself when there was nothing to extract,
-   * with its values behind one underscore each.
+   * What the transform compiles a message down to: its extracted id, or the compiled message
+   * itself when there was nothing to extract. Values sit behind one underscore each.
    */
   export type Descriptor = ({ id: string } | { message: Message }) & {
     [match: string | number]: unknown;
@@ -103,9 +101,8 @@ export interface View<Locale extends string = string> {
   /**
    * Format the message a descriptor names, or the message it carries.
    *
-   * A message with nothing to translate, a lone `say.date(x)` with no text
-   * around it, is never extracted: the transform writes the compiled message
-   * into the call instead of an id.
+   * A message with nothing to translate, such as a lone `say.date(x)`, is never extracted:
+   * the transform writes the compiled message into the call instead of an id.
    *
    * @param descriptor Descriptor to format
    * @returns The formatted message
@@ -246,9 +243,8 @@ export interface View<Locale extends string = string> {
 /**
  * A frozen deep copy of some messages.
  *
- * Messages are only strings, arrays and plain objects, so this is all a copy
- * has to handle. `Object.fromEntries` defines own properties, so a key named
- * `__proto__` stays one.
+ * Messages are only strings, arrays and plain objects. `Object.fromEntries` keeps a `__proto__` key
+ * as an own property.
  */
 function snapshot(value: unknown): unknown {
   if (typeof value !== 'object' || value === null) return value;
@@ -278,23 +274,19 @@ export function createView<Locale extends string>(
   // Only what was set, so a view built with no options reports none
   const ownOptions: View.Options = Object.freeze(bidiIsolation ? { bidiIsolation } : {});
 
-  // Copied and frozen all the way down, so nothing can change a message out
-  // from under the view: an edit to the source after this would otherwise
-  // reach a message not yet called and miss one already compiled
+  // Frozen copy, so a later edit to the source cannot reach a message not yet compiled
   const own = snapshot(messages) as View.Messages;
 
   const say = (() => {
     throw new Error("'say' is a macro and must be used with the relevant saykit plugin");
   }) as unknown as View<Locale>;
 
-  // One compile per message, on the first call that needs it. A message nobody
-  // renders is never walked, and one rendered a thousand times is walked once
+  // Compiled on first use, so a message nobody renders is never walked
   const compiled = new Map<string, (values: Message.Values) => string>();
 
   function call(descriptor: View.Descriptor) {
-    // An inline message is one helper over one value, and the transform writes
-    // a fresh literal into every call, so it is walked rather than cached
-    // The index signature keeps `in` from narrowing, so the shape is asserted
+    // Inline messages are a fresh literal per call, so they are not cached.
+    // Asserted because the index signature keeps `in` from narrowing
     const { id, message } = descriptor as { id: string; message?: Message };
     if (message !== undefined) return compileMessage(message, locale, ownOptions)(descriptor);
 

@@ -22,8 +22,7 @@ export async function writeCatalogueMessages(
   const existingContent = await readFile(path, 'utf8').catch(() => undefined);
   const catalogueContent = bucket.formatter.stringify(messages, { locale, existingContent });
 
-  // No declaration beside it: a catalogue is what a translator edits, not what
-  // the app imports. The generated module carries that, and its own `.d.ts`
+  // No `.d.ts` here: the app imports the generated module, not the catalogue
   await mkdir(dirname(path), { recursive: true });
   await writeFile(path, catalogueContent);
 }
