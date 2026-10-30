@@ -24,6 +24,6 @@
     "@saykit/transform-js": "workspace:^",
     "typescript": "^7.0.2",
     "unplugin-saykit": "workspace:^",
-    "wrangler": "^4.151.0"
+    "wrangler": "^4.155.0"
   }
 }
