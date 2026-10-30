@@ -110,14 +110,15 @@ export class BucketExtractWorker extends BucketWorker {
       if (!event.filename) continue;
       const path = join(process.cwd(), event.filename);
 
-      if (this.bucket.match(event.filename)) {
-        await this.update(path);
+      // A translation changed, not a call site: recompile only, since extraction writes just the
+      // source locale. Checked first, since a broad `include` can match the catalogues too, and
+      // extracting from one finds nothing to recompile for
+      if (this.bucket.output.match(event.filename)) {
+        await this.compile();
         continue;
       }
 
-      // A translation changed, not a call site: recompile only, since extraction writes just the
-      // source locale
-      if (this.bucket.output.match(event.filename)) await this.compile();
+      if (this.bucket.match(event.filename)) await this.update(path);
     }
   }
 }

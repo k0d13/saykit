@@ -127,7 +127,7 @@ Formats a message. The transform writes these calls for you:
 say.call({ id: 'abc123', _name: 'Ada' }); // → "Hello, Ada!"
 ```
 
-The descriptor names a message by `id`, or carries a compiled `message` itself, as for a lone `say.date(x)`. The other keys are values: `call` strips one leading underscore from each, and passes a key without one through as is. Throws if the id is not in the view.
+The descriptor names a message by `id`, or carries a compiled `message` itself, as for a lone `say.date(x)`. The other keys are values, read by the exact keys the compiled message names: an ICU `{name}` reads `_name`, and `call` strips nothing. Throws if the id is not in the view.
 
 A message is compiled into a closure on its first call and cached on the view. A value that cannot be formatted, such as an invalid date, is written as given with a console warning.
 
