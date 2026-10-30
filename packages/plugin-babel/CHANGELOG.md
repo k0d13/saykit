@@ -1,5 +1,16 @@
 # babel-plugin-saykit
 
+## 0.12.0
+
+### Minor Changes
+
+- 26ac4d5: Compile catalogues to data modules with `saykit compile`, and drop the runtime message parser
+
+### Patch Changes
+
+- Updated dependencies [26ac4d5]
+  - @saykit/config@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes
