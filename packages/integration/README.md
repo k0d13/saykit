@@ -4,9 +4,9 @@
 
 [![Coverage](https://codecov.io/gh/k0d13/saykit/graph/badge.svg?flag=integration)](https://codecov.io/gh/k0d13/saykit?flags%5B0%5D=integration)
 
-The core runtime for [SayKit](https://saykit.js.org). Exports `createCatalogue`, which holds your locales and where each one's messages come from, `createView`, which binds one locale and formats messages using ICU MessageFormat, and `createStore`, which holds the current view and swaps it when you switch locale.
+The core runtime for [SayKit](https://saykit.js.org). Exports `createCatalogue`, which holds your locales and where each one's messages come from, `createView`, which binds one locale and formats its compiled messages, and `createStore`, which holds the current view and swaps it when you switch locale.
 
-You author messages with the `` say`...` `` tagged template (and `say.plural`, `say.ordinal`, `say.select`), and format numbers, dates and times for the locale with `say.number`, `say.date` and `say.time`; a SayKit build-tool plugin rewrites them at build time into small runtime calls.
+You author messages with the `` say`...` `` tagged template (and `say.plural`, `say.ordinal`, `say.select`), and format numbers, dates and times for the locale with `say.number`, `say.date` and `say.time`; a SayKit build-tool plugin rewrites them at build time into small runtime calls, and `saykit compile` turns each catalogue into a `.js` module of data that you import.
 
 ## Install
 
@@ -20,8 +20,8 @@ You will normally also want [`@saykit/config`](https://github.com/k0d13/saykit/t
 
 ```ts
 import { createCatalogue } from 'saykit';
-import en from './locales/en.po';
-import fr from './locales/fr.po';
+import en from './locales/en.js';
+import fr from './locales/fr.js';
 
 const catalogue = createCatalogue({ en, fr });
 

@@ -12,7 +12,7 @@ A `<Say>` component for rendering translated content in server and client compon
 pnpm add @saykit/react saykit
 ```
 
-You will also need a SayKit build-tool plugin ([`unplugin-saykit`](https://github.com/k0d13/saykit/tree/main/packages/plugin-unplugin) or [`babel-plugin-saykit`](https://github.com/k0d13/saykit/tree/main/packages/plugin-babel)) and a `saykit.config.ts` with `@saykit/transform-jsx` in the bucket. The lazy `() => import(...)` catalogues below need `unplugin-saykit` or `babel-plugin-saykit` with `catalogues: 'module'`; Babel's default inline mode only handles static imports.
+You will also need a SayKit build-tool plugin ([`unplugin-saykit`](https://github.com/k0d13/saykit/tree/main/packages/plugin-unplugin) or [`babel-plugin-saykit`](https://github.com/k0d13/saykit/tree/main/packages/plugin-babel)) and a `saykit.config.ts` with `@saykit/transform-jsx` in the bucket.
 
 ## Usage
 
@@ -20,8 +20,8 @@ You will also need a SayKit build-tool plugin ([`unplugin-saykit`](https://githu
 import { createCatalogue, createStore } from 'saykit';
 
 export const catalogue = createCatalogue({
-  en: () => import('./locales/en.po'),
-  fr: () => import('./locales/fr.po'),
+  en: () => import('./locales/en.js'),
+  fr: () => import('./locales/fr.js'),
 });
 
 const initial = catalogue.match(navigator.languages);

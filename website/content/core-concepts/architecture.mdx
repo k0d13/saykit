@@ -3,9 +3,9 @@ title: Architecture
 description: How SayKit's runtime, config, transformers, formatters, and plugins fit together
 ---
 
-SayKit is a small toolkit, not a framework. It has a few pieces that compose cleanly, once you've seen them once, everything else in the docs hangs off this picture.
+SayKit is a few small pieces that compose. Everything else in the docs hangs off this picture.
 
-## The five pieces
+## The pieces
 
 import { Code2, Cog, Wand2, FileType2, Plug } from 'lucide-react';
 
@@ -13,158 +13,61 @@ import { Code2, Cog, Wand2, FileType2, Plug } from 'lucide-react';
   <Card
     icon={<Code2 />}
     title="Runtime"
-    description="createCatalogue, createView, createStore. A catalogue holds locales and their messages, a view formats one locale, a store switches between them."
+    description="createCatalogue, createView, createStore. A catalogue holds locales, a view formats one, a store switches between them."
   />
   <Card
     icon={<Cog />}
-    title="Config"
-    description="A typed saykit.config.ts. Tells the CLI and plugins which files to scan, which transformers to apply, and where to write translations."
+    title="Config and CLI"
+    description="A typed saykit.config.ts, and the saykit CLI that extracts and compiles catalogues."
   />
   <Card
     icon={<Wand2 />}
     title="Transformer"
-    description="Knows how to parse a source language. Extracts messages from source, and rewrites macros to runtime calls."
+    description="Parses a source language: extracts messages, and rewrites macros to runtime calls."
   />
   <Card
     icon={<FileType2 />}
     title="Formatter"
-    description="Knows how to read and write a translation file format (PO by default)."
+    description="Reads and writes a catalogue format, PO by default."
   />
   <Card
     icon={<Plug />}
     title="Plugin"
-    description="Glue for your bundler. unplugin-saykit covers Vite/Rollup/etc; babel-plugin-saykit covers Babel-driven pipelines."
+    description="Runs the transformer in your build. unplugin-saykit for Vite and friends, babel-plugin-saykit for Babel."
   />
 </Cards>
 
 ## How they fit together
 
-Two distinct workflows share the same config:
-
-### Extraction (you run this)
-
 ```text
-┌──────────────┐
-│  source.ts   │  contains `say` / <Say> macros
-└──────┬───────┘
-       │
-       │  saykit extract
-       ▼
-┌──────────────┐    ┌────────────┐    ┌──────────────┐
-│  Transformer │ →  │  Formatter │ →  │ locales/*.po │
-│  (extract)   │    │ (stringify)│    │  on disk     │
-└──────────────┘    └────────────┘    └──────────────┘
+ source.ts ──saykit extract──▶ locales/en.po ──saykit compile──▶ locales/en.js
+ (macros)    transformer +     (translators     formatter +       (data your
+              formatter         edit these)      ICU compiler       app imports)
+
+ source.ts ──bundler + saykit plugin──▶ say.call({ id: 'Zk1aQv', _name: name })
 ```
 
-The CLI reads `saykit.config.ts`, walks the bucket globs, asks each transformer to extract messages, and asks the formatter to write the **source** locale to disk. Other locale files are never touched by extraction (`saykit clean` prunes dead entries from them on demand), so your translations are never overwritten.
-
-### Build (your bundler runs this)
-
-```text
-┌──────────────┐
-│  source.ts   │  contains `say` / <Say> macros
-└──────┬───────┘
-       │
-       │  bundler + saykit plugin
-       ▼
-┌──────────────┐                ┌─────────────────────┐
-│  Transformer │  rewrites →    │ source with runtime │
-│  (transform) │                │ say.call(...) calls │
-└──────────────┘                └─────────┬───────────┘
-                                          │
-┌──────────────┐                ┌─────────▼───────────┐
-│  *.po import │  rewritten →   │ JS module exporting │
-│              │  via Formatter │ { id: "string" }    │
-└──────────────┘                └─────────────────────┘
-```
-
-The build-tool plugin does two passes:
-
-1. **Transform** every file in a bucket's `include`, macros become small `say.call(...)` invocations.
-2. **Load** imports that match a bucket's `output` path (e.g. `./locales/en.po`) and turn them into a JS module exporting the compiled message catalogue.
-
-At runtime, no extractor is shipped. There is no babel runtime, no string table, just a catalogue plus your messages.
-
-## The runtime side
-
-A catalogue is a container for locales and messages. A view is one of its locales, bound and ready to format:
-
-```ts
-import { createCatalogue } from 'saykit';
-import en from './locales/en.po';
-import fr from './locales/fr.po';
-
-const catalogue = createCatalogue({ en, fr });
-
-const say = catalogue.locale('en');
-
-say.call({ id: 'abc123', _name: 'Ada' });
-// → "Hello, Ada!"
-```
-
-You almost never write `say.call(...)` by hand, the build transform generates it. What you write is:
-
-```ts
-say`Hello, ${name}!`;
-```
-
-The transformer takes that tagged template, extracts the literal text plus the placeholder, computes a stable hash id, and rewrites the source to call `say.call({ id: '...', _name: name })`. Values are emitted behind an underscore so they keep their own namespace, the runtime strips it back off.
-
-See [runtime](/core-concepts/runtime) for the full API and [messages](/core-concepts/messages) for what's authorable.
-
-## Buckets
-
-A **bucket** is a unit of "files in &rarr; translations out". A single config can have multiple buckets, each with its own globs, output path, formatter, and transformers:
-
-```ts
-buckets: [
-  {
-    include: ['src/app/**/*.{ts,tsx}'],
-    output: 'src/locales/{locale}.{extension}',
-    formatter: po(),
-    transformer: [js(), jsx()],
-  },
-  {
-    include: ['src/emails/**/*.ts'],
-    output: 'src/emails/locales/{locale}.{extension}',
-    formatter: po(),
-    transformer: js(),
-  },
-];
-```
-
-This is useful when:
-
-- different surface areas need different translation files (email vs UI)
-- different parts of your code use different source languages
-- you want to keep server-only messages out of the client bundle
-
-See [configuration](/core-concepts/configuration) for the bucket fields and [extraction](/core-concepts/extraction) for how the CLI uses them.
+1. **Extract.** The CLI walks each bucket's files, the transformer finds the macros, and the formatter writes the **source** locale's catalogue. Other locales are never touched, so translations are never overwritten.
+2. **Compile.** The CLI reads each locale's catalogue, fills untranslated keys from its fallback chain, and compiles every ICU message to data with its number and date formats resolved. `extract` ends by doing this, and `saykit compile` does it alone.
+3. **Build.** The plugin rewrites each macro into a `say.call(...)` with the message's id and values. It does nothing else: a locale module is an ordinary `.js` import your bundler already knows how to load, split and hot-reload.
 
 ## Identifiers
 
-Every extracted message gets a stable identifier. By default it's a **6-character hash** derived from the ICU message text plus an optional context:
+Every message gets a **6-character hash** of its ICU text and context:
 
 ```text
-sha256("Hello, {name}!" + "" + "")  →  truncate 6 chars → "Zk1aQv"
+sha256("Hello, {name}!" + context)  →  "Zk1aQv"
 ```
 
-The same message text plus context always produces the same id, regardless of file, position, or time. That makes the system robust to:
+The same text and context always give the same id, so moving a message between files or reformatting it changes nothing. A [descriptor](/core-concepts/messages#descriptors) can set a readable id instead.
 
-- moving messages between files
-- formatting / whitespace changes
-- multiple files using the same message
+## What ships
 
-You can override this with a [descriptor](/core-concepts/messages#descriptors) if you want a human-readable id or need to disambiguate identical strings with different meanings.
+- the `saykit` runtime, with no dependencies, and whichever integration you use
+- the `say.call(...)` calls the plugin wrote
+- the locale modules you import
 
-## What ships at runtime
-
-Aside from the transformer-emitted `say.call(...)` invocations, only two things end up in your bundle:
-
-- the `saykit` runtime (small, dependency-light apart from ICU MessageFormat)
-- whichever integration you're using (`@saykit/react`, `@saykit/carbon`, &hellip;)
-
-Translation catalogues are emitted as plain JS modules, tree-shakable, code-split-able, dynamically importable. Locales you never load never end up in your bundle.
+A locale module is plain data, with nothing left to parse, so the only formatting code that ships is a small evaluator over `Intl`. Being data is also what lets a server hand a locale to a client as JSON. Locales you never import never reach your bundle.
 
 ## Where to next?
 
@@ -172,18 +75,14 @@ Translation catalogues are emitted as plain JS modules, tree-shakable, code-spli
   <Card
     title="Configuration"
     href="/core-concepts/configuration"
-    description="The full saykit.config.ts schema."
+    description="The saykit.config.ts schema."
   />
   <Card
     title="Messages"
     href="/core-concepts/messages"
     description="Plurals, ordinals, select, descriptors, comments."
   />
-  <Card
-    title="Runtime"
-    href="/core-concepts/runtime"
-    description="Creating a catalogue, loading messages, reading a locale's view."
-  />
+  <Card title="Runtime" href="/core-concepts/runtime" description="Catalogues, views, stores." />
   <Card
     title="Extraction"
     href="/core-concepts/extraction"

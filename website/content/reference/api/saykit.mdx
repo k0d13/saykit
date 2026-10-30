@@ -3,104 +3,56 @@ title: saykit
 description: API reference for the saykit core runtime
 ---
 
-The `saykit` package exports `createCatalogue`, `createView`, `createStore`, and a handful of
-supporting types.
-
 ```ts
-import { createCatalogue, createStore, createView } from 'saykit';
-import type { Catalogue, Store, View } from 'saykit';
+import { createCatalogue, createScope, createStore, createView } from 'saykit';
+import type { Catalogue, Message, Scope, Store, View } from 'saykit';
 ```
 
-There are three objects, with one job each. A **catalogue** owns the locales and where each one's
-messages come from, whether that is inline or on demand; it never formats anything. A **view** is one
-locale bound to a set of messages: callable, immutable, and the only thing application code holds. A
-**store** holds one view at a time and says when it changed, which is what switching locale is.
+A **catalogue** owns the locales and where each one's messages come from; it never formats. A **view** is one locale bound to its messages: callable, immutable, and what application code holds. A **store** holds one view at a time and says when it changed.
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 ## `createCatalogue(messages, options?)`
 
 ```ts
 createCatalogue<Locale>(
   messages: Record<Locale, Catalogue.Source>,
-  options?: Catalogue.Options,
+  options?: View.Options,
 ): Catalogue<Locale>;
 ```
 
 ```ts
 const catalogue = createCatalogue({
   en,
-  fr: () => import('./locales/fr.po'),
-  pl: () => import('./locales/pl.po'),
+  fr: () => import('./locales/fr.js'),
 });
 ```
 
-import { TypeTable } from 'fumadocs-ui/components/type-table';
+The keys are the locales, in order, and the first is the fallback `match` resolves to. Each value is the messages, or a thunk producing them that is called the first time the locale is loaded. Throws if the record is empty. `options` is passed to every view; see [view options](#view-options). The catalogue is frozen.
 
-The first argument is the record of messages itself, so there is no separate list of locales. Its keys are the catalogue's locales, in the order you write them, and the first of them is
-the fallback `match` resolves to. Each value is a [`Catalogue.Source`](#cataloguesource): the
-messages themselves, or a thunk producing them, called the first time that locale is asked for.
-Throws if the record is empty.
+### `locales`
 
-The second argument, `options`, is passed to every view the catalogue hands back. See
-[view options](#view-options).
-
-The returned catalogue is frozen. That fixes its methods; its lazy locales still fill in over time
-through `load`.
-
-### Properties
-
-<TypeTable
-  type={{
-    locales: {
-      description:
-        'All locales, in the order they were written. Never empty, and the first of them is the fallback `match` resolves to.',
-      type: 'readonly [Locale, ...Locale[]]',
-    },
-  }}
-/>
-
-A catalogue has no active locale and no `messages` property. Both of those belong to a view.
+`readonly [Locale, ...Locale[]]`: every locale, in the order written.
 
 ### `locale(code)`
 
-Returns the [view](#view) bound to that locale. Memoised, so asking twice returns the same view.
-Synchronous, so it throws for a locale whose thunk nobody has called yet, and throws differently for
-a locale with no messages at all.
-
-```ts
-const say = catalogue.locale('fr');
-```
+The [view](#view) for a locale, memoised. Synchronous, so it throws for a lazy locale that is not loaded yet, and for a locale the catalogue does not have.
 
 ### `loaded(code)`
 
-Whether a locale's messages are here, and so whether `locale(code)` will hand back a view for it.
-Inline messages are here from the start; a thunk's are here once it has been loaded.
-
-```ts
-if (!catalogue.loaded('fr')) await catalogue.load('fr');
-```
+Whether `locale(code)` would return a view.
 
 ### `load(code)`
 
-Calls a locale's thunk, if it has one and nothing has called it yet, and hands back the locale's
-view.
+Calls the locale's thunk if it has not been called, and returns its view.
 
 ```ts
 const say = await catalogue.load('fr');
 ```
 
-Returns a promise only when the thunk does. A locale whose messages are already here does not go
-near its thunk and comes back synchronously, which is what lets a switch between loaded locales stay
-in one tick. A locale with no entry at all throws.
+Returns a promise only when the thunk does, so a loaded locale comes back synchronously. Overlapping loads share one call; a rejected thunk is forgotten and retried on the next load. A locale is filled once and its messages are never replaced, so a view you hold never changes under you.
 
-Two loads that overlap share one call rather than fetching twice, and a locale that fills never
-calls its thunk again. A thunk that rejects is forgotten instead of cached, so the next load calls
-it afresh.
-
-A locale is filled **once**, and there is no way to replace its messages afterwards. That is what
-lets a view be built once and stay correct: nothing can swap out the messages it was built over, so
-a view you are holding can never start formatting something else.
-
-To pay every import at boot rather than on first use:
+To load everything at boot:
 
 ```ts
 await Promise.all(catalogue.locales.map((locale) => catalogue.load(locale)));
@@ -108,38 +60,21 @@ await Promise.all(catalogue.locales.map((locale) => catalogue.load(locale)));
 
 ### `match(...guesses)`
 
-Pick the best supported locale from one or more guesses. Each argument is a `Catalogue.Guess`: a
-string, `null`, `undefined`, or a one-level readonly array of those; all guesses are flattened in
-order. Guesses come from cookies, headers and URL segments, so nullish and empty-string values are
-allowed and skipped rather than throwing, and you can pass a value straight through without
-narrowing it first.
+The best supported locale for one or more guesses. Each guess is a string, `null`, `undefined`, or an array of those; nullish and empty values are skipped, so cookie and header values can be passed straight in.
 
 ```ts
-catalogue.match('fr-CA', 'en');
-catalogue.match(['fr-CA', 'en-US'], 'de');
-catalogue.match(request.cookies.get('locale')?.value, headerGuesses);
+catalogue.match(request.cookies.get('locale')?.value, ['fr-CA', 'en-US']);
 ```
 
-Matching order:
-
-1. exact match against `locales`
-2. language-prefix match (`fr-CA` &rarr; `fr`)
-3. the first of `locales`, as a final fallback
-
-Returns the matched locale.
+Tries an exact match, then the language (`fr-CA` → `fr`), then falls back to `locales[0]`.
 
 ### Iteration
 
-Catalogues are iterable. They yield `[locale, say]` pairs for every configured locale.
+A catalogue yields `[locale, say]` for every locale, and throws if one is not loaded:
 
 ```ts
-for (const [locale, say] of catalogue) {
-  console.log(locale, say`Hello!`);
-}
+for (const [locale, say] of catalogue) console.log(locale, say`Hello!`);
 ```
-
-Each `say` is that locale's view, the same value `catalogue.locale(locale)` returns. Throws if any
-configured locale has no messages loaded.
 
 ## `createView(locale, messages, options?)`
 
@@ -147,16 +82,7 @@ configured locale has no messages loaded.
 createView<Locale>(locale: Locale, messages: View.Messages, options?: View.Options): View<Locale>;
 ```
 
-Builds a view directly, with no catalogue behind it. A view needs nothing from a catalogue beyond a
-record of messages, so an app that only ever has one locale in hand can skip the catalogue entirely.
-
-```ts
-const say = createView('fr', messages);
-say`Hello!`;
-```
-
-Views built this way are not memoised or shared. When you have a catalogue, prefer
-`catalogue.locale(code)`.
+A view with no catalogue behind it, for code that only ever has one locale. Not memoised; with a catalogue, use `catalogue.locale(code)`. The messages are copied and frozen.
 
 ### View options
 
@@ -164,16 +90,14 @@ Views built this way are not memoised or shared. When you have a catalogue, pref
   type={{
     bidiIsolation: {
       description:
-        "Whether a substituted value is wrapped in the Unicode bidi isolation marks U+2068 and U+2069, so right-to-left text cannot reorder the sentence around it. `'none'` leaves every value byte-for-byte as given.",
+        "Wrap each written value in Unicode isolation marks (U+2068/U+2067 … U+2069) so right-to-left text cannot reorder the sentence around it. `'none'` writes values as given.",
       type: "'default' | 'none'",
       default: "'default'",
     },
   }}
 />
 
-Isolation is right for text a person reads, and wrong for text something parses after it is
-formatted. A Discord mention such as `<#123>` is only a mention while it is written exactly that way,
-so a bot whose messages carry mentions turns isolation off:
+Isolation is right for text a person reads, and wrong for text something parses afterwards, such as a Discord mention `<#123>`:
 
 ```ts
 const catalogue = createCatalogue({ en, fr }, { bidiIsolation: 'none' });
@@ -181,25 +105,15 @@ const catalogue = createCatalogue({ en, fr }, { bidiIsolation: 'none' });
 
 ## `View`
 
-One locale, bound to the messages it formats against. Callable, frozen, and with no reference back
-to the catalogue it came from, so it cannot change locale. Switching locale means holding a
-different view.
-
-### Properties
+One locale and its messages. Callable, frozen, and with no way back to its catalogue, so switching locale means holding a different view.
 
 <TypeTable
   type={{
-    locale: {
-      description: 'The locale this view is bound to.',
-      type: 'Locale',
-    },
-    messages: {
-      description: 'The messages this view formats against.',
-      type: 'View.Messages',
-    },
+    locale: { description: 'The locale this view is bound to.', type: 'Locale' },
+    messages: { description: 'The messages it formats.', type: 'View.Messages' },
     options: {
       description:
-        'The options this view was built with, frozen. Only the ones that were set, so plain data that can be sent with `locale` and `messages`.',
+        'The options that were set, as plain data that can be sent with `locale` and `messages`.',
       type: 'View.Options',
     },
   }}
@@ -207,24 +121,15 @@ different view.
 
 ### `call(descriptor)`
 
-Format a compiled message descriptor against this view's messages.
+Formats a message. The transform writes these calls for you:
 
 ```ts
-say.call({ id: 'abc123', name: 'Ada' }); // → "Hello, Ada!"
+say.call({ id: 'abc123', _name: 'Ada' }); // → "Hello, Ada!"
 ```
 
-The descriptor names the message by `id`, or carries it inline as `message`, which is what the
-transform emits for a lone `say.date(x)` with no text to extract. Extra properties are ICU
-placeholder values.
+The descriptor names a message by `id`, or carries a compiled `message` itself, as for a lone `say.date(x)`. The other keys are values, read by the exact keys the compiled message names: an ICU `{name}` reads `_name`, and `call` strips nothing. Throws if the id is not in the view.
 
-The transform emits each value behind one underscore (`{ id: 'abc123', _name: 'Ada' }`), which keeps
-a message's values in their own namespace, so a value named `id` cannot displace the message being
-looked up. `call` strips exactly one underscore back off, and passes keys written without one
-through untouched, so a hand-written or custom-transformer-generated call works either way.
-
-In normal application code, you don't write this, the build transform emits it from your `` say`...` `` macros.
-
-Compiled formats are cached on the view, so a message is parsed once per locale per process.
+A message is compiled into a closure on its first call and cached on the view. A value that cannot be formatted, such as an invalid date, is written as given with a console warning.
 
 ## `createStore(catalogue, locale?)`
 
@@ -232,239 +137,144 @@ Compiled formats are cached on the view, so a message is parsed once per locale 
 createStore<Locale>(catalogue: Catalogue<Locale>, locale?: Locale): Store<Locale>;
 ```
 
-Builds a [store](#store) over a catalogue, starting on `locale`, or on the first of
-`catalogue.locales` if you leave it out. Throws if the starting locale has no messages loaded.
-
-```ts
-const store = createStore(catalogue, 'en');
-```
+A [store](#store) starting on `locale`, or `locales[0]`. Throws if that locale is not loaded.
 
 ## `Store`
 
-Which view is current, and when that changed. A catalogue does not switch and a view cannot, so
-switching is its own object, and the only one that mutates.
+The current view, and when it changed. It is the one thing that mutates, which makes it a browser value: on a server, look a view up per request instead.
 
-That mutation is why a store is a browser value: one locale at a time, one user, module scope. On a
-server, where several locales are in flight at once, look a view up per request instead.
+### `say`
 
-The returned store is frozen. What it holds changes, which is its whole job; which methods it holds
-does not.
-
-### Properties
-
-<TypeTable
-  type={{
-    say: {
-      description:
-        'The current view, named for the tag a message is written against so a store can be formatted through directly. Its identity changes when the locale does, which is what lets a subscriber compare snapshots.',
-      type: 'View<Locale>',
-    },
-  }}
-/>
-
-Because a catalogue memoises its views, switching away from a locale and back hands the same view
-back again.
-
-It is read at the moment of access rather than bound once, which is what keeps `` store.say`...` ``
-following the switches. Read it per call for that reason: a `const say = store.say` held across a
-switch is the old view. The locale comes off the view, as it does anywhere else:
-
-```ts
-store.say`Hello, ${name}!`;
-store.say.locale; // 'en'
-```
+The current view. Read it per call: `` store.say`...` `` follows switches, a `const say = store.say` does not. Switching back to a locale returns the same view as before.
 
 ### `set(code)`
 
-Switch to another locale, loading its messages first if the catalogue does not have them yet.
+Switches locale, loading it first if needed. Synchronous for a loaded locale, so subscribers see the change in the same tick.
 
 ```ts
-store.set('fr');
 await store.set('ja');
 ```
 
-Like [`load`](#loadcode), this returns a promise only when the thunk does: a locale that is
-already loaded switches synchronously, so a subscriber sees the new view in the same tick.
-
-Switching to the locale that is already current does nothing and notifies nobody, though asking
-again for a locale still being switched to hands back the switch already in flight rather than
-starting a second one. A load that throws leaves the current view where it was, and the locale can
-be asked for again.
-
-Only the last switch counts. If a slow locale resolves after a later `set` has already landed, its
-result is dropped rather than applied on top, and that includes a `set` back to the locale you were
-already on, which calls a pending switch off.
+Setting the current locale does nothing. A failed load keeps the current view. Only the last switch counts: a slow load that resolves after a later `set` is dropped.
 
 ### `subscribe(listener)`
 
-Listen for switches. Returns a function that removes the listener.
+Calls `listener(view)` after each switch, not on subscribe. Returns an unsubscribe function.
 
 ```ts
 const unsubscribe = store.subscribe((say) => render(say));
 ```
 
-The listener is called after `say` has changed, with the view that is now current. It is not
-called on subscribe, the current view is already readable.
+## `createScope(storage?)`
+
+A `say` for code that cannot be handed a view. `scope.say` resolves, on each use, to the view established around the call.
+
+```ts
+import { AsyncLocalStorage } from 'node:async_hooks';
+
+// A server: one view per request, kept across awaits
+export const scope = createScope(new AsyncLocalStorage());
+export const { say } = scope;
+
+scope.run(await catalogue.load(locale), handler);
+```
+
+```ts
+// A browser: one view for the program, read from a store
+export const { say, use } = createScope();
+use(store);
+```
+
+- `run(view, callback, ...args)` runs `callback` with `view` in scope. Without a storage, it holds only until the callback's first await.
+- `use(source)` sets the view read outside any `run`: a view, a store (read on every access, so it follows switches), or `undefined`. Returns a function that puts back what was there.
+- Reading `say` with no view in scope throws.
+
+## `compileMessage(message, locale, options?)`
+
+```ts
+compileMessage(message: Message, locale: string, options?: View.Options): (values: Message.Values) => string;
+```
+
+Builds the function that formats one compiled message. Views call this for you; use it to format a `Message` outside a view.
 
 ## Macros
 
-These are recognised by the SayKit build-tool plugins and rewritten into `say.call(...)`
-invocations. Calling them at runtime without a plugin throws.
-
-### `` say`template` ``
-
-The tagged-template macro.
+Recognised by the SayKit plugins and rewritten to `say.call(...)`. They throw without one. See [Messages](/core-concepts/messages) for each in depth.
 
 ```ts
 say`Hello, ${name}!`;
-```
+say({ id: 'greeting', context: 'direction' })`Right`;
 
-### `say({ id, context })`
-
-Descriptor form, returns a callable that you tag the template against.
-
-```ts
-say({ id: 'greeting' })`Hello!`;
-say({ context: 'direction' })`Right`;
-```
-
-### `say.plural(value, options)`
-
-```ts
-say.plural(count, {
-  one: 'You have 1 item',
-  other: `You have ${count} items`,
-});
-```
-
-### `say.ordinal(value, options)`
-
-```ts
+say.plural(count, { one: 'You have 1 item', other: `You have ${count} items` });
 say.ordinal(position, {
-  1: `${position}st`,
-  2: `${position}nd`,
-  3: `${position}rd`,
+  one: `${position}st`,
+  two: `${position}nd`,
+  few: `${position}rd`,
   other: `${position}th`,
 });
+say.select(gender, { male: 'He liked it', female: 'She liked it', other: 'They liked it' });
+
+say.number(total, { style: '::currency/EUR' }); // integer, percent, a skeleton, or a pattern
+say.date(post.publishedAt, { style: 'long' }); // short, medium, long, full, or a skeleton
+say.time(opensAt, { style: '::Hm' });
+
+say`Your total is ${{ cartTotal: getCartTotal() }}`; // a named placeholder
 ```
-
-### `say.select(value, options)`
-
-```ts
-say.select(gender, {
-  male: 'He liked it',
-  female: 'She liked it',
-  other: 'They liked it',
-});
-```
-
-### `say.number(value, options?)`
-
-Format a number the way the view's locale writes one. A fragment rather than a whole message, so
-it usually goes inside one, but it also works alone, where it is formatted but not extracted.
-
-```ts
-say`You have ${say.number(items.length)} items`;
-say`Battery at ${say.number(level, { style: 'percent' })}`;
-say.number(total, { style: '::currency/EUR' }); // → "€1,234.50"
-```
-
-`style` is `integer`, `percent`, a [skeleton](#skeleton), or a literal `NumberFormat` pattern such
-as `#,##0.00`.
-
-### `say.date(value, options?)`
-
-Format the date portion of a `Date` or timestamp.
-
-```ts
-say`Published ${say.date(post.publishedAt, { style: 'long' })}`;
-say.date(post.publishedAt); // → "13 Sept 2026"
-```
-
-`style` is `short`, `medium`, `long`, `full`, or a skeleton such as `::yMMMM`.
-
-### `say.time(value, options?)`
-
-Format the time portion of a `Date` or timestamp. Same styles as `say.date`; skeletons look like
-`::Hm`.
-
-```ts
-say`Doors open at ${say.time(opensAt, { style: 'short' })}`;
-say.time(opensAt); // → "19:30:00"
-```
-
-### Named placeholders
-
-Interpolating a single-key object names the placeholder that value becomes, for the values that
-would otherwise be numbered. The wrapper is read at build time and never reaches the bundle.
-
-```ts
-say`Your total is ${{ cartTotal: getCartTotal() }}`; // → "Your total is {cartTotal}"
-
-say.plural(
-  { items: cart.length },
-  {
-    one: `${{ items: cart.length }} item`,
-    other: `${{ items: cart.length }} items`,
-  },
-);
-```
-
-The name must be a valid identifier, an invalid one fails the build. See
-[Placeholder names](/core-concepts/messages#placeholder-names).
 
 ## Types
+
+### `Message`
+
+A compiled message: what `saykit compile` writes and a view formats. Plain strings, numbers and arrays, so it serialises as JSON.
+
+A node is an array that starts with its `Kind`, and any other array is a concatenation. Operands are descriptor keys, never nested nodes.
+
+```ts
+const Kind = {
+  Value: 0,
+  Number: 1,
+  DateTime: 2,
+  Plural: 3,
+  Ordinal: 4,
+  Select: 5,
+  Hash: 6,
+} as const;
+
+type Message =
+  | string // literal text
+  | Message[] // concatenation
+  | [Kind.Value, string] // a value, by descriptor key
+  | [Kind.Number, string, Intl.NumberFormatOptions?, number?] // a number, with a scale
+  | [Kind.DateTime, string, Intl.DateTimeFormatOptions?] // a date or time
+  | [Kind.Plural, string, Message.Cases, number?] // a cardinal plural, with its offset
+  | [Kind.Ordinal, string, Message.Cases, number?] // an ordinal plural, with its offset
+  | [Kind.Select, string, Message.Cases] // a select
+  | [Kind.Hash]; // the enclosing plural's number
+```
+
+The numbers are the format, so a kind is only ever added, never renumbered.
 
 ### `View.Messages`
 
 ```ts
-namespace View {
-  type Messages = { [key: string]: string };
-}
+type Messages = { [id: string]: Message };
 ```
 
 ### `Catalogue.Source`
 
-Where one locale's messages come from.
-
 ```ts
-namespace Catalogue {
-  type Source = View.Messages | (() => Produced | Promise<Produced>);
-  type Produced = View.Messages | { default: View.Messages };
-}
+type Source = View.Messages | (() => Produced | Promise<Produced>);
+type Produced = View.Messages | { default: View.Messages };
 ```
 
-A thunk is normally a dynamic import, which resolves to a module rather than to the messages
-themselves; the catalogue reads them off its default export. Every message is a string, so a
-`default` holding an object is a module and never a message named `default`.
+A thunk is normally a dynamic import; the catalogue reads the messages off its default export.
 
-### `Store.Listener<Locale>`
+### Option types
 
-```ts
-namespace Store {
-  type Listener<Locale extends string> = (view: View<Locale>) => void;
-}
-```
-
-### `NumeralOptions` / `SelectOptions`
-
-Option-bag types for `plural`, `ordinal`, and `select`. Both require an `other` key.
-
-### `NumberOptions` / `DateTimeOptions`
-
-Option-bag types for `number`, `date`, and `time`. Each carries an optional `style`.
-
-### `Skeleton`
-
-```ts
-type Skeleton = `::${string}`;
-```
-
-An ICU skeleton, accepted as a `style` by every format macro. See
-[Skeletons](/core-concepts/messages#skeletons).
+`NumeralOptions` and `SelectOptions` are the branch records for `plural`/`ordinal` and `select`; both require `other`. `NumberOptions` and `DateTimeOptions` carry an optional `style`. `Skeleton` is `` `::${string}` ``.
 
 ## Next
 
-- [Runtime concepts](/core-concepts/runtime), how to use these APIs in practice
+- [Runtime concepts](/core-concepts/runtime)
 - [API: @saykit/react](/reference/api/react)
 - [API: @saykit/carbon](/reference/api/carbon)

@@ -84,13 +84,15 @@
     "@commander-js/extra-typings": "^15.0.0",
     "@messageformat/date-skeleton": "2.0.0-0",
     "@messageformat/number-skeleton": "2.0.0-0",
+    "@messageformat/parser": "^5.1.1",
     "commander": "^15.0.0",
     "js-sha256": "^1.0.0",
     "picomatch": "^4.0.7",
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@types/picomatch": "^4.0.3"
+    "@types/picomatch": "^4.0.3",
+    "saykit": "workspace:*"
   },
   "engines": {
     "node": ">=22.18"

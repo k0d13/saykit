@@ -31,13 +31,13 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
   type={{
     extension: {
       description:
-        'The file extension, including the leading dot. SayKit uses this for the `{extension}` placeholder in `output`.',
+        'The file extension, including the leading dot, used for the `{extension}` placeholder in `output`. Not `.js`, which is where the compiled module goes.',
       type: '`.${string}`',
       required: true,
     },
     parse: {
       description:
-        'Parse a catalogue file into Message[]. Called when reading existing translations.',
+        'Parse a catalogue file into Message[]. Called when merging on extract, and for every locale on compile.',
       type: '(content: string) => Message[]',
       required: true,
     },
@@ -144,9 +144,11 @@ Resulting files:
 ```text
 src/locales/
   en.json
-  en.d.json.ts
+  en.js
+  en.d.ts
   fr.json
-  fr.d.json.ts
+  fr.js
+  fr.d.ts
 ```
 
 ## Preserving existing content

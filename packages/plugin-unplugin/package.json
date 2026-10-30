@@ -46,6 +46,6 @@
   },
   "dependencies": {
     "@saykit/config": "workspace:^",
-    "unplugin": "^3.4.0"
+    "unplugin": "^3.7.0"
   }
 }

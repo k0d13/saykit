@@ -40,12 +40,7 @@ export default defineConfig({
 });
 ```
 
-This tells SayKit:
-
-- The source locale is `en` (the first entry), and we also want `fr`.
-- Look for messages in any `.ts`/`.tsx` file under `src/`.
-- Write extracted messages to `src/locales/en.po` and `src/locales/fr.po`.
-- Use the PO formatter and the JS + JSX transformers.
+The source locale is `en`, the first entry. Messages in any `.ts`/`.tsx` under `src/` are extracted to `src/locales/en.po`, and `fr.po` is for its translation.
 
 ## 3. Wire up the bundler
 
@@ -117,22 +112,39 @@ Run the CLI:
 pnpm saykit extract
 ```
 
-SayKit walks your source, finds every macro, and writes the catalogue files:
+SayKit finds every macro, writes the catalogues, and compiles each locale into the module your app imports:
 
 ```
 src/locales/
-  en.po         # source locale, generated from your source
-  en.d.po.ts    # auto-generated TS declaration
-  fr.po         # other locales, created empty (header only)
-  fr.d.po.ts
+  en.po       # source locale, generated from your source
+  en.js       # the compiled module your app imports
+  en.d.ts     # its declaration
+  fr.po       # other locales, created empty (header only)
+  fr.js
+  fr.d.ts
 ```
 
-Extraction only writes the **source** locale (`en`). Other locales are created empty the first time and then left untouched, translated content is owned by your translation management system, and untranslated keys fall back to the source string automatically. See [extraction](/core-concepts/extraction) for the full picture.
+Extraction only writes the **source** locale (`en`). Other locales are created empty and then left to your translators; an untranslated key falls back to the source string. See [extraction](/core-concepts/extraction).
 
-For iterative development, use watch mode:
+During development, run watch mode beside your dev server. It re-extracts when source changes and recompiles when a catalogue does:
 
 ```sh
 pnpm saykit extract --watch
+```
+
+The compiled `.js` files are build output. Ignore them, and compile before anything that imports them:
+
+```text title=".gitignore"
+src/locales/*.js
+```
+
+```json title="package.json"
+{
+  "scripts": {
+    "predev": "saykit compile",
+    "prebuild": "saykit compile"
+  }
+}
 ```
 
 `en.po` will look something like this:
@@ -150,7 +162,7 @@ msgstr "Add one"
 
 ## 6. Translate
 
-Your `fr.po` starts empty. A translation management system fills it in for you, or, if you translate by hand, copy the `msgid` lines you want to translate out of `en.po` and write the `msgstr`:
+`fr.po` starts empty. A TMS fills it in, or by hand, copy the entries you want from `en.po` and write each `msgstr`:
 
 ```po title="src/locales/fr.po"
 msgid "Hello, {name}!"
@@ -160,9 +172,7 @@ msgid "Add one"
 msgstr "Ajouter un"
 ```
 
-You only need the entries you have actually translated, anything missing falls back to the source string.
-
-`extract` only ever writes the source locale, so your translations are never touched. When source strings get removed or reworded, run [`saykit clean`](/reference/cli#saykit-clean) to strip the entries in `fr.po` that no longer match anything in `en.po`:
+Anything missing falls back to the source string. Run `pnpm saykit compile` (or keep watch mode running) to pick up the new translations. When source strings are removed or reworded, [`saykit clean`](/reference/cli#saykit-clean) strips the entries in `fr.po` that no longer match anything:
 
 ```sh
 pnpm saykit clean
@@ -174,8 +184,8 @@ Create one catalogue for your app:
 
 ```tsx title="src/i18n.ts"
 import { createCatalogue } from 'saykit';
-import en from './locales/en.po';
-import fr from './locales/fr.po';
+import en from './locales/en.js';
+import fr from './locales/fr.js';
 
 export const catalogue = createCatalogue({ en, fr });
 ```

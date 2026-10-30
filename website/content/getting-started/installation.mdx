@@ -11,7 +11,7 @@ Every SayKit project needs the same set of pieces:
 
 | Package                      | Why                                                                |
 | ---------------------------- | ------------------------------------------------------------------ |
-| `saykit`                     | The core runtime: catalogues, views, stores and ICU formatting     |
+| `saykit`                     | The core runtime: catalogues, views, stores and formatting         |
 | `@saykit/config`             | The config schema (`defineConfig`) and the `saykit` CLI            |
 | One **formatter**            | Reads and writes your translation files (e.g. `@saykit/format-po`) |
 | One or more **transformers** | Extracts and rewrites macros from your source files                |
@@ -145,8 +145,8 @@ import { Boxes, Cog, Atom, Bot, Hammer, FileType2 } from 'lucide-react';
 <Cards>
 
 <Card icon={<Boxes />} title="saykit" href="/reference/api/saykit">
-  The core runtime: `createCatalogue`, `createStore`, the `say` macros and ICU formatting. Every
-  SayKit app depends on it.
+  The core runtime: `createCatalogue`, `createStore`, the `say` macros and formatting. Every SayKit
+  app depends on it.
 </Card>
 
 <Card icon={<Cog />} title="@saykit/config" href="/reference/api/config">
@@ -168,7 +168,7 @@ React integration. `<Say>`, `SayProvider`, `useSay`, `withSay`.
 </Card>
 
 <Card icon={<Hammer />} title="babel-plugin-saykit" href="/integrations/babel">
-  Babel plugin. Use this for Next.js, React Native, Metro, Expo, or any Babel-driven pipeline.
+  Babel plugin. Use this for Next.js, React Native, Expo, or any Babel-driven pipeline.
 </Card>
 
 <Card icon={<FileType2 />} title="@saykit/format-po">

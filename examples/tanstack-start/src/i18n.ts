@@ -1,8 +1,8 @@
 import { createCatalogue } from 'saykit';
-import enGB from './locales/en-GB.json';
-import enNZ from './locales/en-NZ.json';
-import en from './locales/en.json';
-import fr from './locales/fr.json';
+import enGB from './locales/en-GB.js';
+import enNZ from './locales/en-NZ.js';
+import en from './locales/en.js';
+import fr from './locales/fr.js';
 
 export const catalogue = createCatalogue({
   en: en,

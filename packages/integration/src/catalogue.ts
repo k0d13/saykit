@@ -161,11 +161,11 @@ export function createCatalogue<const Locale extends string = string>(
    * every earlier view formatting text nobody can reach.
    */
   function fill(locale: Locale, produced: Catalogue.Produced) {
-    // A dynamic import resolves to a module rather than the messages. Every
-    // message is a string, so a `default` holding an object is a module's
-    // default export and never a message named `default`
+    // A dynamic import resolves to a module. Messages are strings or arrays, so an object `default`
+    // is the module's export
+    const { default: inner } = produced;
     const messages =
-      typeof produced.default === 'object' ? (produced.default as View.Messages) : produced;
+      typeof inner === 'object' && !Array.isArray(inner) ? (inner as View.Messages) : produced;
 
     if (!store.has(locale)) store.set(locale, messages as View.Messages);
     return catalogue.locale(locale);

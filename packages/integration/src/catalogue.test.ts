@@ -1,17 +1,24 @@
 import { describe, expect, it, vi } from 'vitest';
-import { type Catalogue, createCatalogue, type View } from './index.js';
+import { type Catalogue, createCatalogue, Kind, type Message, type View } from './index.js';
 
 type Locale = 'en' | 'fr' | 'de';
 
 const messages = {
   en: {
     greeting: 'Hello',
-    items: '{count, plural, one {# item} other {# items}}',
-    named: 'Hello, {name}',
-    identified: 'Order {id}',
-    underscored: 'Total {_total}',
+    items: [Kind.Plural, '_count', { one: [[Kind.Hash], ' item'], other: [[Kind.Hash], ' items'] }],
+    named: ['Hello, ', [Kind.Value, '_name']],
+    identified: ['Order ', [Kind.Value, '_id']],
+    underscored: ['Total ', [Kind.Value, '__total']],
   },
-  fr: { greeting: 'Bonjour', items: '{count, plural, one {# article} other {# articles}}' },
+  fr: {
+    greeting: 'Bonjour',
+    items: [
+      Kind.Plural,
+      '_count',
+      { one: [[Kind.Hash], ' article'], other: [[Kind.Hash], ' articles'] },
+    ],
+  },
 } satisfies Partial<Record<Locale, View.Messages>>;
 
 /**
@@ -106,7 +113,7 @@ describe('Catalogue#load', () => {
     const view = catalogue.load('de');
     expect(view).toBe(catalogue.locale('de'));
     expect(thunk).toHaveBeenCalledOnce();
-    expect(catalogue.locale('de').messages).toEqual({ greeting: 'Hallo' });
+    expect(catalogue.locale('de').call({ id: 'greeting' })).toBe('Hallo');
   });
 
   it('does not call a thunk for a locale that already has messages', () => {
@@ -123,12 +130,26 @@ describe('Catalogue#load', () => {
     const catalogue = createCatalogue({ de: async () => ({ default: { greeting: 'Hallo' } }) });
 
     const view = await catalogue.load('de');
-    expect(view.messages).toEqual({ greeting: 'Hallo' });
+    expect(view.call({ id: 'greeting' })).toBe('Hallo');
+  });
+
+  it('keeps a message named default as a message', async () => {
+    const catalogue = createCatalogue({
+      de: async () => ({ default: ['Hallo ', [Kind.Value, '_name']] as Message }),
+    });
+
+    const view = await catalogue.load('de');
+    expect(view.call({ id: 'default', _name: 'Ada' })).toBe('Hallo ⁨Ada⁩');
   });
 
   it('shares one call between loads that overlap', async () => {
     let call = 0;
-    const catalogue = createCatalogue({ de: async () => ({ greeting: `load-${++call}` }) });
+    const catalogue = createCatalogue({
+      de: async () => {
+        const loaded = `load-${++call}`;
+        return { greeting: loaded };
+      },
+    });
 
     // Two loads in flight at once: the second finds the first still running
     // and waits on it rather than starting the thunk again
@@ -148,7 +169,7 @@ describe('Catalogue#load', () => {
     });
 
     await expect(catalogue.load('de')).rejects.toThrow('offline');
-    expect((await catalogue.load('de')).messages).toEqual({ greeting: 'Hallo' });
+    expect((await catalogue.load('de')).call({ id: 'greeting' })).toBe('Hallo');
   });
 
   it('throws for a locale the catalogue does not have', () => {
@@ -165,7 +186,7 @@ describe('Catalogue#load', () => {
     expect(catalogue.load('en')).not.toBeInstanceOf(Promise);
     const result = catalogue.load('de');
     expect(result).toBeInstanceOf(Promise);
-    expect((await result).messages).toEqual({ greeting: 'Hallo' });
+    expect((await result).call({ id: 'greeting' })).toBe('Hallo');
   });
 });
 

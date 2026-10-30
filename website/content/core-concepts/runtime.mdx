@@ -3,261 +3,107 @@ title: Runtime
 description: Catalogues, views and stores, locales, messages, loading, matching, switching
 ---
 
-SayKit's runtime is three objects with one job each.
+The runtime is three objects with one job each:
 
-A **catalogue** holds your locales and where each one's messages come from, whether that is the messages themselves or a function that fetches them on demand. It never formats anything and has no notion of a current locale.
+- A **catalogue** holds your locales and where each one's messages come from. It never formats and has no current locale.
+- A **view** is one locale bound to its messages. You call it to format, it is immutable, and it is what application code holds.
+- A **store** holds one view at a time and says when that changed. It is what switching locale in a browser looks like.
 
-A **view** is one locale bound to a set of messages. It is what you call to format a message, it is immutable, and it is the only thing your application code ever holds.
-
-A **store** holds one view at a time and tells you when that changed. It is the only one of the three that mutates, and it is what switching locale in a browser looks like.
-
-```ts
-import { createCatalogue } from 'saykit';
-```
-
-You usually create one catalogue per app. Framework integrations wrap it, `SayProvider` in React and `SayPlugin` in Carbon, but the underlying API is the same everywhere.
+Framework integrations wrap these (`SayProvider` in React, `SayPlugin` in Carbon), but the API underneath is the same. Every method is in the [API reference](/reference/api/saykit).
 
 ## Creating a catalogue
 
 ```ts
 import { createCatalogue } from 'saykit';
-import en from './locales/en.po';
-import fr from './locales/fr.po';
+import en from './locales/en.js';
 
-const catalogue = createCatalogue({ en, fr });
-```
-
-The keys are your locales, so there is no separate list to keep in step. Each entry is written either way round:
-
-- the messages themselves, useful when catalogues are bundled at build time
-- a thunk producing them, useful when you want to import on demand
-- a mix, bundle some, lazy-load the rest
-
-```ts
 const catalogue = createCatalogue({
-  en,
-  fr: () => import('./locales/fr.po'),
-  ja: () => import('./locales/ja.po'),
+  en, // bundled
+  fr: () => import('./locales/fr.js'), // loaded on demand
+  ja: () => import('./locales/ja.js'),
 });
 ```
 
-A thunk is left alone until its locale is asked for. It usually resolves to a module rather than to the messages themselves, and the catalogue reads them off its default export.
-
-The default locale is the first key you write. It is what `match()` falls back to when nothing else fits.
-
-See [dynamic loading](/guides/dynamic-loading) for a deeper look at the thunk pattern.
+The keys are your locales, and the first is the fallback. Each value is a compiled locale module, imported directly or behind a thunk that is left alone until the locale is loaded. See [dynamic loading](/guides/dynamic-loading).
 
 ## Getting a view
-
-`locale()` returns the view bound to that locale:
 
 ```ts
 const say = catalogue.locale('fr');
 
 say.locale; // 'fr'
-say.messages; // { 'abc123': 'Bonjour !', ... }
 say`Hello!`; // 'Bonjour !'
 ```
 
-Views are memoised, so asking twice returns the same value:
-
-```ts
-catalogue.locale('fr') === catalogue.locale('fr'); // true
-```
-
-<Callout type="warn">
-  `locale()` is synchronous, so it throws for a locale whose thunk nobody has called yet. Reach that
-  one through `load()`, or check first with `catalogue.loaded('fr')`.
-</Callout>
-
-A view has no reference back to its catalogue, so it cannot change locale. That is deliberate: switching locale means holding a different view, not mutating the one you have. Nothing downstream has to clone or freeze to protect itself from someone else's locale change. When something does need to swap which view is current, that is a [store](#switching-locale).
-
-## Reading state
-
-A catalogue and a view expose different things, because they know different things:
-
-```ts
-catalogue.locales; // ['en', 'fr'], never empty, first is the fallback
-catalogue.loaded('fr'); // true
-
-say.locale; // 'fr'
-say.messages; // { 'abc123': 'Bonjour !', ... }
-```
-
-## Loading messages
-
-`load()` calls a locale's thunk, if it has one and nothing has called it yet, and hands back that locale's view:
+Views are memoised, so `catalogue.locale('fr')` returns the same view every time. It is synchronous, so for a lazy locale that is not loaded yet, use `load()`:
 
 ```ts
 const say = await catalogue.load('fr');
 ```
 
-A locale whose messages are already here does not go near its thunk and comes back synchronously, so `load()` returns a promise only when a thunk does. Pay them all up front by loading them together:
-
-```ts
-await Promise.all(catalogue.locales.map((locale) => catalogue.load(locale)));
-```
-
-Two loads that overlap share one call rather than fetching twice, and a locale that fills never calls its thunk again. A thunk that rejects is forgotten instead of cached, so the next load calls it afresh.
-
-A locale is filled **once**, and there is no way to replace its messages afterwards. That is what makes a view safe to hold indefinitely: nothing can swap out the messages it was built over, so a view can never quietly start formatting something else.
+`load()` is synchronous when the locale is already loaded, shares one call between overlapping loads, and retries a thunk that rejected. A locale's messages are filled once and never replaced, so a view is safe to hold for as long as you like.
 
 ## Matching guesses
 
-Use `match()` to pick the best supported locale from a list of guesses, browser locales, an `Accept-Language` header, a URL segment, whatever:
+`match()` maps guesses (browser languages, an `Accept-Language` header, a cookie, a URL segment) to a locale the catalogue has: exact match first, then language (`fr-CA` → `fr`), then the first locale.
 
 ```ts
-catalogue.match(['fr-CA', 'en-US']);
-// → 'fr' if your configured locales include 'fr'
+catalogue.match(navigator.languages); // 'fr' for ['fr-CA', 'en-US']
+catalogue.match(cookieLocale, headerLocales); // nullish guesses are skipped
 ```
 
-Matching prefers in order:
-
-1. exact match against `locales`
-2. language-prefix match (`fr-CA` &rarr; `fr`)
-3. the first of `locales`, as a final fallback
-
-`match()` takes any number of strings or arrays of strings; everything is flattened:
-
-```ts
-catalogue.match('fr-CA', 'en-US');
-catalogue.match(['fr-CA', 'en-US']);
-catalogue.match(headerLocales, [cookieLocale]);
-```
-
-See [locale detection](/guides/locale-detection) for usage patterns.
+See [locale detection](/guides/locale-detection).
 
 ## Switching locale
 
-A catalogue does not switch and a view cannot, so switching is its own object. A **store** holds the current view, swaps it for another, and tells whoever is listening:
+A view cannot switch, so switching is a store:
 
 ```ts
 import { createStore } from 'saykit';
 
 const store = createStore(catalogue, 'en');
 
-store.say`Hello, ${name}!`;
-store.say.locale; // 'en'
-
-const unsubscribe = store.subscribe((say) => render(say));
+store.subscribe((say) => render(say));
 
 await store.set('fr');
-store.say.locale; // 'fr'
+store.say`Hello, ${name}!`; // formats in fr
 ```
 
-The current view is the store's only reading, and it is called `say` because that is the name a message is written against, so a store is formatted through directly rather than through a view pulled off it first.
-
-A store has no locale of its own either: the locale belongs to the view, and the store only says which view is current.
-
-`say` is read at the moment of access, which is what keeps it following the switches. Read it per call for that reason: a `const say = store.say` held across a switch is the old view.
-
-`set()` loads the locale first if the catalogue does not have it yet, and like `load()` it is synchronous when the thunk is, so a locale that is already loaded switches inside the same tick.
-
-Only successful switches notify. Setting the locale that is already current does nothing, and a load that throws leaves the current view where it was, so a subscriber only ever sees a view it can format against. If two switches overlap, the last one you asked for wins, whichever load finishes first.
-
-The current view's identity changes with the locale, which is what lets a subscriber compare snapshots, and because views are memoised, switching away and back gives you the same view again:
-
-```ts
-const en = store.say;
-await store.set('fr');
-await store.set('en');
-store.say === en; // true
-```
+`set()` loads the locale if needed. It does nothing for the current locale, keeps the current view if the load fails, and lets the last switch win when two overlap. Subscribers are told only about successful switches.
 
 <Callout type="warn">
-  A store is the one part of the runtime that mutates, so it belongs in a browser: one locale at a
-  time, one user, module scope. On a server, where several locales are in flight at once, look a
-  view up per request instead of sharing a store.
+  Read `store.say` each time you format. A `const say = store.say` held across a switch is the old
+  view.
 </Callout>
 
-## Concurrency
-
-There is nothing to clone. A catalogue is shared safely because it has no current locale to leak, and a view is shared safely because it cannot be changed.
+A store mutates, so it belongs in a browser: one user, one locale at a time. On a server, look a view up per request instead:
 
 ```ts
-// Two requests, two locales, one catalogue, no defensive copies.
-const english = catalogue.locale('en');
-const french = catalogue.locale('fr');
-```
-
-This is the whole reason for the split. A per-request, per-interaction, or per-render locale is just a view you looked up, and the Carbon and React server integrations do exactly that under the hood.
-
-## Views without a catalogue
-
-A view needs nothing from a catalogue beyond a record of messages, so `createView` builds one directly:
-
-```ts
-import { createView } from 'saykit';
-
-const say = createView('fr', messages);
-```
-
-This is what `SayProvider` builds on when it is given a locale and its messages rather than a store, which is what a server has already picked and serialised across the boundary. When you do have a catalogue, prefer `catalogue.locale(code)`, so views stay memoised.
-
-## Iterating locales
-
-A catalogue is iterable. It yields `[locale, say]` for every configured locale:
-
-```ts
-for (const [locale, say] of catalogue) {
-  console.log(locale, say`Hello!`);
-}
-```
-
-This is how the Carbon integration generates per-locale command names and descriptions in one pass.
-
-## Formatting
-
-Compiled macros end up calling `say.call(descriptor)`:
-
-```ts
-say.call({
-  id: 'abc123',
-  _name: 'Ada',
-});
-// → "Hello, Ada!"
-```
-
-In application code you rarely write this directly, the build transform generates it from your `` say`...` `` and `<Say>` macros. The descriptor names the message by `id`, or carries the ICU inline as `message` when there was nothing to extract, as for a lone `say.date(x)`; extra properties become ICU placeholders. The transform emits each value behind one underscore so it cannot collide with the descriptor's own keys, and `call` strips exactly one back off, keys written without one are passed through unchanged.
-
-Each view caches the formats it compiles, so a message is parsed once per locale for the life of the process.
-
-## Putting it together
-
-A typical client-side bootstrap:
-
-```ts title="src/i18n.ts"
-import { createCatalogue, createStore } from 'saykit';
-import en from './locales/en.po';
-import fr from './locales/fr.po';
-
-export const catalogue = createCatalogue({ en, fr });
-
-// A store rather than a view, so the app can switch locale later. Read
-// `store.say` at the point you format, not once into a module binding.
-export const store = createStore(catalogue, catalogue.match(navigator.languages as string[]));
-```
-
-A typical per-request server-side bootstrap:
-
-```ts title="src/server-i18n.ts"
-import { createCatalogue } from 'saykit';
-
-const catalogue = createCatalogue({
-  en: () => import('./locales/en.po'),
-  fr: () => import('./locales/fr.po'),
-});
-
-export function getSayFor(headers: Headers) {
-  const acceptLang = headers.get('accept-language') ?? '';
-  const guesses = acceptLang.split(',').map((s) => s.split(';')[0]!.trim());
-
+export function sayFor(headers: Headers) {
+  const header = headers.get('accept-language') ?? '';
+  const guesses = header.split(',').map((tag) => tag.split(';')[0]!.trim());
   return catalogue.load(catalogue.match(guesses));
 }
 ```
 
+Catalogues and views are safe to share between requests: neither has anything to leak. For code that cannot be handed a view, [`createScope`](/reference/api/saykit#createscopestorage) gives a `say` that resolves to the view established around each call.
+
+## Formatting
+
+Macros compile to `say.call(descriptor)`:
+
+```ts
+say.call({ id: 'abc123', _name: 'Ada' }); // → "Hello, Ada!"
+```
+
+The message is already compiled to data by [`saykit compile`](/reference/cli#saykit-compile), so nothing is parsed at runtime. A view turns each message into a closure the first time it is called and caches it, building its `Intl` formatters once. A value that cannot be formatted, such as an invalid date, is written as given with a warning rather than throwing.
+
+## Views without a catalogue
+
+`createView(locale, messages)` builds a view directly, for code that only ever has one locale. It is what `SayProvider` uses when a server hands it a locale and messages. With a catalogue, prefer `catalogue.locale()`, which memoises.
+
 ## Next
 
-- [Locale detection](/guides/locale-detection), matching browser, header, cookie, and URL inputs
-- [Dynamic loading](/guides/dynamic-loading), lazy locale loading patterns
-- [React integration](/integrations/react), `SayProvider`, `useSay`, `withSay`
+- [Locale detection](/guides/locale-detection): matching browser, header, cookie, and URL inputs
+- [Dynamic loading](/guides/dynamic-loading): lazy locale loading
+- [React integration](/integrations/react): `SayProvider`, `useSay`, `withSay`

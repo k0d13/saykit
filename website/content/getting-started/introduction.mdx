@@ -7,7 +7,7 @@ description: Compile-time i18n for JavaScript, TypeScript, React, and beyond
 
 SayKit is a framework-agnostic internationalisation toolkit built around **compile-time message extraction**, **typed configuration**, and **small runtime primitives**.
 
-You author messages inline with tagged templates or JSX. A build-tool plugin extracts them to translation files and rewrites your source to small runtime calls. At runtime, a tiny view formats those messages using ICU MessageFormat, with plurals, ordinals, and select, against the one locale it is bound to.
+You author messages inline with tagged templates or JSX. The `saykit` CLI extracts them to translation files and compiles each locale into a module of plain data, and a build plugin rewrites your source to small runtime calls. At runtime a view formats those messages with `Intl`: plurals, ordinals, select, numbers and dates, with nothing left to parse.
 
 <Callout type="warn">
   SayKit is in active development (pre-1.0). Public APIs may change before the stable 1.0 release.
@@ -26,7 +26,7 @@ import { Braces, WandSparkles, Puzzle, Languages, Boxes, FileType2 } from 'lucid
   <Card
     icon={<WandSparkles />}
     title="Compile-time extraction"
-    description="A Babel or unplugin transform extracts messages during build. Your source stays small and ergonomic."
+    description="The CLI extracts messages from your source and compiles them ahead of time. Your source stays small and ergonomic."
   />
   <Card
     icon={<Languages />}
@@ -46,7 +46,7 @@ import { Braces, WandSparkles, Puzzle, Languages, Boxes, FileType2 } from 'lucid
   <Card
     icon={<FileType2 />}
     title="Plain translation files"
-    description="Import .po files (or your own format) directly. Bundlers turn them into JS catalogues, no shipped extractor, no extra runtime."
+    description="Translators work in .po (or your own format). Your app imports the compiled .js beside it: no parser, no loader, no bundler setup."
   />
 </Cards>
 
@@ -57,8 +57,9 @@ SayKit wires up like this:
 1. You **author** messages with `` say`...` `` or `<Say>...</Say>` in source files.
 2. The `saykit` CLI **extracts** them into per-locale files (`src/locales/en.po`, `fr.po`, &hellip;).
 3. Translators (or you) fill in the translations in those files.
-4. At build time a SayKit plugin **transforms** your source, macros become small runtime calls, and `import en from './locales/en.po'` becomes a plain JS object.
-5. At runtime, `catalogue.locale(...)` returns the locale-bound `View` that **formats** messages on demand.
+4. The CLI **compiles** each locale into a module (`src/locales/fr.js`) that your app imports like any other.
+5. At build time a SayKit plugin **transforms** your source: macros become small `say.call(...)` calls.
+6. At runtime, `catalogue.locale(...)` returns the locale-bound `View` that **formats** messages on demand.
 
 There's no SaaS, no proxy, no extra service. Translation files live in your repo, next to the code they describe.
 

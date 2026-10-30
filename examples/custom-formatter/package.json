@@ -9,7 +9,11 @@
     "check": "tsc --noEmit",
     "extract": "saykit extract",
     "build": "tsdown",
-    "start": "node dist/main.mjs"
+    "start": "node dist/main.mjs",
+    "compile": "saykit compile",
+    "prebuild": "saykit compile",
+    "precheck": "saykit compile",
+    "prestart": "saykit compile"
   },
   "dependencies": {
     "saykit": "workspace:^",
@@ -18,7 +22,7 @@
   "devDependencies": {
     "@saykit/config": "workspace:^",
     "@saykit/transform-js": "workspace:^",
-    "tsdown": "^0.23.1",
+    "tsdown": "^0.23.3",
     "typescript": "^7.0.2",
     "unplugin-saykit": "workspace:^"
   }

@@ -3,6 +3,6 @@ module.exports = function babelConfig(api) {
 
   return {
     presets: ['babel-preset-expo'],
-    plugins: [['saykit', { catalogues: 'module' }]],
+    plugins: ['saykit'],
   };
 };

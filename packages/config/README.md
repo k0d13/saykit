@@ -4,7 +4,7 @@
 
 [![Coverage](https://codecov.io/gh/k0d13/saykit/graph/badge.svg?flag=config)](https://codecov.io/gh/k0d13/saykit?flags%5B0%5D=config)
 
-Provides the `defineConfig` helper, the Zod-validated schema for `saykit.config.ts`, and the `saykit` CLI used to extract messages from your source.
+Provides the `defineConfig` helper, the Zod-validated schema for `saykit.config.ts`, and the `saykit` CLI that extracts messages from your source and compiles catalogues into the modules your app imports.
 
 ## Install
 
@@ -43,6 +43,7 @@ export default defineConfig({
 ```sh
 saykit extract           # extract messages once
 saykit extract --watch   # extract and watch for changes
+saykit compile           # compile catalogues to {locale}.js modules
 saykit clean             # prune dead entries from other locales
 ```
 
@@ -50,9 +51,10 @@ Extraction only writes the **source** locale (the first entry in `locales`). Loc
 have a file yet are bootstrapped with an empty, header-only catalogue so a TMS can register them;
 existing translation files are left untouched. Translated content is owned by your TMS.
 
-At load time (via the unplugin or Babel plugin), each locale module is filled from its fallback
-chain, so an untranslated key resolves to a fallback locale and ultimately the source string, the
-runtime still loads a single locale.
+`saykit compile` (which `extract` also runs) writes a `{locale}.js` beside each catalogue, filled
+from its fallback chain so an untranslated key resolves to a fallback locale and ultimately the
+source string. Ignore the `.js` modules in git and compile before dev and build; commit the
+`{locale}.d.ts` beside them.
 
 `saykit clean` only ever subtracts from non-source locales: it drops entries that no longer exist in
 the source catalogue and entries with an empty translation, and leaves everything else exactly as it

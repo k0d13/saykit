@@ -1,18 +1,25 @@
 import { inspect } from 'node:util';
 import { describe, expect, it, vi } from 'vitest';
-import { createCatalogue, createStore, type View } from './index.js';
+import { createCatalogue, createStore, Kind, type View } from './index.js';
 
 type Locale = 'en' | 'fr' | 'de';
 
 const messages = {
   en: {
     greeting: 'Hello',
-    items: '{count, plural, one {# item} other {# items}}',
-    named: 'Hello, {name}',
-    identified: 'Order {id}',
-    underscored: 'Total {_total}',
+    items: [Kind.Plural, '_count', { one: [[Kind.Hash], ' item'], other: [[Kind.Hash], ' items'] }],
+    named: ['Hello, ', [Kind.Value, '_name']],
+    identified: ['Order ', [Kind.Value, '_id']],
+    underscored: ['Total ', [Kind.Value, '__total']],
   },
-  fr: { greeting: 'Bonjour', items: '{count, plural, one {# article} other {# articles}}' },
+  fr: {
+    greeting: 'Bonjour',
+    items: [
+      Kind.Plural,
+      '_count',
+      { one: [[Kind.Hash], ' article'], other: [[Kind.Hash], ' articles'] },
+    ],
+  },
 } satisfies Partial<Record<Locale, View.Messages>>;
 
 /**

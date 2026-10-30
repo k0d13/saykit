@@ -6,7 +6,11 @@
     "check": "tsc --noEmit",
     "extract": "saykit extract",
     "build": "tsdown",
-    "dev": "wrangler dev"
+    "dev": "wrangler dev",
+    "compile": "saykit compile",
+    "predev": "saykit compile",
+    "prebuild": "saykit compile",
+    "precheck": "saykit compile"
   },
   "dependencies": {
     "@buape/carbon": "0.17.0",
@@ -20,6 +24,6 @@
     "@saykit/transform-js": "workspace:^",
     "typescript": "^7.0.2",
     "unplugin-saykit": "workspace:^",
-    "wrangler": "^4.151.0"
+    "wrangler": "^4.155.0"
   }
 }

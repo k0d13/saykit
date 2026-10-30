@@ -8,6 +8,7 @@ import {
 import type {
   DateTimeOptions,
   Disallow,
+  Message,
   Named,
   NumberOptions,
   NumeralOptions,
@@ -34,7 +35,7 @@ export function Say(
 ): ReactElement;
 export function Say(props: {
   id?: string;
-  message?: string;
+  message?: Message;
   whitespace?: boolean;
   [match: string]: unknown;
 }) {
@@ -48,9 +49,8 @@ export function Say(props: {
   const values = resolveValuePropKeys(rest);
 
   return createElement(Renderer, {
-    // The props go through still prefixed, since `View#call` does the single
-    // strip for every caller. The id is merged in last, so a message free to
-    // name a value `id` cannot displace the message being looked up
+    // Props stay underscore-prefixed, as compiled messages read them. `id` is last so a value named
+    // `id` cannot displace it
     html: say.call(message === undefined ? { ...rest, id: id! } : { ...rest, message }),
     whitespace,
     components(tag?: string) {

@@ -3,13 +3,13 @@ title: React
 description: Use SayKit with React, components, hooks, and server runtime
 ---
 
-`@saykit/react` is the React integration for SayKit. It does three things:
+`@saykit/react` gives you:
 
-1. Provides a `<Say>` component for rendering translated content, with sub-components for plurals, ordinals, and select.
-2. Provides a `<SayProvider>` and `useSay()` for client components.
-3. Provides a small server runtime (`withSay` and `getSay()`) for server-rendered apps.
+- `<Say>` and its sub-components, for messages in any component, server or client
+- `<SayProvider>` and `useSay()` for client components
+- `withSay`, `getSay()` and `setSay()` for server components
 
-The package uses the `react-server` export condition, so `<Say>` works in both server and client components without two different imports.
+`<Say>` is one import for both server and client: the package picks its build through the `react-server` export condition.
 
 ## Install
 
@@ -18,33 +18,29 @@ pnpm add @saykit/react saykit
 pnpm add -D @saykit/config @saykit/format-po @saykit/transform-js @saykit/transform-jsx unplugin-saykit
 ```
 
-Then add a SayKit build-tool plugin: [`unplugin-saykit`](/integrations/vite) for Vite/Rollup/etc. (including TanStack Start), or [`babel-plugin-saykit`](/integrations/babel) for Babel-based pipelines like Next.js, React Native, and Expo.
+Then add a plugin: [`unplugin-saykit`](/integrations/vite) for Vite and similar (including TanStack Start), or [`babel-plugin-saykit`](/integrations/babel) for Next.js, Expo and React Native.
 
 ## `<Say>`
-
-`<Say>` is the primary way to render translated content. Write your text and embedded variables naturally; the transform extracts the literal text and rewrites the element to render the translation.
 
 ```tsx
 import { Say } from '@saykit/react';
 
-function CheckoutSummary({ items, total }: { items: number; total: string }) {
-  return (
-    <p>
-      <Say>
-        {items} items &middot; total <strong>{total}</strong>
-      </Say>
-    </p>
-  );
-}
+<Say>
+  {items} items &middot; total <strong>{total}</strong>
+</Say>;
 ```
 
-Variables become named ICU placeholders (`{items}`, `{total}`). JSX elements inside `<Say>` become numbered tags (`<0>{total}</0>`) so translators can reorder them. Childless elements extract as self-closing tags (`<1/>`), so there is nowhere for a translator to insert content an icon never expected.
+Variables become named placeholders (`{items}`), and elements become numbered tags (`<0>{total}</0>`) that translators can move. A childless element extracts as `<1/>`. Plurals, select, numbers, dates and descriptors all have JSX forms, covered in [Messages](/core-concepts/messages#jsx):
 
-`<Say>` works equally in server and client components, the package switches implementation based on the `react-server` condition.
+```tsx
+<Say.Plural _={count} one={<>{count} item</>} other={<>{count} items</>} />
+<Say>Total <Say.Number _={total} style="::currency/EUR" /></Say>
+<Say context="verb">Post</Say>
+```
 
 ### Naming tags
 
-A numbered tag tells a translator nothing about what it does. Add `say-tag` to any element inside `<Say>` to name it:
+A number tells a translator nothing. Name a tag with `say-tag`:
 
 ```tsx
 <Say>
@@ -52,97 +48,9 @@ A numbered tag tells a translator nothing about what it does. Add `say-tag` to a
 </Say>
 ```
 
-The message extracts as `Signed in as <bold>{user}</bold>`. The attribute is compile-time only, it is stripped from the element and never reaches the DOM or a native view.
+This extracts as `Signed in as <bold>{user}</bold>`. The attribute is stripped at build time. Name a tag after what it does to the text (`bold`, `link`, `icon`), not what it wraps, and use a static identifier.
 
-Name the tag after what it does to the text, `bold`, `link`, `icon`, not after the content it happens to wrap. A translator sees only the tag name and the sentence around it, so `<bold>` tells them how the text will look, while `<user>` tells them nothing they can act on.
-
-Naming is opt-in and per element, so untagged elements keep their numbers alongside named ones. A tag must be a static string, and a valid identifier: a letter or underscore followed by letters, digits, or underscores.
-
-`say-tag` names elements. To name a value you interpolate, wrap it in a single-key object: `<Say>Signed in as {{ who: user.profile.name }}</Say>`. Values follow the same rule as tags, a repeat is fine when it is the same value and a build error when it is not. See [Placeholder names](/core-concepts/messages#placeholder-names).
-
-Two tagged elements in one message can share a name as long as they are identical, the same element
-with the same props, as `<b say-tag="bold">` twice is. They compile to one prop, and a translator
-still sees a single `<bold>` they can move around the sentence. Only the props are compared, not the
-content, since that comes from the translation.
-
-<Callout type="warn">
-  Elements that share a name but differ in any way are a build error. Each would compile to its own
-  prop, and a translator reordering the sentence has to be able to tell them apart. Give those
-  distinct names, `link_docs` and `link_faq` rather than `link` twice. Elements you leave untagged
-  are unaffected, they keep their numbers.
-</Callout>
-
-### Plurals, ordinals, select
-
-`<Say>` exposes sub-components for ICU branching:
-
-```tsx
-<Say.Plural _={count} one={<>{count} item in your cart</>} other={<>{count} items in your cart</>} />
-
-<Say.Ordinal _={position} _1="1st" _2="2nd" _3="3rd" other={<>{position}th</>} />
-
-<Say.Select _={gender} male="He liked it" female="She liked it" other="They liked it" />
-```
-
-<Callout type="info">
-  JSX prop names can't start with a digit, so numeric branch keys (`1`, `2`, &hellip;) get a
-  leading underscore (`_1`, `_2`). SayKit strips the underscore during extraction, so the resulting
-  ICU is `1 {...}`, `2 {...}`.
-</Callout>
-
-### Numbers, dates, times
-
-`<Say.Number>`, `<Say.Date>`, and `<Say.Time>` format a value the way the active locale writes it.
-They are fragments rather than whole messages, so they usually nest inside a `<Say>`:
-
-```tsx
-<Say>
-  You have <Say.Number _={items.length} /> items, due
-  <Say.Date _={{ dueAt }} style="medium" />
-</Say>
-```
-
-`style` is optional: `integer` or `percent` on `<Say.Number>` (or a pattern like `#,##0.00`), and
-`short`, `medium`, `long`, or `full` on `<Say.Date>` and `<Say.Time>`. Every one of them also takes
-an ICU skeleton, which is how you ask for a currency or for fields the named styles cannot spell:
-
-```tsx
-<Say>
-  Total <Say.Number _={total} style="::currency/EUR" /> since
-  <Say.Date _={{ joined }} style="::yMMMM" />
-</Say>
-```
-
-They also stand on their own, where there is nothing to translate and nothing is extracted, as a
-locale-aware replacement for calling `Intl` yourself:
-
-```tsx
-<td>
-  <Say.Number _={row.total} style="::currency/EUR" />
-</td>
-<time dateTime={post.publishedAt.toISOString()}>
-  <Say.Date _={post.publishedAt} style="long" />
-</time>
-```
-
-See [Messages](/core-concepts/messages#numbers-dates-and-times) for what each one extracts to.
-
-<Callout type="info">
-  The <code>{"{' '}"}</code> spacing escape is safe inside a `<Say>`. A literal expression child is
-  read as the text
-  it renders as, so it folds into the words around it and reaches a translator as one run of text
-  rather than as a placeholder they can neither see nor move.
-</Callout>
-
-### Descriptors
-
-To attach metadata to a JSX message, a custom id or context, pass it as a prop:
-
-```tsx
-<Say context="noun">Post</Say>
-<Say context="verb">Post</Say>
-<Say id="checkout.review">Review your order</Say>
-```
+Identical elements may share a name and compile to one prop. Elements that share a name but differ in any prop fail the build: name them `link_docs` and `link_faq` rather than `link` twice.
 
 ## Client components
 
@@ -152,111 +60,90 @@ import { SayProvider, useSay } from '@saykit/react/client';
 
 ### `<SayProvider>`
 
-Render `SayProvider` once near the top of your client tree. It takes either a [store](/core-concepts/runtime), or a locale and its messages.
-
-A store owns the catalogue, so it can switch locale at runtime. That is what a browser app wants: every locale is loadable, and switching re-renders the tree.
-
-Build the store in your `i18n` module and export it, so the provider and everything that switches locale hold the same one:
+Render it once near the top of the client tree. In a browser app, give it a [store](/core-concepts/runtime#switching-locale), exported from your i18n module so everything that switches locale holds the same one:
 
 ```ts title="src/i18n.ts"
 import { createCatalogue, createStore } from 'saykit';
-import en from './locales/en.po';
-import fr from './locales/fr.po';
+import en from './locales/en.js';
+import fr from './locales/fr.js';
 
 export const catalogue = createCatalogue({ en, fr });
-
 export const store = createStore(catalogue, catalogue.match(navigator.languages));
 ```
 
 ```tsx title="src/main.tsx"
-import { SayProvider } from '@saykit/react/client';
-import { store } from './i18n';
-
 <SayProvider store={store}>
-  <App />
-</SayProvider>;
-```
-
-A store is a live object and cannot cross the server/client boundary, so a server-rendered app hands over the locale and its messages instead:
-
-```tsx
-<SayProvider locale={locale} messages={messages}>
   <App />
 </SayProvider>
 ```
 
-That form has only the one locale the server sent, so it cannot switch: `set` rejects anything else. Switch by navigating, and let the server render the new locale. See [`createWithSay`](#createwithsay), which fills these props in for you.
+A server-rendered app sends a locale and its messages instead. A store cannot cross the server/client boundary, but compiled messages are plain data:
 
-Anything beneath the provider, `<Say>`, `<Say.Plural>`, `useSay()`, resolves against the current locale.
+```tsx
+<SayProvider locale={locale} messages={messages}>
+  {children}
+</SayProvider>
+```
+
+That form holds one locale and cannot switch; switch by navigating. In a Next.js server component, [`withSay`](#withsay) fills these props in for you.
 
 ### `useSay`
 
-If you need the view itself in a client component (for example, to compose a runtime string in an event handler), call `useSay()`:
+The current view, for a string outside JSX. The component re-renders when the locale changes:
 
 ```tsx
-function ConfirmButton({ count }: { count: number }) {
+function DeleteButton({ count }: { count: number }) {
   const say = useSay();
-
-  return (
-    <button onClick={() => alert(say`Delete ${count} items?`)}>
-      <Say>Delete</Say>
-    </button>
-  );
+  return <button onClick={() => confirm(say`Delete ${count} items?`)}>…</button>;
 }
 ```
 
-`useSay()` subscribes to the provider's store, so the component re-renders when the locale changes and the view it returns is the current one. The view itself is immutable: it formats and reads messages but cannot switch locale.
-
 ### Switching locale
 
-Switching is the store's job, and the store is a module-scope value you already hold, so a locale picker imports it rather than reaching for a hook:
+The store is a module value, so a picker imports it:
 
-```tsx title="src/components/locale-picker.tsx"
+```tsx
 import { useSay } from '@saykit/react/client';
-import { store } from '../i18n';
+import { catalogue, store } from '../i18n';
 
 function LocalePicker() {
   const say = useSay();
-
   return (
     <select value={say.locale} onChange={(event) => store.set(event.target.value)}>
-      {/* … */}
+      {catalogue.locales.map((locale) => (
+        <option key={locale}>{locale}</option>
+      ))}
     </select>
   );
 }
 ```
 
-`store.set(locale)` loads that locale's messages if the catalogue does not have them yet, then swaps the view every consumer reads.
-
-## Server runtime
+## Server components
 
 ```ts
 import { createWithSay, getSay, setSay } from '@saykit/react/server';
 ```
 
-The two halves mirror each other: `withSay` is to `getSay()` what `<SayProvider>` is to `useSay()`. Each establishes a view, and each hands the same kind of value back.
+`withSay` and `getSay()` are the server's `<SayProvider>` and `useSay()`.
 
-### `createWithSay`
+### `withSay`
 
-`createWithSay(catalogue)` binds a `withSay` to your catalogue, normally once beside the catalogue itself:
+Bind it to your catalogue once:
 
 ```ts title="src/i18n.ts"
-import { createWithSay } from '@saykit/react/server';
-
 export const withSay = createWithSay(catalogue);
 ```
 
-`withSay(Component, getLocale)` wraps a server component so its view is negotiated, loaded and published into React's per-request `cache()` before the component renders. A concurrent request rendering another locale reads its own.
+`withSay(Component, getLocale)` matches and loads the locale `getLocale` returns, and establishes its view in React's per-request `cache()` before the component renders:
 
 ```tsx title="src/app/[locale]/layout.tsx"
 import { SayProvider } from '@saykit/react/client';
-import { catalogue, withSay } from '../../i18n';
+import { getSay } from '@saykit/react/server';
+import { withSay } from '../../i18n';
 
-async function RootLayout({ params, children }) {
-  const { locale } = await params;
-
+function Layout({ children }: LayoutProps<'/[locale]'>) {
   return (
-    <html lang={catalogue.match(locale)}>
+    <html lang={getSay().locale}>
       <body>
         <SayProvider>{children}</SayProvider>
       </body>
@@ -264,69 +151,43 @@ async function RootLayout({ params, children }) {
   );
 }
 
-export default withSay(RootLayout, (props) => props.params.then((params) => params.locale));
+export default withSay(Layout, (props) => props.params.then((params) => params.locale));
 ```
 
-`<SayProvider>` takes no props here. In a server component it resolves to the `react-server` build of `@saykit/react/client`, which reads the established view and serialises that locale and its messages across the boundary, which is all a client component can be given.
+`<SayProvider>` takes no props in a server component: its `react-server` build hands the established locale and messages to the client.
 
 <Callout type="warn">
-  Wrap every segment that renders messages, not just the outermost one. A framework is free to
-  render a page before the layout above it - Next.js does - so a layout's view is not established
-  yet when its page runs, and `getSay()` there would throw.
-</Callout>
-
-### `setSay`
-
-If you have already resolved the view yourself, establish it directly:
-
-```ts
-import { setSay } from '@saykit/react/server';
-
-setSay(await catalogue.load('fr'));
-```
-
-<Callout type="warn">
-  One view per request. React renders a server component's children after it returns, so a view does
-  not end where a subtree does: a second view established for another locale in the same request
-  takes over for everything rendered after it, including the messages `<SayProvider>` serialises to
-  the client. Development warns when it happens. To render a second locale, give it its own request,
-  or resolve its view with `catalogue.load(locale)` and pass it to the components that need it.
+  Wrap every layout and page that renders messages, not just the root. Next.js renders a page before
+  its layout, so an unwrapped page's `getSay()` throws.
 </Callout>
 
 ### `getSay`
 
-`getSay()` returns the view established for the request. It is the server counterpart of `useSay()`:
+The view established for the request. Throws if there is none.
 
 ```tsx
-import { getSay } from '@saykit/react/server';
-
 function Page() {
   const say = getSay();
   return <h1>{say`Welcome back!`}</h1>;
 }
 ```
 
-Reach for it when you need the locale as data rather than a rendered message:
+### `setSay`
+
+Establishes a view you resolved yourself:
 
 ```ts
-const say = getSay();
-const price = new Intl.NumberFormat(say.locale, { style: 'currency', currency: 'EUR' }).format(
-  total,
-);
+setSay(await catalogue.load('fr'));
 ```
 
-It throws if nothing established a view for the request.
-
-## Mental model
-
-A simple way to think about the integration:
-
-- render translated content with `<Say>` in any component, server or client
-- on the server, `withSay` binds one view per request, and `getSay()` reads it
-- on the client, `SayProvider` supplies a store to follow, or the single locale the server sent, so the tree hydrates consistently
+<Callout type="warn">
+  One view per request. A second view for another locale takes over for everything rendered after it,
+  including what `<SayProvider>` sends to the client, and development warns. To render another locale,
+  pass its view (`await catalogue.load(locale)`) to the components that need it.
+</Callout>
 
 ## Next
 
 - [Vite (unplugin)](/integrations/vite): the build-tool plugin
-- [Babel](/integrations/babel): for React Native, Expo, and other Babel pipelines
+- [Babel](/integrations/babel): Next.js, React Native, Expo
 - [API reference](/reference/api/react): every export

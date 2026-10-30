@@ -5,15 +5,9 @@ import type { Catalogue, View } from 'saykit';
 /**
  * Where the view for the request being rendered lives.
  *
- * `React.cache` is per request, which is the isolation a server needs.
- * `AsyncLocalStorage` cannot do this job here: a server component's children
- * are rendered after it returns rather than inside the call it makes, so there
- * is no callback to wrap them in, which is why {@link setSay} writes the cell
- * instead.
- *
- * It is also why the cell holds one view for the whole request: a second view
- * replaces the first for everything rendered after it rather than for its own
- * subtree. `warned` keeps that warning to one per request.
+ * `AsyncLocalStorage` cannot be used: a server component's children render after it returns,
+ * so there is no callback to wrap them in. `warned` limits the second-view warning to once per
+ * request.
  */
 const cell = cache<() => { view: View | undefined; warned: boolean }>(() => ({
   view: undefined,
@@ -31,7 +25,7 @@ const SECOND_VIEW = (established: string, next: string) =>
   "request. A view is per request rather than per subtree: React renders a server component's " +
   'children after it returns, so there is nowhere to put the previous view back, and everything ' +
   `rendered after this point reads '${next}' - including components outside the one that ` +
-  "established it, and the messages 'SayProvider' serialises to the client. Render the other " +
+  "established it, and the messages 'SayProvider' hands to the client. Render the other " +
   'locale in its own request, or resolve its view yourself and pass it to the components that ' +
   'need it.';
 
@@ -64,10 +58,8 @@ export function getSay(): View {
  * server. Reach for it when you already have a view; {@link createWithSay}
  * negotiates and loads one for you.
  *
- * Per request is the limit. React renders a server component's children after
- * it returns, so a view does not end where a subtree does: a second view takes
- * over for everything rendered after it, including the messages
- * `<SayProvider>` serialises. Development warns when that happens.
+ * A view lasts the whole request, not a subtree: a second view takes over everything rendered
+ * after it. Development warns when that happens.
  *
  * @param view The view to establish
  */
@@ -102,9 +94,8 @@ export function setSay(view: View): void {
  * layout above it - Next.js does - and a parent that has not run yet has
  * established nothing.
  *
- * A `<SayProvider>` written inside a wrapped component takes no props of its
- * own: the server build of `@saykit/react/client` reads the established view
- * and serialises the locale and its messages across the boundary.
+ * A `<SayProvider>` inside a wrapped component takes no props: the server build of
+ * `@saykit/react/client` reads the established view.
  *
  * @example
  * ```tsx

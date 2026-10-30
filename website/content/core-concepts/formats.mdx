@@ -3,7 +3,7 @@ title: Formats
 description: PO, JSON, and other translation file formats, and how to write your own
 ---
 
-A **formatter** in SayKit is a pluggable adapter that knows how to parse and stringify one translation file format. The bucket calls it during extraction (to write) and during build (to read), but it's completely up to the formatter what file format ends up on disk.
+A **formatter** reads and writes one catalogue format. The CLI uses it to write the source catalogue on `extract`, and to read every catalogue on `compile`; your app never sees it.
 
 ```ts title="saykit.config.ts"
 import po from '@saykit/format-po';
@@ -16,7 +16,7 @@ buckets: [
 ];
 ```
 
-The default first-party formatter is **PO** (Gettext Portable Object). It's the format every SayKit example uses, and the one most translation tools and translators already understand. A **JSON** formatter ([`@saykit/format-json`](https://github.com/k0d13/saykit/tree/main/packages/format-json)) is also shipped for projects that prefer plain JSON bundles with no Gettext tooling.
+**PO** (Gettext) is the default, and the format most translation tools already speak. **JSON** ([`@saykit/format-json`](https://github.com/k0d13/saykit/tree/main/packages/format-json)) is there for projects that want plain JSON, ARB or WebExtension files.
 
 ## PO
 
@@ -50,32 +50,7 @@ Each entry has:
 - `#:`, source references (file:line)
 - `#. id:xxxx`, SayKit's stable id (for messages without a custom id)
 
-### Why PO?
-
-import { Globe, FileText, GitCompare, Wrench } from 'lucide-react';
-
-<Cards>
-  <Card
-    icon={<Globe />}
-    title="Universal"
-    description="Decades of tooling. POEdit, Crowdin, Lokalise, Weblate, Transifex all speak PO natively."
-  />
-  <Card
-    icon={<FileText />}
-    title="Human-readable"
-    description="A reviewer can read a PO diff. Translators can edit them in any text editor if needed."
-  />
-  <Card
-    icon={<GitCompare />}
-    title="Diff-friendly"
-    description="Line-based and entry-aligned. PRs reviewing translations are sensible to read."
-  />
-  <Card
-    icon={<Wrench />}
-    title="Tooling"
-    description="Lots of CLI utilities exist (msgmerge, msgfmt, msgcat) if you ever need to munge PO files outside SayKit."
-  />
-</Cards>
+PO is readable, diffs line by line, and is understood natively by POEdit, Crowdin, Lokalise, Weblate and Transifex.
 
 ### Options
 
@@ -101,11 +76,11 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 formatter: po({ includeReferences: true, includeLineNumbers: false });
 ```
 
-Dropping line numbers is a popular choice once a project is large, references still tell translators which files use a string, but `.po` diffs no longer churn every time a line moves.
+Dropping line numbers keeps the file references but stops diffs churning every time a line moves.
 
 ## JSON
 
-`@saykit/format-json` writes one JSON catalogue per locale, the de facto format for web i18n (react-intl, FormatJS, i18next). It's a lean runtime format: each entry is keyed by its message id (falling back to a stable content hash when there's no id, the same key the runtime resolves), with the translation as the value.
+`@saykit/format-json` writes one JSON file per locale, keyed by message id (the content hash when there is no custom id), with the translation as the value.
 
 ```ts title="saykit.config.ts"
 import json from '@saykit/format-json';
@@ -185,9 +160,7 @@ formatter: json({ dialect: 'arb', includeLineNumbers: false });
 
 ## Other formats
 
-PO and JSON are the formatters shipped today. If you need YAML, XLIFF, or a custom format, you can write one yourself.
-
-A `Formatter` is just an object:
+For YAML, XLIFF or anything else, a `Formatter` is a plain object. Its extension cannot be `.js`, which is where the compiled module goes.
 
 ```ts
 import type { Formatter } from '@saykit/config';
@@ -207,7 +180,7 @@ See the [custom formatter guide](/guides/custom-formatter) for a complete walkth
 
 ## The `Message` shape
 
-Formatters work with this shape:
+Formatters work with this shape, exported from `@saykit/config` (not the runtime's compiled `Message`):
 
 <TypeTable
   type={{
@@ -240,7 +213,7 @@ Formatters work with this shape:
   }}
 />
 
-Your formatter receives an array of these on `stringify`, and must return an array of them on `parse`. Anything you can map back-and-forth, you can support.
+`stringify` receives an array of these and `parse` returns one.
 
 ## Next
 

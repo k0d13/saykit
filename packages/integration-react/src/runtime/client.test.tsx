@@ -3,13 +3,13 @@
 import { act, render, screen } from '@testing-library/react';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { createCatalogue, createStore, type Store, type View } from 'saykit';
+import { createCatalogue, createStore, Kind, type Store, type View } from 'saykit';
 import { describe, expect, it } from 'vitest';
 import { SayProvider, useSay } from '#/runtime/client.js';
 
 function Consumer() {
   const say = useSay();
-  return createElement('span', null, `${say.locale}:${say.messages.greeting}`);
+  return createElement('span', null, `${say.locale}:${say.call({ id: 'greeting' })}`);
 }
 
 const catalogue = () => createCatalogue({ en: { greeting: 'Hello' }, fr: { greeting: 'Bonjour' } });
@@ -30,7 +30,7 @@ describe('SayProvider / useSay', () => {
     function Mention() {
       return createElement('span', null, useSay().call({ id: 'mention', _channel: '<#1>' }));
     }
-    const messages = { mention: 'See {channel}' };
+    const messages: View.Messages = { mention: ['See ', [Kind.Value, '_channel']] };
 
     const isolated = renderToStaticMarkup(
       createElement(SayProvider, { locale: 'en', messages }, createElement(Mention)),

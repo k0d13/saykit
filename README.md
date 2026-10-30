@@ -14,10 +14,10 @@ SayKit is a framework-agnostic internationalisation toolkit built around compile
 
 - Tagged-template and JSX authoring: `` say`Hello, ${name}!` `` or `<Say>Hello, {name}!</Say>`
 - Compile-time extraction from JS, TS, JSX, and TSX via Babel or unplugin
-- ICU MessageFormat support for plurals, ordinals, and select
+- ICU MessageFormat for plurals, ordinals, and select, compiled ahead of time
 - Typed `saykit.config.ts` with a Zod-validated schema
 - A small core runtime, with optional framework adapters
-- Import translation files directly: no build-time replacement, no shipped extraction
+- Catalogues compile to plain `.js` modules: no parser, no loader, nothing to configure in your bundler
 
 ## Documentation
 
@@ -33,7 +33,7 @@ This is a pnpm monorepo. The published packages live in [`packages/*`](./package
 
 | Package                                             | Description                                                          |
 | --------------------------------------------------- | -------------------------------------------------------------------- |
-| [`saykit`](./packages/integration)                  | Core runtime: catalogues, views, macros, and ICU formatting          |
+| [`saykit`](./packages/integration)                  | Core runtime: catalogues, views, macros, and `Intl` helpers          |
 | [`@saykit/config`](./packages/config)               | Config schema (`defineConfig`) and the `saykit` CLI                  |
 | [`@saykit/react`](./packages/integration-react)     | React integration: `<Say>`, `SayProvider`, server helpers            |
 | [`@saykit/carbon`](./packages/integration-carbon)   | Carbon Discord-bot integration                                       |
@@ -90,8 +90,8 @@ export default defineConfig({
 
 ```ts title="src/app.ts"
 import { createCatalogue } from 'saykit';
-import en from './locales/en.po';
-import fr from './locales/fr.po';
+import en from './locales/en.js';
+import fr from './locales/fr.js';
 
 const catalogue = createCatalogue({ en, fr });
 const say = catalogue.locale('en');
@@ -103,11 +103,11 @@ console.log(say`Hello, ${'world'}!`);
 pnpm saykit extract
 ```
 
-Extraction only writes the source locale (the first entry in `locales`); new locales get an empty
-placeholder file and existing translation files are left untouched, keeping diffs small and leaving
-translated content to your TMS. Untranslated keys fall back to a configurable fallback chain (and
-ultimately the source string) at load time, and `saykit clean` can prune orphaned and untranslated
-entries from other locale files when your TMS doesn't do it for you.
+Extraction writes the source locale's catalogue (`en.po`), creates empty files for new locales, and
+leaves existing translations alone. It then compiles each locale into the `en.js` / `fr.js` your app
+imports, filling untranslated keys from a fallback chain that ends at the source string. Ignore the
+compiled `.js` in git and run `saykit compile` before dev and build. `saykit clean` prunes orphaned
+entries from other locales.
 
 ## React
 
@@ -123,8 +123,8 @@ pnpm add -D @saykit/transform-jsx
 import { Say } from '@saykit/react';
 import { SayProvider } from '@saykit/react/client';
 import { createCatalogue, createStore } from 'saykit';
-import en from './locales/en.po';
-import fr from './locales/fr.po';
+import en from './locales/en.js';
+import fr from './locales/fr.js';
 
 const store = createStore(createCatalogue({ en, fr }), 'en');
 

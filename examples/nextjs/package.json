@@ -10,11 +10,16 @@
     "extract": "saykit extract",
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "compile": "saykit compile",
+    "predev": "saykit compile",
+    "prebuild": "saykit compile",
+    "precheck": "saykit compile",
+    "prestart": "saykit compile"
   },
   "dependencies": {
     "@saykit/react": "workspace:^",
-    "next": "^16.4.2",
+    "next": "^16.4.3",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "saykit": "workspace:^",
@@ -25,7 +30,7 @@
     "@saykit/format-po": "workspace:^",
     "@saykit/transform-js": "workspace:^",
     "@saykit/transform-jsx": "workspace:^",
-    "@types/node": "^26.6.5",
+    "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "babel-plugin-saykit": "workspace:^"
