@@ -225,6 +225,61 @@ describe('Catalogue#match', () => {
     expect(catalogue.locales[0]).toBe('fr');
     expect(catalogue.match('zz')).toBe('fr');
   });
+
+  const regional = (...locales: string[]) =>
+    createCatalogue(Object.fromEntries(locales.map((locale) => [locale, messages.en])));
+
+  describe('with regional locales', () => {
+    const catalogue = regional('en-US', 'en-GB', 'fi', 'fil', 'pt-BR', 'zh-CN', 'zh-TW');
+
+    it.each([
+      ['en-us', 'en-US'],
+      ['en-gb', 'en-GB'],
+      ['EN', 'en-US'],
+      ['fi-FI', 'fi'],
+      ['fil-PH', 'fil'],
+      ['zh-HK', 'zh-TW'],
+      ['zh-Hant', 'zh-TW'],
+      ['zh-hant-hk', 'zh-TW'],
+      ['zh-SG', 'zh-CN'],
+      ['zh', 'zh-CN'],
+      ['pt', 'pt-BR'],
+    ])('matches %s to %s', (guess, expected) => {
+      expect(catalogue.match(guess)).toBe(expected);
+    });
+
+    it('matches case-insensitively whichever locale is written first', () => {
+      expect(regional('en-GB', 'en-US').match('en-us')).toBe('en-US');
+    });
+
+    it('never matches on a partial language subtag', () => {
+      expect(regional('fil', 'fi').match('fi-FI')).toBe('fi');
+      expect(regional('en', 'fil').match('fi')).toBe('en');
+    });
+
+    it('breaks ties by the order written', () => {
+      expect(regional('pt-PT', 'pt-BR').match('pt')).toBe('pt-PT');
+      expect(regional('pt-BR', 'pt-PT').match('pt')).toBe('pt-BR');
+    });
+
+    it('falls back to the language when no locale has the script', () => {
+      expect(regional('en', 'zh-CN').match('zh-HK')).toBe('zh-CN');
+    });
+
+    it('keeps an earlier guess ahead of a closer later one', () => {
+      expect(catalogue.match('zh-HK', 'zh-CN')).toBe('zh-TW');
+      expect(catalogue.match('pt-PT', 'en-GB')).toBe('pt-BR');
+    });
+  });
+
+  it('skips a guess that is not a well-formed tag', () => {
+    expect(regional('en', 'fr').match('fr_FR', 'fr-', 'fr')).toBe('fr');
+    expect(regional('en', 'fr').match('fr_FR')).toBe('en');
+  });
+
+  it('still matches a locale that is not a well-formed tag when written exactly', () => {
+    expect(regional('en', 'pirate_speak').match('pirate_speak')).toBe('pirate_speak');
+  });
 });
 
 describe('Catalogue immutability', () => {

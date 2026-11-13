@@ -210,7 +210,7 @@ export type Locale = (typeof catalogue.locales)[number];
 
 ```ts
 catalogue.locales; // ['en', 'fr']
-catalogue.match(navigator.languages, cookieLocale); // exact, then language prefix, then locales[0]; nullish guesses are skipped
+catalogue.match(navigator.languages, cookieLocale); // case-insensitive: exact, then language + script, then language, then locales[0]; nullish and malformed guesses are skipped
 catalogue.loaded('fr'); // false until loaded
 const say = await catalogue.load('fr'); // calls the thunk once; synchronous when already loaded
 catalogue.locale('fr'); // synchronous; throws if a lazy locale has not been loaded

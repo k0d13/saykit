@@ -84,8 +84,23 @@ export interface Catalogue<Locale extends string = string> {
   /**
    * Matches the best locale from a list of guesses.
    *
+   * Guesses are tried in order, and an earlier guess that matches at all wins
+   * over a later one that would match more closely. Each guess is
+   * canonicalised first, so case does not matter (`en-us` is `en-US`), and
+   * then compared in steps, most specific first:
+   *
+   * 1. The same tag
+   * 2. The same language and script, filling in the script a tag implies, so
+   *    `zh-HK` (Traditional) finds `zh-TW` rather than `zh-CN`
+   * 3. The same language subtag, whole, so `fi` never matches `fil`
+   *
+   * Within a step, the locale written first wins, so with `pt-BR` before
+   * `pt-PT`, `pt` matches `pt-BR`.
+   *
    * An absent or empty guess is skipped rather than throwing, which lets a
    * caller write `match(fromCookie, fromHeader)` without narrowing each first.
+   * So is one that is not a well-formed locale tag, unless it is written
+   * exactly as one of {@link locales}.
    *
    * @param guesses List of locale guesses
    * @returns The best matching locale, or the first of {@link locales} if no
@@ -145,6 +160,12 @@ export function createCatalogue<const Locale extends string = string>(
   if (keys.length === 0) throw new Error('A catalogue needs at least one locale, none were given');
 
   const locales = keys as readonly [Locale, ...Locale[]];
+
+  // Parsed once for `match`, leaving out locales that aren't well-formed tags
+  const tags = locales.flatMap((locale) => {
+    const tag = parseTag(locale);
+    return tag ? [[locale, tag] as const] : [];
+  });
 
   const store = new Map<Locale, View.Messages>();
   const views = new Map<Locale, View<Locale>>();
@@ -222,17 +243,21 @@ export function createCatalogue<const Locale extends string = string>(
     },
 
     match(...guesses) {
-      const flat = guesses
-        .flat()
-        .filter((guess): guess is string => typeof guess === 'string' && guess !== '');
-      if (flat.length === 0) return locales[0];
-
-      for (const guess of flat) {
+      for (const guess of guesses.flat()) {
+        if (typeof guess !== 'string' || guess === '') continue;
+        // Before parsing, so a locale that isn't a well-formed tag still matches
         if (locales.includes(guess as Locale)) return guess as Locale;
-        const prefix = guess.split('-')[0];
-        if (!prefix) continue;
-        const match = locales.find((l) => l.startsWith(prefix));
-        if (match) return match;
+
+        const tag = parseTag(guess);
+        if (!tag) continue;
+
+        const found =
+          tags.find(([, t]) => t.canonical === tag.canonical) ??
+          (tag.script
+            ? tags.find(([, t]) => t.language === tag.language && t.script === tag.script)
+            : undefined) ??
+          tags.find(([, t]) => t.language === tag.language);
+        if (found) return found[0];
       }
 
       return locales[0];
@@ -255,4 +280,42 @@ export function createCatalogue<const Locale extends string = string>(
   // methods out from under the code holding it. Lazy locales still fill in
   // over time, in closure state rather than properties of this object
   return Object.freeze(catalogue);
+}
+
+/** The parts of a locale tag that {@link Catalogue.match} compares. */
+interface Tag {
+  /** The tag in canonical form, such as `zh-Hant-HK` for `zh-hant-hk` */
+  canonical: string;
+  /** The language subtag, lowercase, such as `zh` */
+  language: string;
+  /**
+   * The script, written or implied, such as `Hant` for `zh-HK`. Absent where
+   * the runtime has no `Intl.Locale` or no likely script for the language
+   */
+  script: string | undefined;
+}
+
+/**
+ * Parse a locale tag, or hand back `undefined` for one that is not
+ * well-formed, such as `en_US`.
+ */
+function parseTag(input: string): Tag | undefined {
+  let canonical: string | undefined;
+  try {
+    [canonical] = Intl.getCanonicalLocales(input);
+  } catch {
+    return undefined;
+  }
+  if (!canonical) return undefined;
+
+  // Canonical form lowercases the language subtag, so this compares as is
+  const language = canonical.split('-')[0]!;
+
+  // Own try, so a runtime without `Intl.Locale` still matches case-insensitively
+  let script: string | undefined;
+  try {
+    script = new Intl.Locale(canonical).maximize().script;
+  } catch {}
+
+  return { canonical, language, script };
 }
