@@ -23,8 +23,11 @@ interface FormatterOptions {
   flags?: string[];
 }
 
-const entryKey = (context: string | undefined, message: string) =>
-  JSON.stringify([context ?? '', message]);
+// Entries with an explicit id are distinct even when their text and context match
+const entryKey = (id: string | undefined, context: string | undefined, message: string) =>
+  id ? JSON.stringify(['id', id]) : JSON.stringify(['text', context ?? '', message]);
+const readId = (item: { extractedComments: string[] }) =>
+  item.extractedComments.find((c) => c.startsWith('id:'))?.slice(3);
 
 function createPoFormatter(options: FormatterOptions = {}): Formatter {
   return {
@@ -34,7 +37,7 @@ function createPoFormatter(options: FormatterOptions = {}): Formatter {
       const po = PO.parse(content);
 
       return po.items.map((item) => {
-        const id = item.extractedComments.find((c) => c.startsWith('id:'))?.slice(3);
+        const id = readId(item);
         const comments = item.extractedComments //
           .filter((c) => !c.startsWith('id:'))
           .map((c) => c.trim());
@@ -59,7 +62,8 @@ function createPoFormatter(options: FormatterOptions = {}): Formatter {
         Object.assign(po.headers, existing.headers);
         for (const item of existing.items) {
           const flags = Object.keys(item.flags).filter((f) => item.flags[f]);
-          if (flags.length) existingFlags.set(entryKey(item.msgctxt, item.msgid), flags);
+          if (flags.length)
+            existingFlags.set(entryKey(readId(item), item.msgctxt, item.msgid), flags);
         }
       }
 
@@ -87,7 +91,7 @@ function createPoFormatter(options: FormatterOptions = {}): Formatter {
           item.references = Array.from(new Set(references)).sort();
         }
         const flags = [
-          ...(existingFlags.get(entryKey(message.context, message.message)) ?? []),
+          ...(existingFlags.get(entryKey(message.id, message.context, message.message)) ?? []),
           ...(message.flags ?? []),
           ...(options.flags ?? []),
         ];

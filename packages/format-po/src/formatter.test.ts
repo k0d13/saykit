@@ -164,6 +164,7 @@ describe('createPoFormatter', () => {
           'msgid ""',
           'msgstr ""',
           '',
+          '#. id:greeting',
           '#, fuzzy, icu-message-format',
           'msgctxt "formal"',
           'msgid "Hello"',
@@ -184,6 +185,31 @@ describe('createPoFormatter', () => {
         expect(formal).toContain('#, fuzzy,icu-message-format');
         expect(formal.match(/icu-message-format/g)).toHaveLength(1);
         expect(plain).toContain('#, fuzzy,icu-message-format');
+      });
+
+      it('matches existing flags by id, so they do not leak between ids sharing text', () => {
+        const existing = [
+          '#. id:a',
+          '#, fuzzy',
+          'msgid "Hello"',
+          'msgstr "Salut"',
+          '',
+          '#. id:b',
+          'msgid "Hello"',
+          'msgstr "Bonjour"',
+          '',
+        ].join('\n');
+        const formatter = createPoFormatter();
+        const out = formatter.stringify(
+          [
+            { id: 'a', message: 'Hello', translation: 'Salut', comments: [], references: [] },
+            { id: 'b', message: 'Hello', translation: 'Bonjour', comments: [], references: [] },
+          ],
+          { locale: 'fr', existingContent: existing },
+        );
+        const parsed = formatter.parse(out);
+        expect(parsed.find((m) => m.id === 'a')!.flags).toEqual(['fuzzy']);
+        expect(parsed.find((m) => m.id === 'b')!.flags).toEqual([]);
       });
 
       it('writes flags carried on the message and round-trips them through parse', () => {
