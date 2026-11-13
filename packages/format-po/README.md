@@ -25,6 +25,7 @@ formatter: po(),
 
 - `includeReferences` (default `true`): include `#: file:line` source references.
 - `includeLineNumbers` (default `true`): include line numbers in those references.
+- `flags` (default `[]`): `#,` flags written on every message entry, such as `icu-message-format` for Weblate. Flags already on an entry in the existing file are kept.
 
 ## Documentation
 

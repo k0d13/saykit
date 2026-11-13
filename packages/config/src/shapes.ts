@@ -8,6 +8,8 @@ export const Message = z.object({
   context: z.string().optional(),
   comments: z.string().array(),
   references: z.string().array(),
+  /** Format-level flags, such as PO's `fuzzy`, kept so a formatter can write them back */
+  flags: z.string().array().optional(),
 });
 export type Message = z.infer<typeof Message>;
 

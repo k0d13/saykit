@@ -38,6 +38,14 @@ describe('createPoFormatter', () => {
       expect(parsed[0]!.id).toBeUndefined();
       expect(parsed[0]!.comments).toEqual([]);
     });
+
+    it('reads flags, and an empty array when there are none', () => {
+      const parsed = createPoFormatter().parse(
+        '#, fuzzy,icu-message-format\nmsgid "Hi"\nmsgstr "Salut"\n',
+      );
+      expect(parsed[0]!.flags).toEqual(['fuzzy', 'icu-message-format']);
+      expect(messages[0]!.flags).toEqual([]);
+    });
   });
 
   describe('stringify', () => {
@@ -126,6 +134,75 @@ describe('createPoFormatter', () => {
       });
       expect(out).toContain('src/app.ts');
       expect(out).not.toContain('src/app.ts:10');
+    });
+
+    describe('flags', () => {
+      it('writes the given flags on every message entry, not the header', () => {
+        const out = createPoFormatter({ flags: ['icu-message-format'] }).stringify(
+          [message, { message: 'Bye', comments: [], references: [] }],
+          { locale: 'fr' },
+        );
+        expect(out.match(/^#, icu-message-format$/gm)).toHaveLength(2);
+        const header = out.split('\n\n')[0]!;
+        expect(header).not.toContain('#,');
+      });
+
+      it('places the flag line before msgctxt', () => {
+        const out = createPoFormatter({ flags: ['icu-message-format'] }).stringify([message], {
+          locale: 'fr',
+        });
+        expect(out).toMatch(/#: src\/b\.ts:3\n#, icu-message-format\nmsgctxt "formal"/);
+      });
+
+      it('writes no flags by default', () => {
+        const out = createPoFormatter().stringify([message], { locale: 'fr' });
+        expect(out).not.toContain('#,');
+      });
+
+      it('keeps flags from the existing file without duplicating them', () => {
+        const existing = [
+          'msgid ""',
+          'msgstr ""',
+          '',
+          '#, fuzzy, icu-message-format',
+          'msgctxt "formal"',
+          'msgid "Hello"',
+          'msgstr "Bonjour"',
+          '',
+          '#, fuzzy',
+          'msgid "Hello"',
+          'msgstr "Salut"',
+          '',
+        ].join('\n');
+        const out = createPoFormatter({ flags: ['icu-message-format'] }).stringify(
+          [message, { message: 'Hello', comments: [], references: [] }],
+          { locale: 'fr', existingContent: existing },
+        );
+        const entries = out.split('\n\n');
+        const formal = entries.find((e) => e.includes('msgctxt "formal"'))!;
+        const plain = entries.find((e) => e.includes('msgid "Hello"') && !e.includes('msgctxt'))!;
+        expect(formal).toContain('#, fuzzy,icu-message-format');
+        expect(formal.match(/icu-message-format/g)).toHaveLength(1);
+        expect(plain).toContain('#, fuzzy,icu-message-format');
+      });
+
+      it('writes flags carried on the message and round-trips them through parse', () => {
+        const formatter = createPoFormatter({ flags: ['icu-message-format'] });
+        const out = formatter.stringify([{ ...message, flags: ['fuzzy', 'icu-message-format'] }], {
+          locale: 'fr',
+        });
+        expect(out).toContain('#, fuzzy,icu-message-format\n');
+        expect(formatter.parse(out)[0]!.flags).toEqual(['fuzzy', 'icu-message-format']);
+      });
+
+      it('keeps existing flags when no flags option is given', () => {
+        const existing = '#, fuzzy\nmsgid "Hi"\nmsgstr "Salut"\n';
+        const out = createPoFormatter().stringify(
+          [{ message: 'Hi', comments: [], references: [] }],
+          { locale: 'fr', existingContent: existing },
+        );
+        expect(out).toContain('#, fuzzy\nmsgid "Hi"');
+      });
     });
   });
 });

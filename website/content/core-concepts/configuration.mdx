@@ -73,7 +73,7 @@ The first is the **source locale**: the language your code is written in, and th
 
 ## Fallback locales
 
-Non-source catalogues hold only their real translations. When [`saykit compile`](/reference/cli#saykit-compile) builds a locale's module, an untranslated key is filled from a **fallback chain**, which ends at the source locale. `fallbackLocales` adds steps before it:
+Non-source catalogues hold only their real translations. When [`saykit compile`](/reference/cli#saykit-compile) builds a locale's module, an untranslated key is filled from a **fallback chain**, which ends at the source locale. A translation flagged `fuzzy` counts as untranslated until someone confirms it. `fallbackLocales` adds steps before it:
 
 ```ts title="saykit.config.ts"
 export default defineConfig({

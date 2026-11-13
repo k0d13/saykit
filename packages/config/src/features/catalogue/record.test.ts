@@ -72,4 +72,16 @@ describe('assembleCatalogueRecord', () => {
 
     expect(record).toEqual({ greeting: 'Hello' });
   });
+
+  it('treats a fuzzy translation as untranslated', () => {
+    const record = assembleCatalogueRecord(bucket, [
+      JSON.stringify([
+        { message: 'Hello', translation: 'Kia ora', id: 'greeting', flags: ['fuzzy'] },
+        { message: 'Bye', translation: 'Hei kona', id: 'farewell', flags: ['fuzzy'] },
+      ]),
+      JSON.stringify([{ message: 'Hello', translation: 'Hi mate', id: 'greeting' }]),
+    ]);
+
+    expect(record).toEqual({ greeting: 'Hi mate', farewell: 'Bye' });
+  });
 });
