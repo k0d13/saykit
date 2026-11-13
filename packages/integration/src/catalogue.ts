@@ -245,11 +245,13 @@ export function createCatalogue<const Locale extends string = string>(
     match(...guesses) {
       for (const guess of guesses.flat()) {
         if (typeof guess !== 'string' || guess === '') continue;
-        // Before parsing, so a locale that isn't a well-formed tag still matches
-        if (locales.includes(guess as Locale)) return guess as Locale;
-
         const tag = parseTag(guess);
-        if (!tag) continue;
+        if (!tag) {
+          // Only once parsing fails, so a locale that isn't a well-formed tag
+          // still matches, while a well-formed guess keeps to the written order
+          if (locales.includes(guess as Locale)) return guess as Locale;
+          continue;
+        }
 
         const found =
           tags.find(([, t]) => t.canonical === tag.canonical) ??

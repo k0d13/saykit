@@ -252,6 +252,10 @@ describe('Catalogue#match', () => {
       expect(regional('en-GB', 'en-US').match('en-us')).toBe('en-US');
     });
 
+    it('keeps the order written when two locales are the same tag in different case', () => {
+      expect(regional('en-us', 'en-US').match('en-US')).toBe('en-us');
+    });
+
     it('never matches on a partial language subtag', () => {
       expect(regional('fil', 'fi').match('fi-FI')).toBe('fi');
       expect(regional('en', 'fil').match('fi')).toBe('en');
