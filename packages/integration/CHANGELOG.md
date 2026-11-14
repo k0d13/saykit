@@ -1,5 +1,11 @@
 # saykit
 
+## 0.13.0
+
+### Minor Changes
+
+- ba8a0a3: Make `catalogue.match` case-insensitive and script-aware: guesses are canonicalised, then matched exactly, by language and script (`zh-HK` finds `zh-TW`), then by whole language subtag, so `fi` no longer matches `fil`
+
 ## 0.12.0
 
 ### Minor Changes

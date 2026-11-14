@@ -1,5 +1,11 @@
 # @saykit/config
 
+## 0.13.0
+
+### Minor Changes
+
+- 9711908: Read PO flags on parse and carry them on `Message`, so ones a translation tool writes, like `fuzzy`, survive when SayKit rewrites a catalogue, and treat a `fuzzy` translation as untranslated on compile, falling back as gettext does
+
 ## 0.12.0
 
 ### Minor Changes
