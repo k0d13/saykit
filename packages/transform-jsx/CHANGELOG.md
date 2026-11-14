@@ -1,5 +1,13 @@
 # @saykit/transform-jsx
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [9711908]
+  - @saykit/config@0.13.0
+  - @saykit/transform-js@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes
