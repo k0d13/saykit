@@ -14,12 +14,13 @@ This guide walks through the common sources and how to combine them.
 
 ## How `match()` works
 
-For each guess, in order, `match()` tries two things:
+For each guess, in order, `match()` canonicalises it, so case doesn't matter (`en-us` is `en-US`), then tries three steps, most specific first:
 
 1. **Exact** match against your configured `locales`.
-2. **Language-prefix** match (`fr-CA` to `fr`, or `fr` to `fr-CA`).
+2. **Language and script** match, filling in the script a tag implies. `zh-HK` and `zh-Hant` are written in Traditional script, so they find `zh-TW` rather than `zh-CN`.
+3. **Language** match on the whole language subtag (`fr-CA` to `fr`, or `fr` to `fr-CA`). `fi` never matches `fil`.
 
-The first guess that satisfies either step wins. If no guess matches, the first locale the catalogue was written with is returned as a fallback.
+Within a step, the locale written first wins, so with `pt-BR` before `pt-PT`, `pt` matches `pt-BR`. The first guess that satisfies any step wins. A guess that isn't a well-formed locale tag, such as `en_US`, is skipped. If no guess matches, the first locale the catalogue was written with is returned as a fallback.
 
 ```ts
 const catalogue = createCatalogue({ en, fr });

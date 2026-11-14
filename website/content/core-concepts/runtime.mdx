@@ -45,7 +45,7 @@ const say = await catalogue.load('fr');
 
 ## Matching guesses
 
-`match()` maps guesses (browser languages, an `Accept-Language` header, a cookie, a URL segment) to a locale the catalogue has: exact match first, then language (`fr-CA` → `fr`), then the first locale.
+`match()` maps guesses (browser languages, an `Accept-Language` header, a cookie, a URL segment) to a locale the catalogue has: exact match first, then language and script (`zh-HK` → `zh-TW`), then language (`fr-CA` → `fr`), then the first locale. Case doesn't matter.
 
 ```ts
 catalogue.match(navigator.languages); // 'fr' for ['fr-CA', 'en-US']

@@ -69,6 +69,12 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
       type: 'boolean',
       default: 'true',
     },
+    flags: {
+      description:
+        'Flags (`#,`) written on every message entry, but not the header. Flags already on an entry in the existing file, such as `fuzzy`, are kept.',
+      type: 'string[]',
+      default: '[]',
+    },
   }}
 />
 
@@ -77,6 +83,20 @@ formatter: po({ includeReferences: true, includeLineNumbers: false });
 ```
 
 Dropping line numbers keeps the file references but stops diffs churning every time a line moves.
+
+Some translation tools want a flag on every entry. Weblate, for example, only runs its ICU checks and placeholder highlighting on entries flagged `icu-message-format`, and every SayKit catalogue is ICU:
+
+```ts
+formatter: po({ flags: ['icu-message-format'] });
+```
+
+```po
+#. id:welcome
+#: src/app.tsx
+#, icu-message-format
+msgid "Welcome, {name}"
+msgstr ""
+```
 
 ## JSON
 
@@ -208,6 +228,11 @@ Formatters work with this shape, exported from `@saykit/config` (not the runtime
     },
     references: {
       description: 'Source locations as `file:line` strings.',
+      type: 'string[]',
+    },
+    flags: {
+      description:
+        "Format-level flags, such as PO's `fuzzy`, so a formatter can write back what it read.",
       type: 'string[]',
     },
   }}

@@ -45,8 +45,9 @@ export function assembleCatalogueRecord(bucket: Bucket, contents: string[]) {
       const key = message.id || generateHash(message.message, message.context);
 
       // A real translation always wins, so the most specific locale that has
-      // one decides the key
-      if (message.translation) {
+      // one decides the key. A fuzzy one is a guess awaiting review, so, as
+      // gettext's own tools do, it counts as untranslated
+      if (message.translation && !message.flags?.includes('fuzzy')) {
         record[key] = message.translation;
         continue;
       }

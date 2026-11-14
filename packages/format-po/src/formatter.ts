@@ -13,7 +13,21 @@ interface FormatterOptions {
    * @default true
    */
   includeLineNumbers?: boolean;
+
+  /**
+   * Flags written on every message entry (not the header), such as
+   * `icu-message-format` for Weblate. Flags already on an entry in the
+   * existing file are kept.
+   * @default []
+   */
+  flags?: string[];
 }
+
+// Entries with an explicit id are distinct even when their text and context match
+const entryKey = (id: string | undefined, context: string | undefined, message: string) =>
+  id ? JSON.stringify(['id', id]) : JSON.stringify(['text', context ?? '', message]);
+const readId = (item: { extractedComments: string[] }) =>
+  item.extractedComments.find((c) => c.startsWith('id:'))?.slice(3);
 
 function createPoFormatter(options: FormatterOptions = {}): Formatter {
   return {
@@ -23,7 +37,7 @@ function createPoFormatter(options: FormatterOptions = {}): Formatter {
       const po = PO.parse(content);
 
       return po.items.map((item) => {
-        const id = item.extractedComments.find((c) => c.startsWith('id:'))?.slice(3);
+        const id = readId(item);
         const comments = item.extractedComments //
           .filter((c) => !c.startsWith('id:'))
           .map((c) => c.trim());
@@ -35,15 +49,22 @@ function createPoFormatter(options: FormatterOptions = {}): Formatter {
           translation: item.msgstr[0],
           comments,
           references: item.references,
+          flags: Object.keys(item.flags).filter((f) => item.flags[f]),
         };
       });
     },
 
     stringify(messages, { locale, existingContent }) {
       const po = new PO();
+      const existingFlags = new Map<string, string[]>();
       if (existingContent) {
         const existing = PO.parse(existingContent);
         Object.assign(po.headers, existing.headers);
+        for (const item of existing.items) {
+          const flags = Object.keys(item.flags).filter((f) => item.flags[f]);
+          if (flags.length)
+            existingFlags.set(entryKey(readId(item), item.msgctxt, item.msgid), flags);
+        }
       }
 
       po.headers['Content-Type'] ||= 'text/plain; charset=UTF-8';
@@ -69,6 +90,13 @@ function createPoFormatter(options: FormatterOptions = {}): Formatter {
             references = references.map((r) => r.replace(/:\d+$/, ''));
           item.references = Array.from(new Set(references)).sort();
         }
+        const flags = [
+          ...(existingFlags.get(entryKey(message.id, message.context, message.message)) ?? []),
+          ...(message.flags ?? []),
+          ...(options.flags ?? []),
+        ];
+        for (const flag of flags) if (flag.trim()) item.flags[flag.trim()] = true;
+
         po.items.push(item);
       }
 
