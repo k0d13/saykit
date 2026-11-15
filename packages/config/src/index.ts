@@ -1,5 +1,6 @@
 import { resolve } from 'node:path';
 import { messageKey } from './catalogue/index.js';
+import { type CheckOptions, type CheckResult, check } from './check.js';
 import { type CleanResult, clean } from './clean.js';
 import { type CompiledModule, compile, fileChanged } from './compile.js';
 import { load } from './config/load.js';
@@ -24,6 +25,8 @@ export interface SayKitConfig extends Omit<Resolved, 'fallbackChain'> {
   watch(): () => void;
   /** Scan sources, write the source locale, bootstrap missing locales, then compile */
   extract(options?: { watch?: boolean }): Promise<void>;
+  /** Extract in memory and report out-of-date catalogues, writing nothing. `[]` means up to date */
+  check(options?: CheckOptions): Promise<CheckResult[]>;
   /** Prune non-source locales against the source locale */
   clean(): CleanResult[];
   /** Transform a file's code, or `undefined` when no bucket includes it */
@@ -44,12 +47,14 @@ export function loadConfig(options: { cwd?: string } = {}): SayKitConfig {
     fileChanged: (path) => fileChanged(config, path),
     watch: () => watchCatalogues(config),
     extract: (extractOptions) => extract(config, extractOptions),
+    check: (checkOptions) => check(config, checkOptions),
     clean: () => clean(config),
     transform: (code, file) => transform(config, code, file),
   };
 }
 
 export { messageKey };
+export type { CheckOptions, CheckResult } from './check.js';
 export type { CleanResult } from './clean.js';
 export type { CompiledModule } from './compile.js';
 export type { Bucket, ConfigInput, DeclaredMessage, Formatter, Message, Transformer };

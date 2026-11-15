@@ -46,7 +46,7 @@ function merge(messages: Message[]) {
   return [...merged.values()];
 }
 
-function bucketExtractor(config: Resolved, bucket: Bucket) {
+export function bucketExtractor(config: Resolved, bucket: Bucket) {
   const byFile = new Map<string, Message[]>();
   const id = (path: string) => toId(config.root, path);
 
@@ -73,17 +73,19 @@ function bucketExtractor(config: Resolved, bucket: Bucket) {
     return true;
   }
 
+  // Config-declared messages lead so their hand-written metadata wins the
+  // merge; extracted occurrences of the same id only contribute references
+  const messages = () => merge([...bucket.messages, ...[...byFile.values()].flat()]);
+
   function write() {
-    // Config-declared messages lead so their hand-written metadata wins the
-    // merge; extracted occurrences of the same id only contribute references
-    const messages = merge([...bucket.messages, ...[...byFile.values()].flat()]);
+    const merged = messages();
 
     // Extraction only ever writes the source locale's messages. Non-source
     // locales are owned by the TMS, so we never add, change, or remove their
     // strings here, doing so produces huge diffs and destroys orphaned
     // translations the TMS is responsible for cleaning up
-    logger().info(`Writing ${messages.length} messages to ${config.sourceLocale}`);
-    writeCatalogue(bucket, config.sourceLocale, messages);
+    logger().info(`Writing ${merged.length} messages to ${config.sourceLocale}`);
+    writeCatalogue(bucket, config.sourceLocale, merged);
 
     // Bootstrap any locale that does not have a file yet with a minimal,
     // message-less catalogue (just a header) so a TMS like Weblate can register
@@ -104,7 +106,7 @@ function bucketExtractor(config: Resolved, bucket: Bucket) {
     logger().step(`Found ${paths.length} file(s)`);
   }
 
-  return { index, scan, write };
+  return { index, scan, messages, write };
 }
 
 /**

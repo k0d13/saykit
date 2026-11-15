@@ -43,6 +43,7 @@ export default defineConfig({
 ```sh
 saykit extract           # extract messages once
 saykit extract --watch   # extract and watch for changes
+saykit extract --check   # fail if extraction would change a catalogue, for CI
 saykit compile           # compile catalogues to {locale}.js modules
 saykit clean             # prune dead entries from other locales
 ```
@@ -61,6 +62,14 @@ modules in git; commit the `{locale}.d.ts` beside them.
 the source catalogue and entries with an empty translation, and leaves everything else exactly as it
 is. It never adds source keys to a locale file, that stays your TMS's job.
 
+`saykit extract --check` extracts in memory and writes nothing. It exits with 1 and lists the
+messages that would be added (`+`), removed (`-`) or updated (`~`) when the source catalogue is out
+of date, or when a locale file would be created. Two flags make it stricter for non-source locales:
+
+- `--untranslated` fails on source messages a locale has no translation for, whether missing, empty
+  or fuzzy
+- `--orphaned` fails on entries the source no longer has, the ones `clean` would remove
+
 ## Programmatic use
 
 `defineConfig` is a typed identity; `loadConfig` finds `saykit.config.*` in `cwd`, validates it and returns the config with its operations. Relative paths in the config resolve against the config's folder.
@@ -73,6 +82,7 @@ config.compile(); // every bucket and locale, skipping unchanged writes
 config.fileChanged(path); // a catalogue changed: recompile what reads it
 config.watch(); // recompile on catalogue changes, returns a stop function
 await config.extract({ watch: false });
+await config.check({ untranslated: true, orphaned: true }); // out-of-date catalogues, [] when none
 config.clean();
 config.transform(code, file); // undefined when no bucket includes the file
 ```
