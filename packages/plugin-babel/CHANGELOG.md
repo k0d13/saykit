@@ -1,5 +1,19 @@
 # babel-plugin-saykit
 
+## 0.13.0
+
+### Minor Changes
+
+- 9f8ee32: Compile catalogues from the build plugins, so no `saykit compile` script is needed before dev or build. `unplugin-saykit` compiles when the build starts and recompiles in watch mode when a catalogue changes. For Next.js and Metro, wrap the config with `withSayKit` from `babel-plugin-saykit/next` or `babel-plugin-saykit/metro`, which compiles when the config loads and watches outside production. Unchanged modules are no longer rewritten, and writes are atomic so parallel workers never read a half-written module. `saykit compile` stays for setups without a plugin, such as plain Babel
+
+### Patch Changes
+
+- Updated dependencies [1d88938]
+- Updated dependencies [43f56a7]
+- Updated dependencies [9711908]
+- Updated dependencies [9f8ee32]
+  - @saykit/config@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

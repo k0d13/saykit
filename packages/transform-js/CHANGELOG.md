@@ -1,5 +1,15 @@
 # @saykit/transform-js
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [1d88938]
+- Updated dependencies [43f56a7]
+- Updated dependencies [9711908]
+- Updated dependencies [9f8ee32]
+  - @saykit/config@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes
