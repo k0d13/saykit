@@ -236,6 +236,8 @@ These exist so that custom transformers can produce the same id and placeholder 
 
 ```ts
 import {
+  compileCataloguesSync,
+  watchCatalogues,
   emitCatalogueModule,
   expandBucketOutputPath,
   resolveFallbackChain,
@@ -244,9 +246,11 @@ import {
 } from '@saykit/config/features/catalogue';
 ```
 
-The helpers the CLI compiles catalogues with. Most apps never import them.
+The helpers the CLI and build plugins compile catalogues with. Most apps never import them; reach for them to compile from a bundler SayKit has no plugin for.
 
-- `emitCatalogueModule(config, bucket, locale)`, compiles a locale and its [fallback chain](/core-concepts/configuration#fallback-locales) into `{locale}.js` and `{locale}.d.ts`, as `saykit compile` does.
+- `compileCataloguesSync(config)`, compiles every bucket and locale, as `saykit compile` does.
+- `watchCatalogues(config, options?)`, recompiles a bucket whenever one of its catalogues changes, and returns a function that stops watching.
+- `emitCatalogueModule(config, bucket, locale)`, compiles one locale and its [fallback chain](/core-concepts/configuration#fallback-locales) into `{locale}.js` and `{locale}.d.ts`. `emitCatalogueModuleSync` is the same, synchronously. Either skips a write that would not change the file.
 - `expandBucketOutputPath(bucket, locale)`, the catalogue path for a locale.
 - `resolveFallbackChain(config, locale)`, the locales to try, ending at the source.
 - `assembleCatalogueRecord(bucket, contents)`, merges parsed catalogues into one `id → ICU` record, most specific winning.

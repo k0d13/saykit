@@ -9,11 +9,7 @@
     "check": "tsc --noEmit",
     "extract": "saykit extract",
     "build": "vite build",
-    "dev": "vite build --watch",
-    "compile": "saykit compile",
-    "predev": "saykit compile",
-    "prebuild": "saykit compile",
-    "precheck": "saykit compile"
+    "dev": "vite build --watch"
   },
   "dependencies": {
     "saykit": "workspace:^"

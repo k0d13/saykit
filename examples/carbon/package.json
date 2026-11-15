@@ -6,11 +6,7 @@
     "check": "tsc --noEmit",
     "extract": "saykit extract",
     "build": "tsdown",
-    "dev": "wrangler dev",
-    "compile": "saykit compile",
-    "predev": "saykit compile",
-    "prebuild": "saykit compile",
-    "precheck": "saykit compile"
+    "dev": "wrangler dev"
   },
   "dependencies": {
     "@buape/carbon": "0.17.0",

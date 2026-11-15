@@ -96,7 +96,7 @@ Macros compile to `say.call(descriptor)`:
 say.call({ id: 'abc123', _name: 'Ada' }); // → "Hello, Ada!"
 ```
 
-The message is already compiled to data by [`saykit compile`](/reference/cli#saykit-compile), so nothing is parsed at runtime. A view turns each message into a closure the first time it is called and caches it, building its `Intl` formatters once. A value that cannot be formatted, such as an invalid date, is written as given with a warning rather than throwing.
+The message is already compiled to data at build time, so nothing is parsed at runtime. A view turns each message into a closure the first time it is called and caches it, building its `Intl` formatters once. A value that cannot be formatted, such as an invalid date, is written as given with a warning rather than throwing.
 
 ## Views without a catalogue
 

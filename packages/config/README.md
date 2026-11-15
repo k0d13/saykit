@@ -53,8 +53,9 @@ existing translation files are left untouched. Translated content is owned by yo
 
 `saykit compile` (which `extract` also runs) writes a `{locale}.js` beside each catalogue, filled
 from its fallback chain so an untranslated key resolves to a fallback locale and ultimately the
-source string. Ignore the `.js` modules in git and compile before dev and build; commit the
-`{locale}.d.ts` beside them.
+source string. The build plugins compile too, when they start and in dev on every catalogue
+change, so `saykit compile` is only for setups without one, such as plain `babel`. Ignore the `.js`
+modules in git; commit the `{locale}.d.ts` beside them.
 
 `saykit clean` only ever subtracts from non-source locales: it drops entries that no longer exist in
 the source catalogue and entries with an empty translation, and leaves everything else exactly as it

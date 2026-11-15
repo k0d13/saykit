@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, parse as parsePath, resolve } from 'node:path';
 import { compileMessage } from '#/features/messages/compile.js';
 import type { Bucket, Config } from '#/shapes.js';
@@ -70,27 +70,77 @@ export function generateCatalogueModule(record: Record<string, string>) {
   );
 }
 
+function readOrNull(path: string) {
+  try {
+    return readFileSync(path, 'utf8');
+  } catch {
+    return null;
+  }
+}
+
+/** Block for a few milliseconds, for a retry that has to stay synchronous. */
+function pause(ms: number) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+/**
+ * Write a file only if its content would change, and never leave it half written.
+ *
+ * Skipping an unchanged write keeps a dev server and `extract --watch` from reloading each other.
+ * Writing through a rename means two processes compiling at once, as Next's workers do, never
+ * hand a bundler a truncated module.
+ *
+ * @returns Whether the file was written
+ */
+export function writeFileIfChanged(path: string, content: string) {
+  if (readOrNull(path) === content) return false;
+
+  const temporary = `${path}.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`;
+  writeFileSync(temporary, content);
+
+  for (let attempt = 0; ; attempt++) {
+    try {
+      renameSync(temporary, path);
+      return true;
+    } catch (error) {
+      // Windows refuses to replace a file another process has open. If that process wrote the
+      // same content, there is nothing left to do
+      if (readOrNull(path) === content) {
+        rmSync(temporary, { force: true });
+        return false;
+      }
+      const code = (error as NodeJS.ErrnoException).code;
+      if (attempt >= 5 || !['EPERM', 'EACCES', 'EBUSY'].includes(code!)) {
+        rmSync(temporary, { force: true });
+        throw error;
+      }
+      pause(10 * 2 ** attempt);
+    }
+  }
+}
+
 /**
  * Compile one locale's catalogue, and its fallbacks, into a module on disk.
  *
- * The fallback chain is merged here, so the app still imports one module per locale.
+ * The fallback chain is merged here, so the app still imports one module per locale. Synchronous,
+ * so a bundler config can compile while it is evaluated, before the bundler asks for the module.
  */
-export async function emitCatalogueModule(config: Config, bucket: Bucket, locale: string) {
-  const sources = resolveFallbackChain(config, locale).map((l) =>
-    expandBucketOutputPath(bucket, l),
-  );
-  const contents = await Promise.all(
-    sources.map((source) => readFile(source, 'utf8').catch(() => '')),
+export function emitCatalogueModuleSync(config: Config, bucket: Bucket, locale: string) {
+  const contents = resolveFallbackChain(config, locale).map(
+    (l) => readOrNull(expandBucketOutputPath(bucket, l)) ?? '',
   );
 
   const record = assembleCatalogueRecord(bucket, contents);
   const path = modulePathFor(bucket, locale);
 
-  await mkdir(dirname(path), { recursive: true });
-  await Promise.all([
-    writeFile(path, generateCatalogueModule(record)),
-    writeFile(path.replace(/\.js$/, '.d.ts'), DECLARATION_CONTENT),
-  ]);
+  mkdirSync(dirname(path), { recursive: true });
+  const written = writeFileIfChanged(path, generateCatalogueModule(record));
+  writeFileIfChanged(path.replace(/\.js$/, '.d.ts'), DECLARATION_CONTENT);
 
-  return { path, count: Object.keys(record).length };
+  return { path, count: Object.keys(record).length, written };
+}
+
+/** {@link emitCatalogueModuleSync}, as a promise. */
+export async function emitCatalogueModule(config: Config, bucket: Bucket, locale: string) {
+  return emitCatalogueModuleSync(config, bucket, locale);
 }

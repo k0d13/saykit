@@ -21,7 +21,7 @@ src/locales/
   fr.d.ts
 ```
 
-The `.po` is what translators edit. The `.js` is build output from [`saykit compile`](/reference/cli#saykit-compile), which extraction runs as its last step.
+The `.po` is what translators edit. The `.js` is build output: the build plugin compiles it when your dev server or build starts, extraction compiles it as its last step, and [`saykit compile`](/reference/cli#saykit-compile) compiles it on its own.
 
 ## Source-only writes
 
@@ -59,11 +59,11 @@ After the first run it re-extracts when a source file in a bucket changes, drops
 
 ## Committing
 
-| File            | Commit?                                                         |
-| --------------- | --------------------------------------------------------------- |
-| `{locale}.po`   | Yes: the catalogues are the source of truth                     |
-| `{locale}.js`   | No: build output, made by `saykit compile` before dev and build |
-| `{locale}.d.ts` | Yes: it never changes, and lets `tsc` pass on a fresh clone     |
+| File            | Commit?                                                     |
+| --------------- | ----------------------------------------------------------- |
+| `{locale}.po`   | Yes: the catalogues are the source of truth                 |
+| `{locale}.js`   | No: build output, compiled by the build plugin              |
+| `{locale}.d.ts` | Yes: it never changes, and lets `tsc` pass on a fresh clone |
 
 For the scripts and CI check, see the [CLI reference](/reference/cli#scripts).
 

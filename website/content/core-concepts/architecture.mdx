@@ -40,7 +40,7 @@ import { Code2, Cog, Wand2, FileType2, Plug } from 'lucide-react';
 ## How they fit together
 
 ```text
- source.ts ──saykit extract──▶ locales/en.po ──saykit compile──▶ locales/en.js
+ source.ts ──saykit extract──▶ locales/en.po ──saykit plugin──▶ locales/en.js
  (macros)    transformer +     (translators     formatter +       (data your
               formatter         edit these)      ICU compiler       app imports)
 
@@ -48,8 +48,8 @@ import { Code2, Cog, Wand2, FileType2, Plug } from 'lucide-react';
 ```
 
 1. **Extract.** The CLI walks each bucket's files, the transformer finds the macros, and the formatter writes the **source** locale's catalogue. Other locales are never touched, so translations are never overwritten.
-2. **Compile.** The CLI reads each locale's catalogue, fills untranslated keys from its fallback chain, and compiles every ICU message to data with its number and date formats resolved. `extract` ends by doing this, and `saykit compile` does it alone.
-3. **Build.** The plugin rewrites each macro into a `say.call(...)` with the message's id and values. It does nothing else: a locale module is an ordinary `.js` import your bundler already knows how to load, split and hot-reload.
+2. **Compile.** The CLI reads each locale's catalogue, fills untranslated keys from its fallback chain, and compiles every ICU message to data with its number and date formats resolved. The build plugin does this when the build starts and again in dev whenever a catalogue changes; `extract` ends by doing it, and `saykit compile` does it alone.
+3. **Build.** The plugin rewrites each macro into a `say.call(...)` with the message's id and values. A locale module is an ordinary `.js` import your bundler already knows how to load, split and hot-reload.
 
 ## Identifiers
 

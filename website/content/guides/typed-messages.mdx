@@ -3,7 +3,7 @@ title: Typed messages
 description: How translation file imports are typed, and why the type is generic
 ---
 
-`saykit compile` writes a declaration beside every locale module, so `import en from './locales/en.js'` type-checks:
+Compiling writes a declaration beside every locale module, so `import en from './locales/en.js'` type-checks:
 
 ```ts title="src/locales/en.d.ts"
 import type { Message } from 'saykit';
