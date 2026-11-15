@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { transformSync } from '@babel/core';
@@ -6,25 +6,23 @@ import { afterAll, describe, expect, it, vi } from 'vitest';
 
 const dir = mkdtempSync(join(tmpdir(), 'saykit-babel-'));
 
-const config = {
-  locales: ['en', 'fr'],
-  buckets: [
-    {
-      match: (id: string) => id.endsWith('.ts'),
-      output: Object.assign(join(dir, '{locale}.{extension}'), {
-        match: (id: string) => id.endsWith('.json'),
-      }),
-      transformer: { transform: (code: string) => code.replace('MARK', 'DONE') },
-      formatter: {
-        extension: '.json',
-        parse: (content: string) =>
-          JSON.parse(content) as { message: string; translation?: string; id?: string }[],
+writeFileSync(
+  join(dir, 'saykit.config.cjs'),
+  `module.exports = {
+    locales: ['en'],
+    buckets: [{
+      include: ['**/*.ts'],
+      output: 'l/{locale}.{extension}',
+      formatter: { extension: '.json', parse: () => [], stringify: () => '[]' },
+      transformer: {
+        match: () => true,
+        extract: () => [],
+        transform: (code) => code.replace('MARK', 'DONE'),
       },
-    },
-  ],
-};
-
-vi.mock('@saykit/config/features/loader', () => ({ resolveConfig: () => config }));
+    }],
+  };`,
+);
+vi.spyOn(process, 'cwd').mockReturnValue(dir);
 
 const { default: plugin } = await import('./index.js');
 

@@ -10,7 +10,7 @@ import {
   validateArgumentStyle,
   validateBranchIdentifier,
   type Message,
-} from '@saykit/config/features/messages';
+} from '@saykit/config/messages';
 
 // A placeholder name is also used as a property name in the compiled call
 const PLACEHOLDER_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/;

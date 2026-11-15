@@ -76,6 +76,30 @@ function moduleUrl(name: string, version: string, path = '') {
     : `https://esm.sh/${name}@${version}${path}`;
 }
 
+type MessagesModule = { generateHash: Runtime['generateHash'] };
+
+/** Whether a stable `major.minor.patch` release is at least 0.13.0. */
+function atLeast013(version: string) {
+  const [major = 0, minor = 0] = version.split('.').map((part) => Number.parseInt(part, 10));
+  return major > 0 || minor >= 13;
+}
+
+/**
+ * The message IR moved out of `/features/messages` in 0.13.0. Previews are always current, but
+ * `0.0.0-beta-<timestamp>` snapshots sit on either side of the move, so those try the current
+ * path and fall back to the old one.
+ */
+function loadMessages(version: string): Promise<MessagesModule> {
+  const load = (path: string) =>
+    import(
+      /* webpackIgnore: true */ moduleUrl('@saykit/config', version, path)
+    ) as Promise<MessagesModule>;
+
+  if (previewCommit(version)) return load('/messages');
+  if (version.includes('-beta-')) return load('/messages').catch(() => load('/features/messages'));
+  return load(atLeast013(version) ? '/messages' : '/features/messages');
+}
+
 /**
  * The workspace packages depend on each other by caret range, and esm.sh cannot
  * resolve `^0.0.0-beta-<timestamp>`: the entry loads but its imports 404. Pinning
@@ -101,9 +125,7 @@ export function loadRuntime(version: string): Promise<Runtime> {
       }>,
       // Same version as the transformer, so a displayed id always matches what
       // that release would actually write into the catalogue
-      import(
-        /* webpackIgnore: true */ moduleUrl('@saykit/config', version, '/features/messages')
-      ) as Promise<{ generateHash: Runtime['generateHash'] }>,
+      loadMessages(version),
     ]).then(([transform, messages]) => {
       const transformer = transform.default();
       if (typeof transformer?.extract !== 'function' || typeof transformer.transform !== 'function')

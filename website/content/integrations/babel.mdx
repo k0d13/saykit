@@ -22,7 +22,13 @@ pnpm add -D babel-plugin-saykit @saykit/config @saykit/format-po @saykit/transfo
 }
 ```
 
-Adding a `.babelrc` switches Next.js from SWC to Babel. There is no SWC plugin, so this is how SayKit runs in Next.js. `next.config.mjs` needs no SayKit wrapper.
+```js title="next.config.mjs"
+import { withSayKit } from 'babel-plugin-saykit/next';
+
+export default withSayKit({});
+```
+
+Adding a `.babelrc` switches Next.js from SWC to Babel. There is no SWC plugin, so this is how SayKit runs in Next.js. `withSayKit` compiles the catalogues; see [what it does](#what-it-does).
 
 ### Expo
 
@@ -36,7 +42,14 @@ module.exports = function (api) {
 };
 ```
 
-Bare React Native is the same with `module:metro-react-native-babel-preset`. `metro.config.js` needs no SayKit wrapper.
+```js title="metro.config.js"
+const { getDefaultConfig } = require('expo/metro-config');
+const { withSayKit } = require('babel-plugin-saykit/metro');
+
+module.exports = withSayKit(getDefaultConfig(__dirname));
+```
+
+Bare React Native is the same with `module:metro-react-native-babel-preset` and `@react-native/metro-config`.
 
 ### Plain Babel
 
@@ -46,14 +59,26 @@ export default {
 };
 ```
 
+Plain Babel has no dev server or config to hook into, so compile the catalogues yourself before building:
+
+```json title="package.json"
+{
+  "scripts": {
+    "prebuild": "saykit compile"
+  }
+}
+```
+
 ## What it does
 
-The plugin rewrites macros to `say.call(...)` in every source file outside `node_modules`. That is all. Catalogues are compiled by [`saykit compile`](/reference/cli#saykit-compile) into ordinary `{locale}.js` modules, which Next.js and Metro load and hot-reload like any other module.
+The plugin rewrites macros to `say.call(...)` in every source file outside `node_modules`.
+
+`withSayKit` compiles each catalogue into an ordinary `{locale}.js` module when Next.js or Metro evaluates its config, before anything is bundled. Under `next dev` and `expo start` it then watches the catalogues and recompiles on every change, so editing `en.po` rewrites every locale that falls back to it, and the bundler hot-reloads those modules like any other. `next start` compiles nothing, so a deployment that only serves a build needs neither `saykit.config.*` nor its formatters. The Next.js wrapper returns a config function, so keep it outermost when combining it with wrappers that expect a config object; the Metro wrapper returns your config untouched.
+
+A write is skipped when a module would not change, and Next.js's worker processes leave compiling to the process that started them, so nothing reloads for no reason.
 
 <Callout type="info">
-  Run `saykit compile` before anything that imports those modules, usually as `predev` and
-  `prebuild` scripts. Keep `saykit extract --watch` running in development to recompile when a
-  translation changes.
+  Keep `saykit extract --watch` running in development so the source catalogue follows your code.
 </Callout>
 
 ## Next

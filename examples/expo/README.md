@@ -42,13 +42,22 @@ would otherwise produce loose strings between elements.
 
 Metro is not a Vite/Rollup-family bundler, so `unplugin-saykit` does not apply. Metro compiles every
 module through Babel, and `babel-plugin-saykit` hooks in there instead to rewrite the macros.
-`import en from './locales/en.js'` is an ordinary import of the module `saykit compile` writes.
 
 ```js
 module.exports = function babelConfig(api) {
   api.cache(true);
   return { presets: ['babel-preset-expo'], plugins: ['saykit'] };
 };
+```
+
+`import en from './locales/en.js'` is an ordinary import of a module compiled from `en.json`.
+`withSayKit` in `metro.config.js` compiles every locale when Metro starts, and under `expo start`
+recompiles whenever a catalogue changes. Each locale is a real file, so editing `en.json` rewrites
+every locale that falls back to it and Metro reloads them as it would any other module.
+
+```js
+const { withSayKit } = require('babel-plugin-saykit/metro');
+module.exports = withSayKit(getDefaultConfig(__dirname));
 ```
 
 Note `api.cache(true)`: without it Babel re-evaluates the config per file, and the plugin's config

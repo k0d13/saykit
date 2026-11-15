@@ -75,8 +75,7 @@ If your format doesn't natively support every field, you can choose what to drop
 A minimal JSON formatter that maps catalogue entries to a flat object:
 
 ```ts title="my-format-json.ts"
-import type { Formatter, Message } from '@saykit/config';
-import { generateHash } from '@saykit/config/features/messages';
+import { messageKey, type Formatter } from '@saykit/config';
 
 interface JsonEntry {
   message: string;
@@ -108,8 +107,7 @@ export default function json(): Formatter {
       const out: Record<string, JsonEntry> = {};
 
       for (const msg of messages.sort((a, b) => a.message.localeCompare(b.message))) {
-        const id = msg.id || generateHash(msg.message, msg.context);
-        out[id] = {
+        out[messageKey(msg)] = {
           message: msg.message,
           translation: msg.translation ?? '',
           ...(msg.context ? { context: msg.context } : {}),
@@ -170,12 +168,12 @@ stringify(messages, { locale, existingContent }) {
 
 ## Generating ids
 
-By default, SayKit hashes `message + context` into a 6-character id. The `generateHash` helper is exposed for formatters that need to compute ids during `stringify`:
+By default, SayKit hashes `message + context` into a 6-character id. The `messageKey` helper returns the id (`msg.id` when there is one) for formatters that need it during `stringify`:
 
 ```ts
-import { generateHash } from '@saykit/config/features/messages';
+import { messageKey } from '@saykit/config';
 
-const id = msg.id || generateHash(msg.message, msg.context);
+const id = messageKey(msg);
 ```
 
 If your format has its own id convention (e.g. dotted path keys), you can use that on `parse` and `stringify` regardless of what SayKit would have hashed to.

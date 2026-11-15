@@ -9,15 +9,15 @@ never heard of, this is the example.
 
 ## What it demonstrates
 
-| Concern                                                     | Where                  |
-| ----------------------------------------------------------- | ---------------------- |
-| A custom `Formatter` (`extension` / `parse` / `stringify`)  | `yaml-formatter.ts`    |
-| `existingContent`: not clobbering human edits               | `yaml-formatter.ts`    |
-| `generateHash`: keying messages the way the runtime expects | both files             |
-| A custom `Transformer` (`match` / `extract` / `transform`)  | `email-transformer.ts` |
-| Compiling a **non-JS** file into a module                   | `email-transformer.ts` |
-| Ambient types for the generated module                      | `src/templates.d.ts`   |
-| Locale from `LC_ALL` / `LC_MESSAGES` / `LANG`               | `src/i18n.ts`          |
+| Concern                                                    | Where                  |
+| ---------------------------------------------------------- | ---------------------- |
+| A custom `Formatter` (`extension` / `parse` / `stringify`) | `yaml-formatter.ts`    |
+| `existingContent`: not clobbering human edits              | `yaml-formatter.ts`    |
+| `messageKey`: keying messages the way the runtime expects  | both files             |
+| A custom `Transformer` (`match` / `extract` / `transform`) | `email-transformer.ts` |
+| Compiling a **non-JS** file into a module                  | `email-transformer.ts` |
+| Ambient types for the generated module                     | `src/templates.d.ts`   |
+| Locale from `LC_ALL` / `LC_MESSAGES` / `LANG`              | `src/i18n.ts`          |
 
 ## Writing a formatter
 
@@ -30,12 +30,12 @@ interface Formatter {
 ```
 
 That is the whole contract. `Formatter` is a Zod schema in
-[`@saykit/config`](../../packages/config/src/shapes.ts), so a mistake in the shape is reported when
+[`@saykit/config`](../../packages/config/src/config/schema.ts), so a mistake in the shape is reported when
 the config loads rather than halfway through an extraction run.
 
 Two details are easy to get wrong, and this example is written to show both:
 
-**Key messages with `generateHash`, not with the source text.** The transformer compiles the same
+**Key messages with `messageKey`, not with the source text.** The transformer compiles the same
 id into `say.call({ id })` at the call site, and that is what the runtime looks up. Keying on the
 raw text instead produces a catalogue the runtime silently cannot read, and collides for two
 messages with the same text but different `context`.

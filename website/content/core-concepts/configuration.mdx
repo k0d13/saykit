@@ -24,11 +24,11 @@ export default defineConfig({
 });
 ```
 
-`defineConfig()` types the config and validates it, so a mistake fails with a clear error.
+`defineConfig()` only types the config. It is validated when the CLI or a bundler plugin loads it, so a mistake fails with a clear error.
 
 ## Loading
 
-The CLI and plugins search up from the working directory for `saykit.config.{ts,mts,cts,js,mjs,cjs}`. The file runs as it is on disk, so relative imports resolve against it:
+The CLI and plugins search up from the working directory for `saykit.config.{ts,mts,cts,js,mjs,cjs}`. The file runs as it is on disk, so relative imports resolve against it. Relative paths inside the config (`include`, `exclude`, `output`) resolve against its folder, not the working directory:
 
 ```ts title="saykit.config.ts"
 import { yaml } from './yaml-formatter.ts';
@@ -73,7 +73,7 @@ The first is the **source locale**: the language your code is written in, and th
 
 ## Fallback locales
 
-Non-source catalogues hold only their real translations. When [`saykit compile`](/reference/cli#saykit-compile) builds a locale's module, an untranslated key is filled from a **fallback chain**, which ends at the source locale. A translation flagged `fuzzy` counts as untranslated until someone confirms it. `fallbackLocales` adds steps before it:
+Non-source catalogues hold only their real translations. When a locale's module is compiled, an untranslated key is filled from a **fallback chain**, which ends at the source locale. A translation flagged `fuzzy` counts as untranslated until someone confirms it. `fallbackLocales` adds steps before it:
 
 ```ts title="saykit.config.ts"
 export default defineConfig({

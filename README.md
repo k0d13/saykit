@@ -106,7 +106,8 @@ pnpm saykit extract
 Extraction writes the source locale's catalogue (`en.po`), creates empty files for new locales, and
 leaves existing translations alone. It then compiles each locale into the `en.js` / `fr.js` your app
 imports, filling untranslated keys from a fallback chain that ends at the source string. Ignore the
-compiled `.js` in git and run `saykit compile` before dev and build. `saykit clean` prunes orphaned
+compiled `.js` in git; the build plugin compiles it when your dev server or build starts, and
+recompiles in dev when a catalogue changes. `saykit clean` prunes orphaned
 entries from other locales.
 
 ## React

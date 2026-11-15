@@ -19,7 +19,7 @@
     "directory": "packages/config"
   },
   "bin": {
-    "saykit": "./dist/commands/index.mjs"
+    "saykit": "./dist/cli/index.mjs"
   },
   "files": [
     "dist",
@@ -40,34 +40,14 @@
         "default": "./dist/index.mjs"
       }
     },
-    "./features/catalogue": {
+    "./messages": {
       "require": {
-        "types": "./dist/features/catalogue/index.d.cts",
-        "default": "./dist/features/catalogue/index.cjs"
+        "types": "./dist/messages/index.d.cts",
+        "default": "./dist/messages/index.cjs"
       },
       "import": {
-        "types": "./dist/features/catalogue/index.d.mts",
-        "default": "./dist/features/catalogue/index.mjs"
-      }
-    },
-    "./features/loader": {
-      "require": {
-        "types": "./dist/features/loader/index.d.cts",
-        "default": "./dist/features/loader/index.cjs"
-      },
-      "import": {
-        "types": "./dist/features/loader/index.d.mts",
-        "default": "./dist/features/loader/index.mjs"
-      }
-    },
-    "./features/messages": {
-      "require": {
-        "types": "./dist/features/messages/index.d.cts",
-        "default": "./dist/features/messages/index.cjs"
-      },
-      "import": {
-        "types": "./dist/features/messages/index.d.mts",
-        "default": "./dist/features/messages/index.mjs"
+        "types": "./dist/messages/index.d.mts",
+        "default": "./dist/messages/index.mjs"
       }
     }
   },

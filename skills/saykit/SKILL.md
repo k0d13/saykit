@@ -97,18 +97,30 @@ module.exports = function (api) {
 };
 ```
 
-A plugin only rewrites macros. Catalogues are never loaded through it: no `next.config` or `metro.config` wrapper, no loader options.
+Next.js and Metro also need `withSayKit` around their config, which compiles the catalogues (see below):
+
+```js
+// next.config.mjs
+import { withSayKit } from 'babel-plugin-saykit/next';
+export default withSayKit({});
+
+// metro.config.js
+const { withSayKit } = require('babel-plugin-saykit/metro');
+module.exports = withSayKit(getDefaultConfig(__dirname));
+```
+
+Catalogues are never loaded through a plugin: no loader options, nothing intercepts an import.
 
 ### Compiled locale modules
 
-`saykit compile` writes a `{locale}.js` beside each catalogue (`src/locales/fr.po` → `src/locales/fr.js`), with the `fallbackLocales` chain already merged in, plus a `{locale}.d.ts` declaring `Record<string, Message>`. `saykit extract` compiles too, and `extract --watch` recompiles when a catalogue changes. Gitignore the `.js` modules and commit the `.d.ts`, which never changes, so `tsc` passes on a fresh clone. Since the modules are not committed, run compile before anything that imports a locale:
+Each catalogue compiles to a `{locale}.js` beside it (`src/locales/fr.po` → `src/locales/fr.js`), with the `fallbackLocales` chain already merged in, plus a `{locale}.d.ts` declaring `Record<string, Message>`. The build plugin does this: `unplugin-saykit` when the build starts, `withSayKit` when Next or Metro loads its config, and both recompile in dev whenever a catalogue changes. `saykit extract` compiles too. Gitignore the `.js` modules and commit the `.d.ts`, which never changes, so `tsc` passes on a fresh clone.
+
+No `pre*` script is needed with a plugin. Without one (plain `babel`, a script Node runs directly), run `saykit compile` before anything imports a locale:
 
 ```json title="package.json"
 {
   "scripts": {
-    "predev": "saykit compile",
-    "prebuild": "saykit compile",
-    "pretest": "saykit compile"
+    "prebuild": "saykit compile"
   }
 }
 ```
@@ -333,7 +345,7 @@ new Client(options, { commands: [new Ping()] }, [new SayPlugin(catalogue)]);
 
 1. Write or change a message.
 2. `saykit extract` (or `saykit extract --watch`). Only the source locale file is written; other locales are created header-only and never touched afterwards. Every locale is then compiled.
-3. Translate the other locales by hand or through a TMS. A locale file needs only the entries actually translated; the rest fall back through `fallbackLocales` to the source string at compile time. After pulling translations, `saykit compile`.
+3. Translate the other locales by hand or through a TMS. A locale file needs only the entries actually translated; the rest fall back through `fallbackLocales` to the source string at compile time. After pulling translations, the next dev server or build compiles them (or `saykit compile` without a plugin).
 4. `saykit clean` when source strings were removed or reworded: it drops orphaned and empty entries from non-source locales and never adds anything.
 
 Commit the catalogues and `.d.ts` files, not the compiled `.js`. CI check that extraction was run:
@@ -353,11 +365,11 @@ Custom formats: a `Formatter` is `{ extension: '.yaml', parse(content) => Messag
 | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `'say' is a macro and must be used with the relevant saykit plugin` | The file was not transformed. Check the bucket `include` glob and that the plugin is in the bundler and test config |
 | `No message for <id> in locale 'x'`                                 | Stale or hand-written module. Run `saykit extract`; import the compiled file, never declare messages                |
-| `Cannot find module './locales/en.js'`                              | Not compiled yet. `saykit compile`, and add it as a `pre` script                                                    |
+| `Cannot find module './locales/en.js'`                              | Not compiled yet. Add the plugin (and `withSayKit` for Next/Metro), or run `saykit compile` where there is none     |
 | `Messages for locale 'x' have not been loaded yet`                  | `catalogue.locale('x')` on a lazy locale. `await catalogue.load('x')` or `store.set('x')` first                     |
 | `No messages for locale 'x'`                                        | `x` is not a key of the catalogue. Run guesses through `match` first                                                |
 | `'getSay' must be called below a 'withSay'`                         | This segment is not wrapped. Wrap every layout and page, not only the root                                          |
-| Edited a `.po`, dev server shows old strings                        | The module was not recompiled. Run `saykit extract --watch` alongside the dev server, or `saykit compile`           |
+| Edited a `.po`, dev server shows old strings                        | The module was not recompiled. On Next/Metro, check `withSayKit` wraps the config; otherwise run `saykit compile`   |
 | Translator sees `{0}`                                               | Placeholder is not an identifier. Name it: `${{ name: value }}`                                                     |
 | Build fails on a branch key such as `sold-out`                      | ICU keys are identifiers. Rename the discriminant at its source                                                     |
 | `Text strings must be rendered within a <Text> component`           | React Native. `<Say whitespace={false}>`                                                                            |

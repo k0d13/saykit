@@ -10,7 +10,7 @@ import {
   validateArgumentStyle,
   validateBranchIdentifier,
   type Message,
-} from '@saykit/config/features/messages';
+} from '@saykit/config/messages';
 import { getTranslatorComments, unwrapPlaceholder } from '@saykit/transform-js/parser';
 
 /**

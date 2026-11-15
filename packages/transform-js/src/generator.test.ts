@@ -5,7 +5,7 @@ import {
   CompositeMessage,
   ElementMessage,
   LiteralMessage,
-} from '@saykit/config/features/messages';
+} from '@saykit/config/messages';
 import { describe, expect, it } from 'vitest';
 import { generateSayCallExpression } from './generator.js';
 

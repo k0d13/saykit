@@ -25,6 +25,8 @@ export default defineConfig({
 
 Import from the subpath matching your bundler: `/vite`, `/rollup`, `/rolldown`, `/webpack`, `/rspack`, `/esbuild`, `/farm`, or `/bun`.
 
+The plugin compiles your catalogues into the `{locale}.js` modules your app imports when the build starts, and again in dev whenever a catalogue changes, so there is no `saykit compile` step to run first.
+
 ## Documentation
 
 See [saykit.js.org/integrations/vite](https://saykit.js.org/integrations/vite).

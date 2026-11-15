@@ -2,7 +2,7 @@ import { generate } from '@babel/generator';
 import * as parser from '@babel/parser';
 import traverse_ from '@babel/traverse';
 import type { Transformer } from '@saykit/config';
-import { assignSequenceIdentifiers, CompositeMessage } from '@saykit/config/features/messages';
+import { assignSequenceIdentifiers, CompositeMessage } from '@saykit/config/messages';
 import { generateSayCallExpression, isLoneArgument } from '@saykit/transform-js/generator';
 import {
   collectLeadingComments,

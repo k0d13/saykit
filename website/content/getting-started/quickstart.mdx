@@ -126,26 +126,19 @@ src/locales/
 
 Extraction only writes the **source** locale (`en`). Other locales are created empty and then left to your translators; an untranslated key falls back to the source string. See [extraction](/core-concepts/extraction).
 
-During development, run watch mode beside your dev server. It re-extracts when source changes and recompiles when a catalogue does:
+You don't run anything else before dev or build: the build plugin compiles every locale when it starts, and in development recompiles whenever a catalogue changes. Run watch mode beside your dev server so the source catalogue keeps up with your code:
 
 ```sh
 pnpm saykit extract --watch
 ```
 
-The compiled `.js` files are build output. Ignore them, and compile before anything that imports them:
+The compiled `.js` files are build output. Ignore them in git:
 
 ```text title=".gitignore"
 src/locales/*.js
 ```
 
-```json title="package.json"
-{
-  "scripts": {
-    "predev": "saykit compile",
-    "prebuild": "saykit compile"
-  }
-}
-```
+Without a build plugin, as with plain `babel` or a script Node runs directly, run [`saykit compile`](/reference/cli#saykit-compile) before anything imports a locale.
 
 `en.po` will look something like this:
 
@@ -172,7 +165,7 @@ msgid "Add one"
 msgstr "Ajouter un"
 ```
 
-Anything missing falls back to the source string. Run `pnpm saykit compile` (or keep watch mode running) to pick up the new translations. When source strings are removed or reworded, [`saykit clean`](/reference/cli#saykit-clean) strips the entries in `fr.po` that no longer match anything:
+Anything missing falls back to the source string. Your dev server picks up the new translations on save, and the next build compiles them in. When source strings are removed or reworded, [`saykit clean`](/reference/cli#saykit-clean) strips the entries in `fr.po` that no longer match anything:
 
 ```sh
 pnpm saykit clean

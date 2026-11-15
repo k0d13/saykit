@@ -26,7 +26,19 @@ export default {
 };
 ```
 
-The plugin only rewrites macros. Catalogues are compiled to ordinary `.js` modules by `saykit compile`, so Next.js and Metro need no extra configuration.
+The plugin rewrites macros. For Next.js and Metro, wrap the config with `withSayKit`, which compiles catalogues to ordinary `.js` modules before anything is bundled and recompiles them in dev:
+
+```js title="next.config.mjs"
+import { withSayKit } from 'babel-plugin-saykit/next';
+export default withSayKit({});
+```
+
+```js title="metro.config.js"
+const { withSayKit } = require('babel-plugin-saykit/metro');
+module.exports = withSayKit(getDefaultConfig(__dirname));
+```
+
+With plain Babel, run `saykit compile` before building.
 
 ## Documentation
 

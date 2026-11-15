@@ -48,7 +48,7 @@ Messages with the same text and context are merged into one entry with every ref
 
 ## `saykit compile`
 
-Compiles each locale's catalogue into the `{locale}.js` module your app imports, beside the catalogue. Run it on its own when there is nothing to extract: a build from a fresh clone, or after pulling translations from a TMS.
+Compiles each locale's catalogue into the `{locale}.js` module your app imports, beside the catalogue. The [Vite/unplugin](/integrations/vite) and [Next.js and Metro](/integrations/babel) plugins already do this when they start, so you need it only without one: plain `babel`, or a script Node runs directly.
 
 ```sh
 saykit compile
@@ -91,15 +91,22 @@ The CLI looks for `saykit.config.{ts,mts,cts,js,mjs,cjs}` from the working direc
 
 ## Scripts
 
-The compiled modules are not committed, so anything that imports them should compile first:
+The build plugin compiles the modules, so dev and build need no `pre` script:
 
 ```json title="package.json"
 {
   "scripts": {
-    "extract": "saykit extract",
-    "predev": "saykit compile",
-    "prebuild": "saykit compile",
-    "pretest": "saykit compile"
+    "extract": "saykit extract"
+  }
+}
+```
+
+Without a plugin, compile before anything that imports a locale:
+
+```json title="package.json"
+{
+  "scripts": {
+    "prebuild": "saykit compile"
   }
 }
 ```
