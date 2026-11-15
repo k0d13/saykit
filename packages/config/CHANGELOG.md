@@ -1,5 +1,14 @@
 # @saykit/config
 
+## 0.13.0
+
+### Minor Changes
+
+- 1d88938: Rewrite the package around two entry points, `@saykit/config` and `@saykit/config/messages`, replacing the `features/*` subpaths. `loadConfig({ cwd? })` finds, loads and validates `saykit.config.*` and returns the config with `compile`, `fileChanged`, `watch`, `extract`, `clean` and `transform` bound to it, so callers no longer thread it through loose functions. `defineConfig` is now a typed identity and no longer validates; `loadConfig` does, with readable errors, and accepts configs exported without it. Catalogue and output paths and include/exclude globs now resolve against the config's folder rather than the working directory, and references written by extraction are relative to it. Library calls are silent apart from failures; the CLI reports progress
+- 43f56a7: Add `saykit extract --check` for CI, which extracts in memory, writes nothing, and exits non-zero listing the messages that would be added, removed or updated in each out-of-date catalogue. `--untranslated` and `--orphaned` also fail on non-source locales with untranslated messages or entries `clean` would remove. The same check is available as `config.check()`
+- 9711908: Read PO flags on parse and carry them on `Message`, so ones a translation tool writes, like `fuzzy`, survive when SayKit rewrites a catalogue, and treat a `fuzzy` translation as untranslated on compile, falling back as gettext does
+- 9f8ee32: Compile catalogues from the build plugins, so no `saykit compile` script is needed before dev or build. `unplugin-saykit` compiles when the build starts and recompiles in watch mode when a catalogue changes. For Next.js and Metro, wrap the config with `withSayKit` from `babel-plugin-saykit/next` or `babel-plugin-saykit/metro`, which compiles when the config loads and watches outside production. Unchanged modules are no longer rewritten, and writes are atomic so parallel workers never read a half-written module. `saykit compile` stays for setups without a plugin, such as plain Babel
+
 ## 0.12.0
 
 ### Minor Changes
