@@ -78,10 +78,16 @@ function moduleUrl(name: string, version: string, path = '') {
 
 type MessagesModule = { generateHash: Runtime['generateHash'] };
 
+/** Whether a stable `major.minor.patch` release is at least 0.13.0. */
+function atLeast013(version: string) {
+  const [major = 0, minor = 0] = version.split('.').map((part) => Number.parseInt(part, 10));
+  return major > 0 || minor >= 13;
+}
+
 /**
- * The message IR moved out of `/features/messages` in 1.0.0. Previews and 1.x releases are
- * always current, but `0.0.0-beta-<timestamp>` snapshots sit on either side of the move, so those
- * try the current path and fall back to the old one.
+ * The message IR moved out of `/features/messages` in 0.13.0. Previews are always current, but
+ * `0.0.0-beta-<timestamp>` snapshots sit on either side of the move, so those try the current
+ * path and fall back to the old one.
  */
 function loadMessages(version: string): Promise<MessagesModule> {
   const load = (path: string) =>
@@ -89,9 +95,9 @@ function loadMessages(version: string): Promise<MessagesModule> {
       /* webpackIgnore: true */ moduleUrl('@saykit/config', version, path)
     ) as Promise<MessagesModule>;
 
-  if (previewCommit(version) || Number.parseInt(version, 10) >= 1) return load('/messages');
-  if (!version.includes('-beta-')) return load('/features/messages');
-  return load('/messages').catch(() => load('/features/messages'));
+  if (previewCommit(version)) return load('/messages');
+  if (version.includes('-beta-')) return load('/messages').catch(() => load('/features/messages'));
+  return load(atLeast013(version) ? '/messages' : '/features/messages');
 }
 
 /**
