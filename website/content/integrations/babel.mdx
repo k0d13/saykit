@@ -73,7 +73,7 @@ Plain Babel has no dev server or config to hook into, so compile the catalogues 
 
 The plugin rewrites macros to `say.call(...)` in every source file outside `node_modules`.
 
-`withSayKit` compiles each catalogue into an ordinary `{locale}.js` module when Next.js or Metro evaluates its config, before anything is bundled. Under `next dev` and `expo start` it then watches the catalogues and recompiles on every change, so editing `en.po` rewrites every locale that falls back to it, and the bundler hot-reloads those modules like any other. It returns your config untouched, so it composes with other wrappers in any order.
+`withSayKit` compiles each catalogue into an ordinary `{locale}.js` module when Next.js or Metro evaluates its config, before anything is bundled. Under `next dev` and `expo start` it then watches the catalogues and recompiles on every change, so editing `en.po` rewrites every locale that falls back to it, and the bundler hot-reloads those modules like any other. `next start` compiles nothing, so a deployment that only serves a build needs neither `saykit.config.*` nor its formatters. The Next.js wrapper returns a config function, so keep it outermost when combining it with wrappers that expect a config object; the Metro wrapper returns your config untouched.
 
 A write is skipped when a module would not change, and Next.js's worker processes leave compiling to the process that started them, so nothing reloads for no reason.
 

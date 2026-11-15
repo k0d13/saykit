@@ -76,10 +76,22 @@ function moduleUrl(name: string, version: string, path = '') {
     : `https://esm.sh/${name}@${version}${path}`;
 }
 
-/** The message IR moved out of `/features/messages` in 1.0.0. Previews are always current. */
-function messagesPath(version: string) {
-  const current = previewCommit(version) || Number.parseInt(version, 10) >= 1;
-  return current ? '/messages' : '/features/messages';
+type MessagesModule = { generateHash: Runtime['generateHash'] };
+
+/**
+ * The message IR moved out of `/features/messages` in 1.0.0. Previews and 1.x releases are
+ * always current, but `0.0.0-beta-<timestamp>` snapshots sit on either side of the move, so those
+ * try the current path and fall back to the old one.
+ */
+function loadMessages(version: string): Promise<MessagesModule> {
+  const load = (path: string) =>
+    import(
+      /* webpackIgnore: true */ moduleUrl('@saykit/config', version, path)
+    ) as Promise<MessagesModule>;
+
+  if (previewCommit(version) || Number.parseInt(version, 10) >= 1) return load('/messages');
+  if (!version.includes('-beta-')) return load('/features/messages');
+  return load('/messages').catch(() => load('/features/messages'));
 }
 
 /**
@@ -107,9 +119,7 @@ export function loadRuntime(version: string): Promise<Runtime> {
       }>,
       // Same version as the transformer, so a displayed id always matches what
       // that release would actually write into the catalogue
-      import(
-        /* webpackIgnore: true */ moduleUrl('@saykit/config', version, messagesPath(version))
-      ) as Promise<{ generateHash: Runtime['generateHash'] }>,
+      loadMessages(version),
     ]).then(([transform, messages]) => {
       const transformer = transform.default();
       if (typeof transformer?.extract !== 'function' || typeof transformer.transform !== 'function')

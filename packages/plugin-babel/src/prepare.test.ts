@@ -39,20 +39,51 @@ afterAll(() => {
   rmSync(dir, { recursive: true, force: true });
 });
 
-describe.each([
-  ['next', withNext],
-  ['metro', withMetro],
-])('withSayKit (%s)', (_, withSayKit) => {
+const context = { defaultConfig: {} };
+
+describe('withSayKit (next)', () => {
+  it('compiles catalogues and returns the config untouched while building', () => {
+    const input = { reactStrictMode: true };
+    expect(withNext(input)('phase-production-build', context)).toBe(input);
+    expect(readFileSync(join(dir, 'en.js'), 'utf8')).toContain('Hi');
+    expect(process.env[MARKER]).toBe(String(process.pid));
+  });
+
+  it('compiles under next dev', () => {
+    withNext({})('phase-development-server', context);
+    expect(existsSync(join(dir, 'en.js'))).toBe(true);
+  });
+
+  it('leaves the catalogues alone under next start', () => {
+    const input = { reactStrictMode: true };
+    expect(withNext(input)('phase-production-server', context)).toBe(input);
+    expect(existsSync(join(dir, 'en.js'))).toBe(false);
+  });
+
+  it('passes the phase and context through to a config function', () => {
+    const config = vi.fn(() => ({ reactStrictMode: true }));
+    expect(withNext(config)('phase-production-server', context)).toEqual({ reactStrictMode: true });
+    expect(config).toHaveBeenCalledWith('phase-production-server', context);
+  });
+
+  it('leaves compiling to the process that already did it', () => {
+    process.env[MARKER] = '1';
+    withNext({})('phase-production-build', context);
+    expect(existsSync(join(dir, 'en.js'))).toBe(false);
+  });
+});
+
+describe('withSayKit (metro)', () => {
   it('compiles catalogues and returns the config untouched', () => {
     const input = { reactStrictMode: true };
-    expect(withSayKit(input)).toBe(input);
+    expect(withMetro(input)).toBe(input);
     expect(readFileSync(join(dir, 'en.js'), 'utf8')).toContain('Hi');
     expect(process.env[MARKER]).toBe(String(process.pid));
   });
 
   it('leaves compiling to the process that already did it', () => {
     process.env[MARKER] = '1';
-    withSayKit({});
+    withMetro({});
     expect(existsSync(join(dir, 'en.js'))).toBe(false);
   });
 });
