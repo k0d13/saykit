@@ -6,7 +6,7 @@ import {
   CompositeMessage,
   ElementMessage,
   type Message,
-} from '@saykit/config/features/messages';
+} from '@saykit/config/messages';
 
 /**
  * Whether a message is one formatted value and nothing else: `say.date(x)` on

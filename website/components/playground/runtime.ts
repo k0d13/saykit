@@ -76,6 +76,12 @@ function moduleUrl(name: string, version: string, path = '') {
     : `https://esm.sh/${name}@${version}${path}`;
 }
 
+/** The message IR moved out of `/features/messages` in 1.0.0. Previews are always current. */
+function messagesPath(version: string) {
+  const current = previewCommit(version) || Number.parseInt(version, 10) >= 1;
+  return current ? '/messages' : '/features/messages';
+}
+
 /**
  * The workspace packages depend on each other by caret range, and esm.sh cannot
  * resolve `^0.0.0-beta-<timestamp>`: the entry loads but its imports 404. Pinning
@@ -102,7 +108,7 @@ export function loadRuntime(version: string): Promise<Runtime> {
       // Same version as the transformer, so a displayed id always matches what
       // that release would actually write into the catalogue
       import(
-        /* webpackIgnore: true */ moduleUrl('@saykit/config', version, '/features/messages')
+        /* webpackIgnore: true */ moduleUrl('@saykit/config', version, messagesPath(version))
       ) as Promise<{ generateHash: Runtime['generateHash'] }>,
     ]).then(([transform, messages]) => {
       const transformer = transform.default();

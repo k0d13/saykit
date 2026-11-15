@@ -8,7 +8,7 @@ import {
   ChoiceMessage,
   CompositeMessage,
   LiteralMessage,
-} from '@saykit/config/features/messages';
+} from '@saykit/config/messages';
 import { describe, expect, it } from 'vitest';
 import * as parser from './parser.js';
 

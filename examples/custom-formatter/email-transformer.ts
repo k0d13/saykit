@@ -1,5 +1,4 @@
-import type { Message, Transformer } from '@saykit/config';
-import { generateHash } from '@saykit/config/features/messages';
+import { type Message, messageKey, type Transformer } from '@saykit/config';
 
 export function createEmailTransformer(): Transformer {
   return {
@@ -17,7 +16,7 @@ export function createEmailTransformer(): Transformer {
 
       if (!message) return 'export default () => "";\n';
 
-      const key = generateHash(message.message, message.context);
+      const key = messageKey(message);
 
       return [
         `// generated from ${id} by the .email transformer`,

@@ -4,7 +4,7 @@
 
 [![Coverage](https://codecov.io/gh/k0d13/saykit/graph/badge.svg?flag=config)](https://codecov.io/gh/k0d13/saykit?flags%5B0%5D=config)
 
-Provides the `defineConfig` helper, the Zod-validated schema for `saykit.config.ts`, and the `saykit` CLI that extracts messages from your source and compiles catalogues into the modules your app imports.
+Provides the `defineConfig` helper, `loadConfig` for build tools, and the `saykit` CLI that extracts messages from your source and compiles catalogues into the modules your app imports.
 
 ## Install
 
@@ -60,6 +60,24 @@ modules in git; commit the `{locale}.d.ts` beside them.
 `saykit clean` only ever subtracts from non-source locales: it drops entries that no longer exist in
 the source catalogue and entries with an empty translation, and leaves everything else exactly as it
 is. It never adds source keys to a locale file, that stays your TMS's job.
+
+## Programmatic use
+
+`defineConfig` is a typed identity; `loadConfig` finds `saykit.config.*` in `cwd`, validates it and returns the config with its operations. Relative paths in the config resolve against the config's folder.
+
+```ts
+import { loadConfig } from '@saykit/config';
+
+const config = loadConfig();
+config.compile(); // every bucket and locale, skipping unchanged writes
+config.fileChanged(path); // a catalogue changed: recompile what reads it
+config.watch(); // recompile on catalogue changes, returns a stop function
+await config.extract({ watch: false });
+config.clean();
+config.transform(code, file); // undefined when no bucket includes the file
+```
+
+The message IR for transform authors lives in `@saykit/config/messages`.
 
 ## Documentation
 

@@ -1,11 +1,4 @@
-import { relative } from 'node:path';
-import {
-  compileBucketSync,
-  compileCataloguesSync,
-  findCatalogueBuckets,
-  listCataloguePaths,
-} from '@saykit/config/features/catalogue';
-import { resolveConfig } from '@saykit/config/features/loader';
+import { loadConfig } from '@saykit/config';
 import { createUnplugin } from 'unplugin';
 
 /**
@@ -18,23 +11,23 @@ import { createUnplugin } from 'unplugin';
  * One plugin rather than a list, so each bundler entry is typed as a single plugin.
  */
 export default createUnplugin<undefined, false>((_options?: never) => {
-  const config = resolveConfig();
+  const config = loadConfig();
 
   return {
     name: 'saykit',
     enforce: 'pre',
 
     buildStart() {
-      compileCataloguesSync(config);
       // Catalogues are not in the module graph, so ask the bundler to watch them for us
-      for (const path of listCataloguePaths(config)) this.addWatchFile(path);
+      const sources = config.compile().flatMap((module) => module.sources);
+      for (const path of sources) this.addWatchFile(path);
     },
 
     watchChange(id) {
       // A catalogue saved mid-edit can fail to parse. Report it and keep the dev server running,
       // the next save recompiles
       try {
-        for (const bucket of findCatalogueBuckets(config, id)) compileBucketSync(config, bucket);
+        config.fileChanged(id);
       } catch (error) {
         console.error('[saykit] Failed to compile catalogues', error);
       }
@@ -42,11 +35,7 @@ export default createUnplugin<undefined, false>((_options?: never) => {
 
     transform: {
       filter: { id: { exclude: /node_modules/ } },
-      handler: (code, id_) => {
-        const id = relative(process.cwd(), id_).replaceAll('\\', '/').split('?')[0]!;
-        const bucket = config.buckets.find((b) => b.match(id));
-        return bucket?.transformer.transform(code, id) ?? code;
-      },
+      handler: (code, id) => config.transform(code, id) ?? code,
     },
   };
 });

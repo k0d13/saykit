@@ -5,33 +5,30 @@ import { afterAll, describe, expect, it, vi } from 'vitest';
 
 const dir = mkdtempSync(join(tmpdir(), 'saykit-unplugin-'));
 
-const config = {
-  locales: ['en', 'fr'],
-  buckets: [
-    {
-      match: (id: string) => id.endsWith('.ts'),
-      output: Object.assign(join(dir, '{locale}', 'messages.{extension}'), {
-        match: (id: string) => id.endsWith('messages.json'),
-      }),
-      transformer: { transform: (code: string) => code.replace('say', 'SAY') },
+writeFileSync(
+  join(dir, 'saykit.config.cjs'),
+  `module.exports = {
+    locales: ['en', 'fr'],
+    buckets: [{
+      include: ['**/*.ts'],
+      output: '{locale}/messages.{extension}',
       formatter: {
         extension: '.json',
-        parse: (content: string) =>
-          JSON.parse(content) as {
-            message: string;
-            translation?: string;
-            id?: string;
-            context?: string;
-          }[],
+        parse: (content) => JSON.parse(content),
+        stringify: () => '[]',
       },
-    },
-  ],
-};
-
-vi.mock('@saykit/config/features/loader', () => ({ resolveConfig: () => config }));
+      transformer: {
+        match: (id) => id.endsWith('.ts'),
+        extract: () => [],
+        transform: (code) => code.replace('say', 'SAY'),
+      },
+    }],
+  };`,
+);
+vi.spyOn(process, 'cwd').mockReturnValue(dir);
 
 const { default: unplugin } = await import('./index.js');
-const plugin = unplugin.raw(undefined, { framework: 'rollup' } as never) as {
+const plugin = unplugin.raw(undefined, { framework: 'rollup' } as never) as unknown as {
   buildStart: (this: { addWatchFile: (path: string) => void }) => void;
   watchChange: (id: string) => void;
   transform: { handler: (code: string, id: string) => string };
@@ -50,11 +47,11 @@ afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
 describe('unplugin transform', () => {
   it('transforms code for a matching bucket', () => {
-    expect(plugin.transform.handler('say`Hi`', join(process.cwd(), 'src/app.ts'))).toBe('SAY`Hi`');
+    expect(plugin.transform.handler('say`Hi`', join(dir, 'src/app.ts'))).toBe('SAY`Hi`');
   });
 
   it('leaves code untouched when no bucket matches', () => {
-    expect(plugin.transform.handler('say`Hi`', join(process.cwd(), 'src/app.css'))).toBe('say`Hi`');
+    expect(plugin.transform.handler('say`Hi`', join(dir, 'src/app.css'))).toBe('say`Hi`');
   });
 });
 
@@ -84,7 +81,7 @@ describe('unplugin compile', () => {
     const before = read('en');
     write('en', [{ message: 'Hello', translation: 'Hey', id: 'greeting' }]);
 
-    plugin.watchChange(join(process.cwd(), 'src/app.ts'));
+    plugin.watchChange(join(dir, 'src/app.ts'));
 
     expect(read('en')).toBe(before);
   });

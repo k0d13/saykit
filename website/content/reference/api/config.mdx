@@ -3,18 +3,18 @@ title: '@saykit/config'
 description: API reference for the configuration package and CLI building blocks
 ---
 
-`@saykit/config` exports the `defineConfig` helper, the underlying Zod schemas / types, and a small set of building blocks used by the CLI and plugins.
+`@saykit/config` exports `defineConfig`, `loadConfig`, `messageKey` and the config types. The `saykit` CLI and the build plugins are built on them.
 
 ```ts
-import { defineConfig } from '@saykit/config';
-import type { Config, Bucket, Formatter, Transformer, Message } from '@saykit/config';
+import { defineConfig, loadConfig, messageKey } from '@saykit/config';
+import type { ConfigInput, SayKitConfig, Bucket, Formatter, Transformer, Message } from '@saykit/config';
 ```
 
-Most application code only ever uses `defineConfig` and the types. The other exports exist for plugin and transformer authors.
+Most application code only uses `defineConfig` and the types. `loadConfig` and `messageKey` are for plugin, formatter and transformer authors.
 
 ## `defineConfig(config)`
 
-Validate a SayKit configuration against the Zod schema and return the normalised result.
+Type a SayKit configuration. It returns the config unchanged and does not validate it; that happens in [`loadConfig`](#loadconfigoptions).
 
 ```ts title="saykit.config.ts"
 import { defineConfig } from '@saykit/config';
@@ -34,13 +34,11 @@ export default defineConfig({
 });
 ```
 
-Returns the parsed `Config`. Throws if validation fails (with a Zod error containing the path and reason).
-
 ## Types
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 
-### `Config`
+### `ConfigInput`
 
 <TypeTable
   type={{
@@ -98,13 +96,6 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
     },
   }}
 />
-
-After parsing, each bucket also exposes `match(id)` and an `output` value with a `match(id)` helper. Plugin authors can use these to test whether a file belongs to a bucket:
-
-```ts
-config.buckets[0]!.match('src/app/page.tsx'); // true if matched by include
-config.buckets[0]!.output.match('src/locales/en.po'); // true if it's a translation file
-```
 
 ### `Formatter`
 
@@ -182,79 +173,59 @@ config.buckets[0]!.output.match('src/locales/en.po'); // true if it's a translat
   }}
 />
 
-## Subpath exports
+## `loadConfig(options?)`
 
-`@saykit/config` also exposes a few subpaths used by plugins and transformer authors.
-
-### `@saykit/config/features/loader`
+Search up from `options.cwd` (default `process.cwd()`) for `saykit.config.{ts,mts,cts,js,mjs,cjs}`, load it, validate it and return a `SayKitConfig`. Throws a readable error if the file is missing or invalid. Configs exported without `defineConfig` are accepted.
 
 ```ts
-import { resolveConfig } from '@saykit/config/features/loader';
+const config = loadConfig();
+config.compile();
 ```
 
-#### `resolveConfig(name?)`
+The config is loaded from where it sits, so its relative imports and `import.meta.dirname` resolve against its own directory. Reading TypeScript requires Node 22.18+ or a runtime that loads it itself (Bun, Deno, tsx). The `saykit` CLI, `unplugin-saykit` and `babel-plugin-saykit` all load it this way.
 
-Search up from `process.cwd()` for `saykit.config.{ts,mts,cts,js,mjs,cjs}` (or `${name}.config.*`), load it, and return the validated `Config`.
+### `SayKitConfig`
+
+- `root`, the config file's folder. Relative paths in the config (`output`, `include`, `exclude`) resolve against it, not the working directory
+- `file`, `locales`, `sourceLocale` (the first locale)
+- `buckets`, the resolved buckets: `include`, `exclude`, `output`, `formatter`, `transformer` (merged) and `messages`, plus `includes(file)`, `cataloguePath(locale)` and `isCatalogue(path)`
+- `compile()`, compiles every bucket and locale into `{locale}.js` and `{locale}.d.ts`, following the [fallback chain](/core-concepts/configuration#fallback-locales), skipping writes that would not change a file
+- `fileChanged(path)`, recompiles the buckets that read a changed catalogue, or returns `[]` for any other file
+- `watch()`, recompiles whenever a catalogue changes and returns a function that stops watching
+- `extract({ watch? })`, extracts from source, writes the source locale, adds missing locales and compiles; with `watch`, keeps going
+- `clean()`, prunes untranslated and stale entries from the other locales, as `saykit clean` does
+- `transform(code, file)`, runs the matching bucket's transformer, or returns `undefined` if no bucket includes the file. Accepts absolute or root-relative paths and ignores a `?query`
+
+`compile`, `fileChanged` and `watch` return `CompiledModule`s: `{ bucket, locale, path, sources, count, written }`. `sources` lists the catalogue files read, most specific first, for a bundler's `addWatchFile`. Library calls only log errors; the CLI adds its own progress output.
+
+## `messageKey(message)`
+
+The key SayKit stores a message under: its `id` if it has one, otherwise the 6-character hash of `message` and `context`. Formatters and transformers should key with it so catalogues match what the runtime looks up.
 
 ```ts
-const config = resolveConfig(); // looks for saykit.config.*
-const config = resolveConfig('my-tool'); // looks for my-tool.config.*
+messageKey({ message: 'Hello', context: 'greeting' });
 ```
 
-Used by:
+## `@saykit/config/messages`
 
-- the `saykit` CLI
-- `unplugin-saykit`
-- `babel-plugin-saykit`
-
-The config is loaded from where it sits, so its relative imports and `import.meta.dirname` resolve against its own directory. Reading TypeScript requires Node 22.18+ or a runtime that loads it itself (Bun, Deno, tsx).
-
-### `@saykit/config/features/messages`
+The message types transformers work with (different from the public catalogue `Message` shape), plus helpers:
 
 ```ts
 import {
   compileMessage,
-  generateHash,
   assignSequenceIdentifiers,
   CompositeMessage,
   LiteralMessage,
   ArgumentMessage,
   ChoiceMessage,
   ElementMessage,
-} from '@saykit/config/features/messages';
+} from '@saykit/config/messages';
 ```
-
-The internal `Message` types used by transformers (different from the public catalogue `Message` shape), plus helpers:
 
 - `compileMessage(icu)`, compiles one ICU message to the runtime's [`Message`](/reference/api/saykit#message)
-- `generateHash(text, context?)`, produces the same 6-character id SayKit uses elsewhere
 - `assignSequenceIdentifiers(message, { current: 0 })`, numbers positional placeholders depth-first
 
-These exist so that custom transformers can produce the same id and placeholder shape the built-in transformers do.
-
-### `@saykit/config/features/catalogue`
-
-```ts
-import {
-  compileCataloguesSync,
-  watchCatalogues,
-  emitCatalogueModule,
-  expandBucketOutputPath,
-  resolveFallbackChain,
-  assembleCatalogueRecord,
-  pruneLocaleMessages,
-} from '@saykit/config/features/catalogue';
-```
-
-The helpers the CLI and build plugins compile catalogues with. Most apps never import them; reach for them to compile from a bundler SayKit has no plugin for.
-
-- `compileCataloguesSync(config)`, compiles every bucket and locale, as `saykit compile` does.
-- `watchCatalogues(config, options?)`, recompiles a bucket whenever one of its catalogues changes, and returns a function that stops watching.
-- `emitCatalogueModule(config, bucket, locale)`, compiles one locale and its [fallback chain](/core-concepts/configuration#fallback-locales) into `{locale}.js` and `{locale}.d.ts`. `emitCatalogueModuleSync` is the same, synchronously. Either skips a write that would not change the file.
-- `expandBucketOutputPath(bucket, locale)`, the catalogue path for a locale.
-- `resolveFallbackChain(config, locale)`, the locales to try, ending at the source.
-- `assembleCatalogueRecord(bucket, contents)`, merges parsed catalogues into one `id → ICU` record, most specific winning.
-- `pruneLocaleMessages(existing, source)`, the filter `saykit clean` uses.
+These let custom transformers produce the same placeholder shape the built-in transformers do.
 
 ## Next
 

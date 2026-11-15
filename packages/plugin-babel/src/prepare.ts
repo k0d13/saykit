@@ -1,5 +1,4 @@
-import { compileCataloguesSync, watchCatalogues } from '@saykit/config/features/catalogue';
-import { resolveConfig } from '@saykit/config/features/loader';
+import { loadConfig } from '@saykit/config';
 
 /** Set once catalogues are compiled, so worker processes inherit it and skip doing it again. */
 const MARKER = 'SAYKIT_CATALOGUES_PREPARED';
@@ -16,9 +15,9 @@ const MARKER = 'SAYKIT_CATALOGUES_PREPARED';
 export function prepareCatalogues() {
   if (process.env[MARKER]) return;
 
-  const config = resolveConfig();
-  compileCataloguesSync(config);
-  if (process.env.NODE_ENV !== 'production') watchCatalogues(config);
+  const config = loadConfig();
+  config.compile();
+  if (process.env.NODE_ENV !== 'production') config.watch();
 
   process.env[MARKER] = String(process.pid);
 }

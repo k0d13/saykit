@@ -1,5 +1,4 @@
-import type { Formatter, Message } from '@saykit/config';
-import { generateHash } from '@saykit/config/features/messages';
+import { type Formatter, type Message, messageKey } from '@saykit/config';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 
 interface Entry {
@@ -48,8 +47,10 @@ export function createYamlFormatter(options: YamlFormatterOptions = {}): Formatt
 
       const entries: Record<string, Entry> = {};
 
-      for (const message of [...messages].sort((a, b) => key(a).localeCompare(key(b)))) {
-        const id = key(message);
+      for (const message of [...messages].sort((a, b) =>
+        messageKey(a).localeCompare(messageKey(b)),
+      )) {
+        const id = messageKey(message);
         const entry: Entry = { source: message.message };
 
         entry.translation = message.translation ?? previous?.messages?.[id]?.translation ?? '';
@@ -64,10 +65,6 @@ export function createYamlFormatter(options: YamlFormatterOptions = {}): Formatt
       return stringifyYaml({ ...previous, locale, messages: entries }, { lineWidth: 0 });
     },
   };
-}
-
-function key(message: Message) {
-  return message.id ?? generateHash(message.message, message.context);
 }
 
 export default createYamlFormatter;

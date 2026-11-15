@@ -74,11 +74,11 @@ The JSX transformer does the same plus a `JSXElement` visitor for `<Say>` compon
 
 ## Reusing the building blocks
 
-Most of the parsing work is reusable. `@saykit/config/features/messages` exposes:
+Most of the parsing work is reusable. `@saykit/config/messages` exposes:
 
 - `CompositeMessage`, `LiteralMessage`, `ArgumentMessage`, `ChoiceMessage`, `ElementMessage`
 - `assignSequenceIdentifiers(message, { current: 0 })`, numbers positional placeholders
-- `generateHash(text, context)`, produces the same 6-char id SayKit uses elsewhere
+- `messageKey(message)`, from `@saykit/config`, produces the same id SayKit uses elsewhere
 
 And `@saykit/transform-js` exposes its parser and generator:
 

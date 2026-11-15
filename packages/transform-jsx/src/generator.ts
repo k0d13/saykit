@@ -5,7 +5,7 @@ import {
   CompositeMessage,
   ElementMessage,
   type Message,
-} from '@saykit/config/features/messages';
+} from '@saykit/config/messages';
 import { generateDescriptorProperty } from '@saykit/transform-js/generator';
 
 export function generateSayJSXElement(message: CompositeMessage) {

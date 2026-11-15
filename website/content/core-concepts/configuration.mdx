@@ -24,11 +24,11 @@ export default defineConfig({
 });
 ```
 
-`defineConfig()` types the config and validates it, so a mistake fails with a clear error.
+`defineConfig()` only types the config. It is validated when the CLI or a bundler plugin loads it, so a mistake fails with a clear error.
 
 ## Loading
 
-The CLI and plugins search up from the working directory for `saykit.config.{ts,mts,cts,js,mjs,cjs}`. The file runs as it is on disk, so relative imports resolve against it:
+The CLI and plugins search up from the working directory for `saykit.config.{ts,mts,cts,js,mjs,cjs}`. The file runs as it is on disk, so relative imports resolve against it. Relative paths inside the config (`include`, `exclude`, `output`) resolve against its folder, not the working directory:
 
 ```ts title="saykit.config.ts"
 import { yaml } from './yaml-formatter.ts';

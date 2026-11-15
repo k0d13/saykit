@@ -5,23 +5,19 @@ import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const dir = mkdtempSync(join(tmpdir(), 'saykit-prepare-'));
 
-const config = {
-  locales: ['en', 'fr'],
-  buckets: [
-    {
-      output: Object.assign(join(dir, '{locale}.{extension}'), {
-        match: (id: string) => id.endsWith('.json'),
-      }),
-      formatter: {
-        extension: '.json',
-        parse: (content: string) =>
-          JSON.parse(content) as { message: string; translation?: string; id?: string }[],
-      },
-    },
-  ],
-};
-
-vi.mock('@saykit/config/features/loader', () => ({ resolveConfig: () => config }));
+writeFileSync(
+  join(dir, 'saykit.config.cjs'),
+  `module.exports = {
+    locales: ['en'],
+    buckets: [{
+      include: ['**/*.ts'],
+      output: '{locale}.{extension}',
+      formatter: { extension: '.json', parse: (c) => JSON.parse(c), stringify: () => '[]' },
+      transformer: { match: () => true, extract: () => [], transform: (code) => code },
+    }],
+  };`,
+);
+vi.spyOn(process, 'cwd').mockReturnValue(dir);
 
 const { withSayKit: withNext } = await import('./next.js');
 const { withSayKit: withMetro } = await import('./metro.js');

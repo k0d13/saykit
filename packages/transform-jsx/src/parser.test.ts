@@ -8,7 +8,7 @@ import {
   CompositeMessage,
   ElementMessage,
   LiteralMessage,
-} from '@saykit/config/features/messages';
+} from '@saykit/config/messages';
 import { isEquivalentPlaceholder } from '@saykit/transform-js/parser';
 import { describe, expect, it } from 'vitest';
 import * as parser from './parser.js';

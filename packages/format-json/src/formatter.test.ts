@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { generateHash } from '@saykit/config/features/messages';
+import { generateHash } from '@saykit/config/messages';
 import { describe, expect, it } from 'vitest';
 import createJsonFormatter from './formatter.js';
 

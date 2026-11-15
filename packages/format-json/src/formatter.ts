@@ -1,18 +1,6 @@
-import type { Formatter, Message } from '@saykit/config';
-import { generateHash } from '@saykit/config/features/messages';
+import { type Formatter, type Message, messageKey } from '@saykit/config';
 
 type Dialect = 'arb' | 'webextension';
-
-/**
- * Derive a catalogue key the same way the runtime and the rest of SayKit do:
- * an explicit id when present, otherwise a stable hash of the message and its
- * context. Keying by the raw message text instead would not match the hashed
- * key the runtime looks up, and would collide for same-text/different-context
- * messages.
- */
-function messageKey(message: Message) {
-  return message.id ?? generateHash(message.message, message.context);
-}
 
 interface FormatterOptions {
   /**
