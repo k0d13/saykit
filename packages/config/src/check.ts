@@ -34,7 +34,12 @@ const byKey = (messages: Message[]) => new Map(messages.map((m) => [messageKey(m
 
 /** What a catalogue round-trip is expected to keep, for spotting an updated entry. */
 const fingerprint = (m: Message) =>
-  JSON.stringify([m.message, m.context, [...m.comments].sort(), [...m.references].sort()]);
+  JSON.stringify([
+    m.message,
+    m.context,
+    [...(m.comments ?? [])].sort(),
+    [...(m.references ?? [])].sort(),
+  ]);
 
 const isTranslated = (m: Message | undefined) =>
   Boolean(m?.translation) && !m!.flags?.includes('fuzzy');
@@ -77,10 +82,14 @@ export async function check(config: Resolved, options: CheckOptions = {}): Promi
           });
           result.stale = content !== expected;
           if (!result.stale) return result;
+          // Compare what the file would hold, not the raw extraction, since a formatter may drop
+          // comments or references and every kept entry would otherwise look updated
+          const written = byKey(bucket.formatter.parse(expected));
           for (const [key, message] of sourceKeys) {
             const before = existingKeys.get(key);
+            const after = written.get(key) ?? message;
             if (!before) result.added.push(message);
-            else if (fingerprint(before) !== fingerprint(message)) result.updated.push(message);
+            else if (fingerprint(before) !== fingerprint(after)) result.updated.push(message);
           }
           result.removed = existing.filter((m) => !sourceKeys.has(messageKey(m)));
           return result;

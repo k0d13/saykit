@@ -42,6 +42,31 @@ describe('check', () => {
     expect(ids(en!.updated)).toEqual(['farewell']);
   });
 
+  it('ignores fields the formatter does not keep when listing updates', async () => {
+    // Drops comments and references, like the plain JSON layout or PO without references
+    const { config, write } = project({
+      bucket: `{ formatter: {
+        extension: '.json',
+        parse: (content) => (content ? JSON.parse(content) : []).map((m) => ({ ...m, comments: [], references: [] })),
+        stringify: (messages) => JSON.stringify(messages.map(({ comments, references, ...m }) => m)),
+      } }`,
+    });
+    write('src/app.ts', [
+      msg('Hello', { id: 'greeting', comments: ['Shown on load'], references: ['src/app.ts:1'] }),
+      msg('Bye', { id: 'farewell', references: ['src/app.ts:2'] }),
+    ]);
+    await config.extract();
+    write('src/app.ts', [
+      msg('Hello', { id: 'greeting', comments: ['Shown on load'], references: ['src/app.ts:1'] }),
+      msg('See ya', { id: 'farewell', references: ['src/app.ts:2'] }),
+      msg('Welcome', { id: 'welcome', references: ['src/app.ts:3'] }),
+    ]);
+
+    const [en] = await config.check();
+    expect(ids(en!.added)).toEqual(['welcome']);
+    expect(ids(en!.updated)).toEqual(['farewell']);
+  });
+
   it('reports a missing non-source locale file, but not edits to an existing one', async () => {
     const { config, write, dir } = project();
     const rm = (path: string) => rmSync(join(dir, path));
